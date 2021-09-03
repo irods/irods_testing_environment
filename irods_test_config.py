@@ -8,18 +8,10 @@ import os
 import context
 import execute
 
-def reconnect_with_alias(container, network, alias):
-    network.disconnect(container)
-    network.connect(container, aliases=[alias])
-
-
 def set_hostnames_for_irods(docker_client, compose_project):
-    # Assuming only the default network is in use for all services
-    network_name = list(compose_project.services[0].networks.keys())[0]
-    network = docker_client.networks.get(
-        list(n.id for n in docker_client.networks.list() if n.name == network_name)[0])
+    import json
 
-    hosts_file = os.path.join('/etc', 'hosts')
+    hosts_file = os.path.join('/etc', 'irods', 'hosts_config.json')
 
     # TODO: PARALLEL
     containers = compose_project.containers(service_names=[
@@ -33,14 +25,46 @@ def set_hostnames_for_irods(docker_client, compose_project):
         else:
             alias = 'resource{}.example.org'.format(context.service_instance(c.name))
 
-        # TODO: need to have each container recognize itself as `alias`
-        # TODO: use /etc/irods/hosts_config.json!!
-        # this does not work because the docker daemon is controlling the /etc/hosts file
-        add_to_hosts_file = 'sed -i \'${{s/$/\\t{}/}}\' {}'.format(alias, hosts_file)
-        if execute.execute_command(container, add_to_hosts_file) is not 0:
-            raise RuntimeError('failed to add hostname [{}]'.format(c.name))
+        hosts = {
+            'schema_name': 'hosts_config',
+            'schema_version': 'v3',
+            'host_entries': [
+                {
+                    'address_type': 'local',
+                    'addresses': [
+                        {'address': alias},
+                        {'address': context.container_hostname(container)}
+                    ]
+                }
+            ]
+        }
 
-        reconnect_with_alias(container, network, alias)
+        for o in containers:
+            if o.name == container.name: continue
+
+            other = docker_client.containers.get(o.name)
+
+            if context.is_irods_catalog_provider_container(other):
+                remote_address = 'icat.example.org'
+            else:
+                remote_address = 'resource{}.example.org'.format(context.service_instance(other.name))
+
+            hosts['host_entries'].append(
+                {
+                    'address_type': 'remote',
+                    'addresses': [
+                        {'address': remote_address},
+                        {'address': context.container_hostname(other)}
+                    ]
+                }
+            )
+
+        logging.info('json for hosts_config [{}] [{}]'.format(json.dumps(hosts), container.name))
+
+        create_hosts_config = 'bash -c \'echo "{}" > {}\''.format(json.dumps(hosts).replace('"', '\\"'), hosts_file)
+        if execute.execute_command(container, create_hosts_config) is not 0:
+            raise RuntimeError('failed to create hosts_config file [{}]'.format(container.name))
+
 
 def configure_univmss_script(docker_client, compose_project):
     """Configure UnivMSS script for iRODS tests.
@@ -98,6 +122,7 @@ def configure_irods_testing(docker_client, compose_project):
     docker_client -- docker client for interacting with the docker-compose project
     compose_project -- compose.Project in which the iRODS servers are running
     """
+    # TODO: PARALLEL??
     set_hostnames_for_irods(docker_client, compose_project)
 
     configure_univmss_script(docker_client, compose_project)
