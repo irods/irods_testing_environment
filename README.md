@@ -24,7 +24,7 @@ pip freeze
 ```
 Compare the output to `requirements.txt`.
 
-To stand up the latest released versoin of iRODS in a Zone running on Ubuntu 18.04 using a Postgres 10.12 database to host the catalog, run the following:
+To stand up the latest released version of iRODS in a Zone running on Ubuntu 18.04 using a Postgres 10.12 database to host the catalog, run the following:
 
 ```bash
 # --project-directory defaults to `pwd`
