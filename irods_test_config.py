@@ -26,14 +26,13 @@ def set_hostnames_for_irods(docker_client, compose_project):
             alias = 'resource{}.example.org'.format(context.service_instance(c.name))
 
         hosts = {
-            'schema_name': 'hosts_config',
-            'schema_version': 'v3',
             'host_entries': [
                 {
                     'address_type': 'local',
                     'addresses': [
-                        {'address': alias},
-                        {'address': context.container_hostname(container)}
+                        {'address': context.container_ip(container)},
+                        {'address': context.container_hostname(container)},
+                        {'address': alias}
                     ]
                 }
             ]
@@ -53,8 +52,9 @@ def set_hostnames_for_irods(docker_client, compose_project):
                 {
                     'address_type': 'remote',
                     'addresses': [
-                        {'address': remote_address},
-                        {'address': context.container_hostname(other)}
+                        {'address': context.container_ip(other)},
+                        {'address': context.container_hostname(other)},
+                        {'address': remote_address}
                     ]
                 }
             )

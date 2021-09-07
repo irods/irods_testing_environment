@@ -78,7 +78,27 @@ def container_name(project_name, service_name, service_instance=1):
 
 
 def container_hostname(container):
+    """Return the hostname for the specified docker.container.
+
+    Arguments:
+    container -- docker.container from which the hostname is to be extracted
+    """
     return container.client.api.inspect_container(container.name)['Config']['Hostname']
+
+
+def container_ip(container, network_name=None):
+    """Return the IP address for the specified docker.container.
+
+    Arguments:
+    container -- docker.container from which the IP is to be extracted
+    network_name -- name of the docker network to inspect (if None, default network is used)
+    """
+    return (container.client.api.inspect_container(container.name)
+        ['NetworkSettings']
+        ['Networks']
+        [network_name or '_'.join([project_name(container.name), 'default'])]
+        ['IPAddress']
+    )
 
 
 def image_repo_and_tag_string(image_repo_and_tag):
