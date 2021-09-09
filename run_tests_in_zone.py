@@ -96,12 +96,6 @@ if __name__ == "__main__":
     compose_project = compose.cli.command.get_project(os.path.abspath(args.project_directory),
                                                       project_name=args.project_name)
 
-    job_name = job_name(compose_project.name, args.job_name)
-
-    output_directory = make_output_directory(dirname, job_name)
-
-    logs.configure(args.verbosity, os.path.join(output_directory, 'script_output.log'))
-
     project_name = args.project_name if args.project_name else compose_project.name
 
     if args.output_directory:
@@ -109,6 +103,12 @@ if __name__ == "__main__":
     else:
         import tempfile
         dirname = tempfile.mkdtemp(prefix=project_name)
+
+    job_name = job_name(compose_project.name, args.job_name)
+
+    output_directory = make_output_directory(dirname, job_name)
+
+    logs.configure(args.verbosity, os.path.join(output_directory, 'script_output.log'))
 
     platform = args.platform
     if not platform:
