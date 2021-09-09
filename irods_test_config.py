@@ -8,22 +8,22 @@ import os
 import context
 import execute
 
-def set_hostnames_for_irods(docker_client, compose_project):
+def configure_hosts_config(docker_client, compose_project):
+    """Set hostname aliases for all iRODS servers in the compose project via hosts_config.json.
+
+    Arguments:
+    docker_client -- docker client for interacting with the docker-compose project
+    compose_project -- compose.Project in which the iRODS servers are running
+    """
     import json
-
-    hosts_file = os.path.join('/etc', 'irods', 'hosts_config.json')
-
-    # TODO: PARALLEL
-    containers = compose_project.containers(service_names=[
-        context.irods_catalog_provider_service(),
-        context.irods_catalog_consumer_service()])
-    for c in containers:
-        container = docker_client.containers.get(c.name)
+    def set_hostnames(docker_client, docker_compose_container, hosts_file):
+        container = docker_client.containers.get(docker_compose_container.name)
 
         if context.is_irods_catalog_provider_container(container):
             alias = 'icat.example.org'
         else:
-            alias = 'resource{}.example.org'.format(context.service_instance(c.name))
+            alias = 'resource{}.example.org'.format(
+                context.service_instance(docker_compose_container.name))
 
         hosts = {
             'host_entries': [
@@ -46,7 +46,8 @@ def set_hostnames_for_irods(docker_client, compose_project):
             if context.is_irods_catalog_provider_container(other):
                 remote_address = 'icat.example.org'
             else:
-                remote_address = 'resource{}.example.org'.format(context.service_instance(other.name))
+                remote_address = 'resource{}.example.org'.format(
+                    context.service_instance(other.name))
 
             hosts['host_entries'].append(
                 {
@@ -61,9 +62,48 @@ def set_hostnames_for_irods(docker_client, compose_project):
 
         logging.info('json for hosts_config [{}] [{}]'.format(json.dumps(hosts), container.name))
 
-        create_hosts_config = 'bash -c \'echo "{}" > {}\''.format(json.dumps(hosts).replace('"', '\\"'), hosts_file)
+        create_hosts_config = 'bash -c \'echo "{}" > {}\''.format(
+            json.dumps(hosts).replace('"', '\\"'), hosts_file)
+
         if execute.execute_command(container, create_hosts_config) is not 0:
             raise RuntimeError('failed to create hosts_config file [{}]'.format(container.name))
+
+        return 0
+
+    import concurrent.futures
+
+    containers = compose_project.containers(service_names=[
+        context.irods_catalog_provider_service(),
+        context.irods_catalog_consumer_service()])
+
+    rc = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        hosts_file = os.path.join('/etc', 'irods', 'hosts_config.json')
+        futures_to_containers = {
+            executor.submit(set_hostnames, docker_client, c, hosts_file): c for c in containers
+        }
+        logging.debug(futures_to_containers)
+
+        for f in concurrent.futures.as_completed(futures_to_containers):
+            container = futures_to_containers[f]
+            try:
+                ec = f.result()
+                if ec is not 0:
+                    logging.error('error while configuring hosts_configs.json on container [{}]'
+                                  .format(container.name))
+                    rc = ec
+                else:
+                    logging.info('hosts_config.json configured successfully [{}]'
+                                 .format(container.name))
+
+            except Exception as e:
+                logging.error('exception raised while installing packages [{}]'
+                              .format(container.name))
+                logging.error(e)
+                rc = 1
+
+    if rc is not 0:
+        raise RuntimeError('failed to configure hosts_config.json on some service')
 
 
 def configure_univmss_script(docker_client, compose_project):
@@ -73,46 +113,78 @@ def configure_univmss_script(docker_client, compose_project):
     docker_client -- docker client for interacting with the docker-compose project
     compose_project -- compose.Project in which the iRODS servers are running
     """
-    # TODO: PARALLEL
-    univmss_script = os.path.join(context.irods_home(),
-                                  'msiExecCmd_bin',
-                                  'univMSSInterface.sh')
-    chown_msiexec = 'chown irods:irods {}'.format(os.path.dirname(univmss_script))
-    copy_from_template = 'cp {0}.template {0}'.format(univmss_script)
-    remove_template_from_commands = 'sed -i \"s/template-//g\" {}'.format(univmss_script)
-    make_script_executable = 'chmod 544 {}'.format(univmss_script)
+    def modify_script(docker_client, docker_compose_container, script):
+        chown_msiexec = 'chown irods:irods {}'.format(os.path.dirname(univmss_script))
+        copy_from_template = 'cp {0}.template {0}'.format(univmss_script)
+        remove_template_from_commands = 'sed -i \"s/template-//g\" {}'.format(univmss_script)
+        make_script_executable = 'chmod 544 {}'.format(univmss_script)
 
-    containers = compose_project.containers(service_names=[
-        context.irods_catalog_provider_service(),
-        context.irods_catalog_consumer_service()])
-
-    for c in containers:
-        on_container = docker_client.containers.get(c.name)
+        on_container = docker_client.containers.get(docker_compose_container.name)
         if execute.execute_command(on_container,
                                    chown_msiexec) is not 0:
             raise RuntimeError('failed to change ownership to msiExecCmd_bin [{}]'
-                               .format(c.name))
+                               .format(on_container.name))
 
         if execute.execute_command(on_container,
                                    copy_from_template,
                                    user='irods',
                                    workdir=context.irods_home()) is not 0:
             raise RuntimeError('failed to copy univMSSInterface.sh template file [{}]'
-                               .format(c.name))
+                               .format(on_container.name))
 
         if execute.execute_command(on_container,
                                    remove_template_from_commands,
                                    user='irods',
                                    workdir=context.irods_home()) is not 0:
             raise RuntimeError('failed to modify univMSSInterface.sh template file [{}]'
-                               .format(c.name))
+                               .format(on_container.name))
 
         if execute.execute_command(on_container,
                                    make_script_executable,
                                    user='irods',
                                    workdir=context.irods_home()) is not 0:
             raise RuntimeError('failed to change permissions on univMSSInterface.sh [{}]'
-                               .format(c.name))
+                               .format(on_container.name))
+
+        return 0
+
+    import concurrent.futures
+
+    containers = compose_project.containers(service_names=[
+        context.irods_catalog_provider_service(),
+        context.irods_catalog_consumer_service()])
+
+    rc = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        univmss_script = os.path.join(
+            context.irods_home(), 'msiExecCmd_bin', 'univMSSInterface.sh')
+
+        futures_to_containers = {
+            executor.submit(
+                modify_script, docker_client, c, univmss_script
+            ): c for c in containers
+        }
+
+        logging.debug(futures_to_containers)
+
+        for f in concurrent.futures.as_completed(futures_to_containers):
+            container = futures_to_containers[f]
+            try:
+                ec = f.result()
+                if ec is not 0:
+                    logging.error('error while configuring univMSS script on container [{}]'
+                                  .format(container.name))
+                    rc = ec
+                else:
+                    logging.info('univMSS script configured successfully [{}]'.format(container.name))
+
+            except Exception as e:
+                logging.error('exception raised while configuring univMSS script [{}]'.format(container.name))
+                logging.error(e)
+                rc = 1
+
+    if rc is not 0:
+        raise RuntimeError('failed to configure univMSS script on some service')
 
 
 def configure_irods_testing(docker_client, compose_project):
@@ -122,8 +194,7 @@ def configure_irods_testing(docker_client, compose_project):
     docker_client -- docker client for interacting with the docker-compose project
     compose_project -- compose.Project in which the iRODS servers are running
     """
-    # TODO: PARALLEL??
-    set_hostnames_for_irods(docker_client, compose_project)
+    configure_hosts_config(docker_client, compose_project)
 
     configure_univmss_script(docker_client, compose_project)
 
