@@ -54,8 +54,8 @@ if __name__ == "__main__":
     import logs
 
     parser = argparse.ArgumentParser(description='Run iRODS tests in a consistent environment.')
-    parser.add_argument('commands', metavar='COMMANDS', nargs='+',
-                        help='Space-delimited list of commands to be run')
+    parser.add_argument('--tests', metavar='TESTS', nargs='+',
+                        help='Space-delimited list of tests to be run. If not provided, ALL tests will be run (--run_python-suite).')
     parser.add_argument('--output-directory', '-o', metavar='FULLPATH_TO_DIRECTORY_FOR_OUTPUT', dest='output_directory', type=str,
                         help='Full path to local directory for output from execution.')
     parser.add_argument('--job-name', '-j', metavar='JOB_NAME', dest='job_name', type=str,
@@ -74,10 +74,10 @@ if __name__ == "__main__":
                         help='Version of iRODS to download and install. If neither --package-version or --package-directory is specified, the latest available version is used.')
     parser.add_argument('--odbc-driver-path', metavar='PATH_TO_ODBC_DRIVER_ARCHIVE', dest='odbc_driver', type=str,
                         help='Path to the ODBC driver archive file on the local machine. If not provided, the driver will be downloaded.')
-    parser.add_argument('--target-service-instance', '-t', metavar='TARGET_SERVICE_INSTANCE', dest='target_service_instance', type=str, nargs=2, default='irods-catalog-provider 1',
-                        help='The service instance on which the command will run represented as "SERVICE_NAME SERVICE_INSTANCE_NUM".')
     parser.add_argument('--fail-fast', dest='fail_fast', action='store_true',
                         help='If indicated, exits on the first command that returns a non-zero exit code.')
+    parser.add_argument('--topology', metavar='<provider|consumer>', type=str, choices=['provider', 'consumer'], dest='topology',
+                        help='Indicates that the tests should be run in the context of a topology with specification of "from provider" or "from consumer".')
     parser.add_argument('--verbose', '-v', dest='verbosity', action='count', default=1,
                         help='Increase the level of output to stdout. CRITICAL and ERROR messages will always be printed.')
 
@@ -178,21 +178,65 @@ if __name__ == "__main__":
         logging.info('configuring iRODS containers for testing')
         irods_test_config.configure_irods_testing(docker_client, compose_project)
 
-        # Get the container on which the command is to be executed
-        logging.debug('--target-service-instance [{}]'.format(args.target_service_instance.split()))
-        target_service_name, target_service_instance = args.target_service_instance.split()
+        run_on_consumer = args.topology and args.topology == 'consumer'
 
+        target_service = context.irods_catalog_consumer_service() if run_on_consumer \
+                         else context.irods_catalog_provider_service()
+
+        # Get the container on which the command is to be executed
         container = docker_client.containers.get(
-            context.container_name(compose_project.name,
-                                   target_service_name,
-                                   target_service_instance)
+            context.container_name(compose_project.name, target_service)
         )
         logging.debug('got container to run on [{}]'.format(container.name))
 
+        # start constructing the run_tests command
+        command = ['python', 'scripts/run_tests.py']
+
+        if args.topology:
+            command.append('--topology={}'.format('resource' if run_on_consumer else 'icat'))
+
+            hostname_map = context.topology_hostnames(docker_client, compose_project)
+
+            icat_hostname = hostname_map[context.container_name(compose_project.name,
+                                         'irods-catalog-provider')]
+            hostname_1 = hostname_map[context.container_name(compose_project.name,
+                                      'irods-catalog-consumer', 1)]
+            hostname_2 = hostname_map[context.container_name(compose_project.name,
+                                      'irods-catalog-consumer', 2)]
+            hostname_3 = hostname_map[context.container_name(compose_project.name,
+                                      'irods-catalog-consumer', 3)]
+
+            command.append('--hostnames {}'.format(' '.join([icat_hostname,
+                                                             hostname_1,
+                                                             hostname_2,
+                                                             hostname_3])))
+
         # Serially execute the list of commands provided in the input
-        for command in list(args.commands):
+        if args.tests:
+            for test in list(args.tests):
+                cmd = command + ['--run_specific_test', test]
+                ec = execute.execute_command(container,
+                                             ' '.join(cmd),
+                                             user='irods',
+                                             workdir=context.irods_home(),
+                                             stream_output=True)
+
+                if ec is not 0:
+                    rc = ec
+                    last_command_to_fail = cmd
+                    logging.warning('command exited with error code [{}] [{}] [{}]'
+                                    .format(ec, cmd, container.name))
+
+                    if args.fail_fast:
+                        logging.critical('command failed [{}]'.format(cmd))
+                        break
+
+            if rc is not 0:
+                logging.error('last command to fail [{}]'.format(last_command_to_fail))
+
+        else:
             ec = execute.execute_command(container,
-                                         command,
+                                         ' '.join(command + ['--run_python_suite']),
                                          user='irods',
                                          workdir=context.irods_home(),
                                          stream_output=True)
@@ -201,14 +245,7 @@ if __name__ == "__main__":
                 rc = ec
                 last_command_to_fail = command
                 logging.warning('command exited with error code [{}] [{}] [{}]'
-                              .format(ec, command, container.name))
-
-                if args.fail_fast:
-                    logging.critical('command failed [{}]'.format(command))
-                    break
-
-        if rc is not 0:
-            logging.error('last command to fail [{}]'.format(last_command_to_fail))
+                                .format(ec, command, container.name))
 
     except Exception as e:
         logging.critical(e)
