@@ -191,3 +191,15 @@ def database_image_repo_and_tag(project_name, delimiter='-'):
     delimiter -- optional parameter which changes the delimiter for the project name to parse
     """
     return project_name.split(delimiter)[-2:]
+
+def topology_hostnames(docker_client, compose_project):
+    """Return a map of container names to hostnames for the provided Compose project as a dict.
+
+    Arguments:
+    docker_client -- docker client for interacting with the docker-compose project
+    compose_project -- compose.Project from which hostnames will be derived
+    """
+    return {
+        c.name : container_hostname(docker_client.containers.get(c.name))
+        for c in compose_project.containers()
+    }
