@@ -36,6 +36,8 @@ if __name__ == "__main__":
                         help='If indicated, skips running the iRODS setup script on the catalog service consumers.')
     parser.add_argument('--odbc-driver-path', metavar='PATH_TO_ODBC_DRIVER_ARCHIVE', dest='odbc_driver', type=str,
                         help='Path to the ODBC driver archive file on the local machine. If not provided, the driver will be downloaded.')
+    parser.add_argument('--force-recreate', dest='force_recreate', action='store_true',
+                        help='If indicated, forces recreating the iRODS catalog and database user by dropping existing database and deleting existing user. NOTE: Setup must be run again to use iRODS.')
     parser.add_argument('--verbose', '-v', dest='verbosity', action='count', default=1,
                         help='Increase the level of output to stdout. CRITICAL and ERROR messages will always be printed.')
 
@@ -83,7 +85,8 @@ if __name__ == "__main__":
             database_setup.setup_catalog(docker_client,
                                          compose_project,
                                          database,
-                                         service_instance=args.catalog_instance)
+                                         service_instance=args.catalog_instance,
+                                         force_recreate=args.force_recreate)
 
         if args.setup_csp:
             irods_setup.setup_irods_catalog_provider(docker_client,
