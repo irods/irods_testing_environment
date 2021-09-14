@@ -60,7 +60,12 @@ def get_list_of_package_paths(platform_name, package_directory, package_name_lis
 
         logging.debug('looking for packages like [{}]'.format(p_glob))
 
-        packages.append(glob.glob(p_glob)[0])
+        glob_list = glob.glob(p_glob)
+
+        if len(glob_list) is 0:
+            raise RuntimeError('no packages found [{}]'.format(p_glob))
+
+        packages.append(glob_list[0])
 
     return packages
 
@@ -234,14 +239,14 @@ if __name__ == "__main__":
     logging.debug('provided project name [{0}], docker-compose project name [{1}]'
                   .format(args.project_name, compose_project.name))
 
+    project_name = args.project_name or compose_project.name
+
     if len(compose_project.containers()) is 0:
         logging.critical(
             'no containers found for project [directory=[{0}], name=[{1}]]'.format(
             os.path.abspath(project_directory), project_name))
 
         exit(1)
-
-    project_name = args.project_name or compose_project.name
 
     logging.debug('containers on project [{}]'.format([c.name for c in compose_project.containers()]))
 
@@ -259,7 +264,6 @@ if __name__ == "__main__":
             context.database_image_repo_and_tag(project_name))
 
         logging.debug('derived database image tag [{}]'.format(database))
-
 
     if args.package_directory:
         exit(
