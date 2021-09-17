@@ -109,7 +109,7 @@ def base_image(container, tag=0):
     """
     return [image for image in
                 container.client.images.get(
-                    container.client.api.inspect_container(container.name)['Config']
+                    container.client.api.inspect_container(container.name)['Config']['Image']
                 ).history()
             if image['Id'] != '<missing>'][-1]['Tags'][tag]
 

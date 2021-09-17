@@ -24,18 +24,11 @@ if __name__ == "__main__":
     cli.add_compose_args(parser)
     cli.add_database_config_args(parser)
     cli.add_irods_package_args(parser)
-    cli.add_platform_args(parser)
 
     args = parser.parse_args()
 
     if args.package_directory and args.package_version:
         print('--package-directory and --package-version are incompatible')
-        exit(1)
-
-    if not args.project_name and not (args.database and args.platform):
-        print('One of the following sets of options is required:')
-        print('    --database-tag and --platform-tag')
-        print('    --project-name of the form (.*<platform_repo>-<platform_tag>-<database_repo>-<database_tag>)')
         exit(1)
 
     compose_project = compose.cli.command.get_project(os.path.abspath(args.project_directory),
@@ -44,8 +37,6 @@ if __name__ == "__main__":
     logs.configure(args.verbosity)
 
     project_name = args.project_name or compose_project.name
-
-    platform, database = cli.platform_and_database(args.platform, args.database, project_name)
 
     rc = 0
     last_command_to_fail = None
@@ -58,6 +49,8 @@ if __name__ == "__main__":
     containers = compose_project.up(scale_override={
         context.irods_catalog_consumer_service(): consumer_count
     })
+
+    platform, database = cli.platform_and_database(docker_client, compose_project)
 
     if args.irods_externals_package_directory:
         install.install_packages(docker_client,

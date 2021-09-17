@@ -5,22 +5,6 @@ import logging
 import context
 import textwrap
 
-def add_platform_args(parser):
-    '''Add argparse options related to database/platform specification.
-
-    Arguments:
-    parser -- argparse.ArgumentParser to augment
-    '''
-    parser.add_argument('--os-platform-image', '-p',
-                        metavar='OS_PLATFORM_IMAGE_REPO_AND_TAG',
-                        dest='platform',
-                        help='The repo:tag of the OS platform image to use')
-
-    parser.add_argument('--database-image', '-d',
-                        metavar='DATABASE_IMAGE_REPO_AND_TAG',
-                        dest='database',
-                        help='The repo:tag of the database image to use')
-
 def add_compose_args(parser):
     '''Add argparse options related to Docker Compose project.
 
@@ -89,25 +73,26 @@ def add_common_args(parser):
                             CRITICAL and ERROR messages will always be printed. \
                             Add more to see more log messages (e.g. -vvv displays DEBUG).'''))
 
-def platform_and_database(platform, database, project_name=None):
-    '''Return tuple of platform and database Docker image tags based on provided arguments.
-
-    If platform and database are not None, these will serve as the platform and database pieces
-    of the returned tuple, respectively. If neither are known, the project_name is consulted,
-    with the expectation that it is a string of the following form:
-        (.*-<platform_name>-<platform_version>-<database_name>-<database_version>)
-
-    If platform, database, and project are None, an error will occur.
+def platform_and_database(docker_client,
+                          compose_project,
+                          platform_service_name=None,
+                          platform_service_instance=1,
+                          database_service_instance=1):
+    '''Return tuple of platform and database Docker image tags, derived from the inputs.
 
     Arguments:
-    platform -- The platform Docker image tag. If unknown, None should be passed.
-    database -- The database Docker image tag. If unknown, None should be passed.
-    project_name -- The Compose project name from which the platform/database are divined.
+    docker_client -- docker client for interacting with the docker-compose project
+    compose_project -- The Compose project from which the platform/database are derived
+    platform_service_name -- service to target for platform derivation (default: provider)
+    platform_service_instance -- service instance to target for platform derivation
+    database_service_instance -- service instance to target for database derivation
     '''
     return (
-        platform or context.image_repo_and_tag_string(
-            context.platform_image_repo_and_tag(project_name)),
+        context.base_image(docker_client.containers.get(
+            context.container_name(compose_project.name,
+                platform_service_name or context.irods_catalog_provider_service(),
+                platform_service_instance))),
 
-        database or context.image_repo_and_tag_string(
-            context.database_image_repo_and_tag(project_name))
+        context.base_image(docker_client.containers.get(
+            context.irods_catalog_database_container(compose_project.name)))
     )

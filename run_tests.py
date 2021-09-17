@@ -62,12 +62,11 @@ if __name__ == "__main__":
     cli.add_compose_args(parser)
     cli.add_database_config_args(parser)
     cli.add_irods_package_args(parser)
-    cli.add_platform_args(parser)
 
     parser.add_argument('--tests',
                         metavar='TESTS',
                         nargs='+',
-                        help=texwrap.dedent('''\
+                        help=textwrap.dedent('''\
                             Space-delimited list of tests to be run. If not provided, \
                             ALL tests will be run (--run_python-suite).'''))
 
@@ -101,12 +100,6 @@ if __name__ == "__main__":
         print('--package-directory and --package-version are incompatible')
         exit(1)
 
-    if not args.project_name and not (args.database and args.platform):
-        print('One of the following sets of options is required:')
-        print('    --database-tag and --platform-tag')
-        print('    --project-name of the form (.*<platform_repo>-<platform_tag>-<database_repo>-<database_tag>)')
-        exit(1)
-
     compose_project = compose.cli.command.get_project(os.path.abspath(args.project_directory),
                                                       project_name=args.project_name)
 
@@ -124,8 +117,6 @@ if __name__ == "__main__":
 
     logs.configure(args.verbosity, os.path.join(output_directory, 'script_output.log'))
 
-    platform, database = cli.platform_and_database(args.platform, args.database, project_name)
-
     rc = 0
     last_command_to_fail = None
     containers = list()
@@ -138,6 +129,8 @@ if __name__ == "__main__":
         containers = compose_project.up(scale_override={
             context.irods_catalog_consumer_service(): consumer_count
         })
+
+        platform, database = cli.platform_and_database(docker_client, compose_project)
 
         if args.irods_externals_package_directory:
             install.install_packages(docker_client,
