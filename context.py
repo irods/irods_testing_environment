@@ -97,6 +97,23 @@ def container_name(project_name, service_name, service_instance=1):
     return '_'.join([sanitize(project_name), service_name, str(service_instance)])
 
 
+def base_image(container, tag=0):
+    """Return the base image for the specified docker.container.
+
+    The base image is the last (read: oldest) item in the history() of a Docker image that has a
+    valid ID (read: not "<missing>").
+
+    Arguments:
+    container -- docker.container from which the OS platform is to be extracted
+    tag -- The index in the list of Tags for the retrieved base Docker image (default: first)
+    """
+    return [image for image in
+                container.client.images.get(
+                    container.client.api.inspect_container(container.name)['Config']
+                ).history()
+            if image['Id'] != '<missing>'][-1]['Tags'][tag]
+
+
 def container_hostname(container):
     """Return the hostname for the specified docker.container.
 
