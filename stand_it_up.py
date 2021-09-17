@@ -18,7 +18,7 @@ if __name__ == "__main__":
 
     import cli
 
-    parser = argparse.ArgumentParser(description='Run iRODS tests in a consistent environment.')
+    parser = argparse.ArgumentParser(description='Stand up an iRODS zone.')
 
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
