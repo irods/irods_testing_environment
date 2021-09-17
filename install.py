@@ -239,20 +239,6 @@ if __name__ == "__main__":
     cli.add_compose_args(parser)
     cli.add_irods_package_args(parser)
 
-    parser.add_argument('--irods-catalog-provider-service-instance',
-                        metavar='IRODS_CATALOG_PROVIDER_INSTANCE_NUM',
-                        dest='irods_csp_instance', type=int, default=1,
-                        help=textwrap.dedent('''\
-                            The Compose service instance number of the iRODS catalog service \
-                            provider.'''))
-
-    parser.add_argument('--irods-catalog-consumer-service-instances',
-                        metavar='IRODS_CATALOG_CONSUMER_INSTANCE_NUM',
-                        dest='irods_csc_instances', type=int, nargs='+',
-                        help=textwrap.dedent('''\
-                            The Compose service instance numbers of the iRODS catalog service \
-                            consumers.'''))
-
     args = parser.parse_args()
 
     if args.package_directory and args.package_version:
