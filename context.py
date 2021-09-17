@@ -1,3 +1,8 @@
+def is_database_plugin(package_name):
+    """Return whether the provided package name is the iRODS database plugin package."""
+    return 'irods-database-plugin-' in package_name
+
+
 def irods_catalog_database_service():
     """Return name of the iRODS catalog database server docker-compose service."""
     return 'catalog'

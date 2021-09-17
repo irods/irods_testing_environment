@@ -23,6 +23,11 @@ if __name__ == "__main__":
     add_irods_args(parser)
     add_platform_args(parser)
 
+    parser.add_argument('--irods-zone-name',
+                        metavar='ZONE_NAME',
+                        dest='zone_name', default='tempZone',
+                        help='Desired name for the iRODS Zone being set up.')
+
     parser.add_argument('--catalog-service-instance',
                         metavar='CATALOG_SERVICE_INSTANCE_NUM',
                         dest='catalog_instance', type=int, default=1,
