@@ -3,6 +3,21 @@ def is_database_plugin(package_name):
     return 'irods-database-plugin-' in package_name
 
 
+def irods_externals_package_names():
+    """Return list of iRODS externals package names. For now, just a glob-able string."""
+    return ['irods-externals']
+
+
+def irods_package_names(database_name=None):
+    """Return list of iRODS packages (with database plugin if `database_name` provided)."""
+    irods_package_names = ['irods-runtime', 'irods-icommands', 'irods-server']
+
+    if database_name:
+       irods_package_names.append('irods-database-plugin-{}'.format(database_name))
+
+    return irods_package_names
+
+
 def irods_catalog_database_service():
     """Return name of the iRODS catalog database server docker-compose service."""
     return 'catalog'

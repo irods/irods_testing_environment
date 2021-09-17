@@ -38,18 +38,18 @@ def add_compose_args(parser):
                         dest='project_name',
                         help='Name of Compose project on which to install packages.')
 
-def add_package_args(parser):
-    '''Add argparse options related to to-be-installed package specification.
+def add_irods_package_args(parser):
+    '''Add argparse options related to to-be-installed iRODS packages.
 
     Arguments:
     parser -- argparse.ArgumentParser to augment
     '''
-    parser.add_argument('--package-directory',
+    parser.add_argument('--irods-package-directory',
                         metavar='PATH_TO_DIRECTORY_WITH_PACKAGES',
                         dest='package_directory',
                         help='Path to local directory which contains iRODS packages.')
 
-    parser.add_argument('--package-version',
+    parser.add_argument('--irods-package-version',
                         metavar='PACKAGE_VERSION_TO_DOWNLOAD',
                         dest='package_version',
                         help=textwrap.dedent('''\
@@ -57,7 +57,13 @@ def add_package_args(parser):
                             If neither this or --package-directory are specified, \
                             the latest available version will be installed.'''))
 
-def add_irods_args(parser):
+    parser.add_argument('--irods-externals-package-directory',
+                        metavar='PATH_TO_DIRECTORY_WITH_IRODS_EXTERNALS_PACKAGES',
+                        dest='irods_externals_package_directory',
+                        help='Path to local directory which contains iRODS externals packages.')
+
+
+def add_database_config_args(parser):
     '''Add argparse options related to setting up and configuring iRODS.
 
     Arguments:

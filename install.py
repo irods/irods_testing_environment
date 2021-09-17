@@ -72,7 +72,9 @@ def get_list_of_package_paths(platform_name, package_directory, package_name_lis
         if len(glob_list) is 0:
             raise RuntimeError('no packages found [{}]'.format(glob_str))
 
-        packages.append(glob_list[0])
+        # TODO: allow specifying a suffix or something instead of taking everything
+        for item in glob_list:
+            packages.append(item)
 
     return packages
 
@@ -160,6 +162,7 @@ def install_packages(docker_client, platform_name, package_directory, containers
 
     return rc
 
+
 def install_official_irods_packages(docker_client, platform_name, database_name, version, containers):
     def install_packages_(docker_client, docker_compose_container, packages_list, platform_name):
         # Only the iRODS containers need to have packages installed
@@ -234,13 +237,8 @@ if __name__ == "__main__":
 
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
-    cli.add_package_args(parser)
+    cli.add_irods_package_args(parser)
     cli.add_platform_args(parser)
-
-    parser.add_argument('--irods-externals-package-directory',
-                        metavar='PATH_TO_DIRECTORY_WITH_IRODS_EXTERNALS_PACKAGES',
-                        dest='irods_externals_package_directory',
-                        help='Path to local directory which contains iRODS externals packages.')
 
     parser.add_argument('--irods-catalog-provider-service-instance',
                         metavar='IRODS_CATALOG_PROVIDER_INSTANCE_NUM',
@@ -293,24 +291,21 @@ if __name__ == "__main__":
     target_containers = compose_project.containers()
 
     if args.irods_externals_package_directory:
-        install_packages(docker_client,
-                         context.image_repo(platform),
-                         os.path.abspath(args.irods_externals_package_directory),
-                         target_containers,
-                         ['irods-externals'])
+        ec = install_packages(docker_client,
+                              context.image_repo(platform),
+                              os.path.abspath(args.irods_externals_package_directory),
+                              target_containers,
+                              context.irods_externals_package_names())
+        if ec is not 0:
+            exit(ec)
 
     # TODO: allow specifying package names
-    irods_package_names = ['irods-runtime',
-                           'irods-icommands',
-                           'irods-server',
-                           'irods-database-plugin-{}'.format(context.image_repo(database))]
-
     if args.package_directory:
         exit(install_packages(docker_client,
                               context.image_repo(platform),
                               os.path.abspath(args.package_directory),
                               target_containers,
-                              irods_package_names))
+                              context.irods_package_names(context.image_repo(database))))
 
     # Even if no version was provided, we default to using the latest official release
     exit(install_official_irods_packages(docker_client,
