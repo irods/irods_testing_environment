@@ -18,10 +18,10 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Setup the iRODS catalog, catalog service provider, and catalog service consumers on a running docker-compose project.')
 
-    add_common_args(parser)
-    add_compose_args(parser)
-    add_irods_args(parser)
-    add_platform_args(parser)
+    cli.add_common_args(parser)
+    cli.add_compose_args(parser)
+    cli.add_database_config_args(parser)
+    cli.add_platform_args(parser)
 
     parser.add_argument('--irods-zone-name',
                         metavar='ZONE_NAME',

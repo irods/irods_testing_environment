@@ -52,27 +52,48 @@ def make_output_directory(dirname, basename):
 if __name__ == "__main__":
     import argparse
     import logs
+    import textwrap
 
     import cli
 
     parser = argparse.ArgumentParser(description='Run iRODS tests in a consistent environment.')
 
-    add_common_args(parser)
-    add_compose_args(parser)
-    add_irods_args(parser)
-    add_package_args(parser)
-    add_platform_args(parser)
+    cli.add_common_args(parser)
+    cli.add_compose_args(parser)
+    cli.add_database_config_args(parser)
+    cli.add_irods_package_args(parser)
+    cli.add_platform_args(parser)
 
-    parser.add_argument('--tests', metavar='TESTS', nargs='+',
-                        help='Space-delimited list of tests to be run. If not provided, ALL tests will be run (--run_python-suite).')
-    parser.add_argument('--output-directory', '-o', metavar='FULLPATH_TO_DIRECTORY_FOR_OUTPUT', dest='output_directory', type=str,
+    parser.add_argument('--tests',
+                        metavar='TESTS',
+                        nargs='+',
+                        help=texwrap.dedent('''\
+                            Space-delimited list of tests to be run. If not provided, \
+                            ALL tests will be run (--run_python-suite).'''))
+
+    parser.add_argument('--output-directory', '-o',
+                        metavar='FULLPATH_TO_DIRECTORY_FOR_OUTPUT',
+                        dest='output_directory',
                         help='Full path to local directory for output from execution.')
-    parser.add_argument('--job-name', '-j', metavar='JOB_NAME', dest='job_name', type=str,
+
+    parser.add_argument('--job-name', '-j',
+                        metavar='JOB_NAME',
+                        dest='job_name',
                         help='Name of the test run')
-    parser.add_argument('--fail-fast', dest='fail_fast', action='store_true',
-                        help='If indicated, exits on the first command that returns a non-zero exit code.')
-    parser.add_argument('--topology', metavar='<provider|consumer>', type=str, choices=['provider', 'consumer'], dest='topology',
-                        help='Indicates that the tests should be run in the context of a topology with specification of "from provider" or "from consumer".')
+
+    parser.add_argument('--fail-fast',
+                        dest='fail_fast', action='store_true',
+                        help=textwrap.dedent('''\
+                            If indicated, exits on the first test that returns a non-zero exit \
+                            code.'''))
+
+    parser.add_argument('--topology',
+                        metavar='<provider|consumer>',
+                        choices=['provider', 'consumer'], dest='topology',
+                        help=textwrap.dedent('''\
+                            Indicates that the tests should be run in the context of a \
+                            topology with option to run tests "from provider" or "from \
+                            consumer".'''))
 
     args = parser.parse_args()
 
@@ -118,18 +139,25 @@ if __name__ == "__main__":
             context.irods_catalog_consumer_service(): consumer_count
         })
 
-        # TODO: install iRODS externals packages
+        if args.irods_externals_package_directory:
+            install.install_packages(docker_client,
+                                     context.image_repo(platform),
+                                     os.path.abspath(args.irods_externals_package_directory),
+                                     containers,
+                                     context.irods_externals_package_names())
+
 
         # Install iRODS packages
         if args.package_directory:
             logging.warning('installing iRODS packages from directory [{}]'
                             .format(args.package_directory))
 
-            install.install_local_irods_packages(docker_client,
-                                                 context.image_repo(platform),
-                                                 context.image_repo(database),
-                                                 args.package_directory,
-                                                 containers)
+            install.install_packages(docker_client,
+                                     context.image_repo(platform),
+                                     os.path.abspath(args.package_directory),
+                                     containers,
+                                     context.irods_package_names(context.image_repo(database)))
+
         else:
             # Even if no version was provided, we default to using the latest official release
             logging.warning('installing official iRODS packages [{}]'
