@@ -238,7 +238,6 @@ if __name__ == "__main__":
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
     cli.add_irods_package_args(parser)
-    cli.add_platform_args(parser)
 
     parser.add_argument('--irods-catalog-provider-service-instance',
                         metavar='IRODS_CATALOG_PROVIDER_INSTANCE_NUM',
@@ -285,7 +284,7 @@ if __name__ == "__main__":
     logging.debug('containers on project [{}]'.format(
                   [c.name for c in compose_project.containers()]))
 
-    platform, database = cli.platform_and_database(args.platform, args.database, project_name)
+    platform, database = cli.platform_and_database(docker_client, compose_project)
 
     # TODO: allow specifying containers by service instance
     target_containers = compose_project.containers()

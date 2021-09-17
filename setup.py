@@ -21,7 +21,6 @@ if __name__ == "__main__":
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
     cli.add_database_config_args(parser)
-    cli.add_platform_args(parser)
 
     parser.add_argument('--irods-zone-name',
                         metavar='ZONE_NAME',
@@ -92,7 +91,7 @@ if __name__ == "__main__":
 
     project_name = args.project_name or compose_project.name
 
-    platform, database = cli.platform_and_database(args.platform, args.database, project_name)
+    platform, database = cli.platform_and_database(docker_client, compose_project)
 
     try:
         if args.setup_catalog:
