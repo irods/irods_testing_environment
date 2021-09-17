@@ -171,7 +171,7 @@ def install_official_irods_packages(docker_client, platform_name, database_name,
 
     # If a version is not provided, just install the latest
     if version:
-        packages = ['{0}={1}'.format(p, version) for p in package_name_list]
+        packages = ['{}={}'.format(p, version) for p in package_name_list]
     else:
         packages = package_name_list
 
@@ -204,21 +204,14 @@ if __name__ == "__main__":
     import argparse
     import logs
 
+    import cli
+
     parser = argparse.ArgumentParser(description='Install iRODS packages to a docker-compose project.')
-    parser.add_argument('--package-directory', metavar='PATH_TO_DIRECTORY_WITH_PACKAGES', type=str, dest='package_directory',
-                        help='Path to local directory which contains iRODS packages to be installed.')
-    parser.add_argument('--package-version', metavar='PACKAGE_VERSION_TO_DOWNLOAD', type=str, dest='package_version',
-                        help='Version of iRODS to download and install.')
-    parser.add_argument('--project-directory', metavar='PATH_TO_PROJECT_DIRECTORY', type=str, dest='project_directory',
-                        help='Path to the docker-compose project on which packages will be installed. (Default: $(pwd))')
-    parser.add_argument('--project-name', metavar='PROJECT_NAME', type=str, dest='project_name',
-                        help='Name of the docker-compose project on which to install packages.')
-    parser.add_argument('--os-platform-tag', '-p', metavar='OS_PLATFORM_IMAGE_TAG', dest='platform', type=str,
-                        help='The tag of the base Docker image to use.')
-    parser.add_argument('--database-tag', '-d', metavar='DATABASE_IMAGE_TAG', dest='database', type=str,
-                        help='The tag of the database container to use.')
-    parser.add_argument('--verbose', '-v', dest='verbosity', action='count', default=1,
-                        help='Increase the level of output to stdout. CRITICAL and ERROR messages will always be printed.')
+
+    cli.add_common_args(parser)
+    cli.add_compose_args(parser)
+    cli.add_package_args(parser)
+    cli.add_platform_args(parser)
 
     args = parser.parse_args()
 
@@ -248,27 +241,15 @@ if __name__ == "__main__":
 
         exit(1)
 
-    logging.debug('containers on project [{}]'.format([c.name for c in compose_project.containers()]))
+    logging.debug('containers on project [{}]'.format(
+                  [c.name for c in compose_project.containers()]))
 
-    platform = args.platform
-    if not platform:
-        platform = context.image_repo_and_tag_string(
-            context.platform_image_repo_and_tag(project_name)
-        )
-
-        logging.debug('derived os platform image tag [{}]'.format(platform))
-
-    database = args.database
-    if not database:
-        database = context.image_repo_and_tag_string(
-            context.database_image_repo_and_tag(project_name))
-
-        logging.debug('derived database image tag [{}]'.format(database))
+    platform, database = cli.platform_and_database(args.platform, args.database, project_name)
 
     if args.package_directory:
         exit(
             install_local_irods_packages(
-                docker.from_env(),
+                docker_client,
                 context.image_repo(platform),
                 context.image_repo(database),
                 os.path.abspath(args.package_directory),
@@ -279,7 +260,7 @@ if __name__ == "__main__":
     # Even if no version was provided, we default to using the latest official release
     exit(
         install_official_irods_packages(
-            docker.from_env(),
+            docker_client,
             context.image_repo(platform),
             context.image_repo(database),
             args.package_version,

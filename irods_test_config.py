@@ -120,8 +120,7 @@ def configure_univmss_script(docker_client, compose_project):
         make_script_executable = 'chmod 544 {}'.format(univmss_script)
 
         on_container = docker_client.containers.get(docker_compose_container.name)
-        if execute.execute_command(on_container,
-                                   chown_msiexec) is not 0:
+        if execute.execute_command(on_container, chown_msiexec) is not 0:
             raise RuntimeError('failed to change ownership to msiExecCmd_bin [{}]'
                                .format(on_container.name))
 
@@ -203,16 +202,10 @@ if __name__ == "__main__":
     import logs
 
     parser = argparse.ArgumentParser(description='Run iRODS tests in a consistent environment.')
-    parser.add_argument('--project-directory', metavar='PATH_TO_PROJECT_DIRECTORY', type=str, dest='project_directory', default='.',
-                        help='Path to the docker-compose project on which packages will be installed.')
-    parser.add_argument('--project-name', metavar='PROJECT_NAME', type=str, dest='project_name',
-                        help='Name of the docker-compose project on which to install packages.')
-    parser.add_argument('--os-platform-image', '-p', metavar='OS_PLATFORM_IMAGE_REPO_AND_TAG', dest='platform', type=str,
-                        help='The repo:tag of the OS platform image to use')
-    parser.add_argument('--database-image', '-d', metavar='DATABASE_IMAGE_REPO_AND_TAG', dest='database', type=str,
-                        help='The repo:tag of the database image to use')
-    parser.add_argument('--verbose', '-v', dest='verbosity', action='count', default=1,
-                        help='Increase the level of output to stdout. CRITICAL and ERROR messages will always be printed.')
+
+    cli.add_common_args(parser)
+    cli.add_compose_args(parser)
+    cli.add_platform_args(parser)
 
     args = parser.parse_args()
 
@@ -222,23 +215,6 @@ if __name__ == "__main__":
                                                       project_name=args.project_name)
 
     logs.configure(args.verbosity)
-
-    project_name = args.project_name or compose_project.name
-
-    platform = args.platform
-    if not platform:
-        platform = context.image_repo_and_tag_string(
-            context.platform_image_repo_and_tag(project_name)
-        )
-
-        logging.debug('derived os platform image tag [{}]'.format(platform))
-
-    database = args.database
-    if not database:
-        database = context.image_repo_and_tag_string(
-            context.database_image_repo_and_tag(project_name))
-
-        logging.debug('derived database image tag [{}]'.format(database))
 
     try:
         configure_irods_testing(docker_client, compose_project)
