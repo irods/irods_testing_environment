@@ -53,33 +53,26 @@ if __name__ == "__main__":
     import argparse
     import logs
 
+    import cli
+
     parser = argparse.ArgumentParser(description='Run iRODS tests in a consistent environment.')
+
+    add_common_args(parser)
+    add_compose_args(parser)
+    add_irods_args(parser)
+    add_package_args(parser)
+    add_platform_args(parser)
+
     parser.add_argument('--tests', metavar='TESTS', nargs='+',
                         help='Space-delimited list of tests to be run. If not provided, ALL tests will be run (--run_python-suite).')
     parser.add_argument('--output-directory', '-o', metavar='FULLPATH_TO_DIRECTORY_FOR_OUTPUT', dest='output_directory', type=str,
                         help='Full path to local directory for output from execution.')
     parser.add_argument('--job-name', '-j', metavar='JOB_NAME', dest='job_name', type=str,
                         help='Name of the test run')
-    parser.add_argument('--project-directory', metavar='PATH_TO_PROJECT_DIRECTORY', type=str, dest='project_directory', default='.',
-                        help='Path to the docker-compose project on which packages will be installed.')
-    parser.add_argument('--project-name', metavar='PROJECT_NAME', type=str, dest='project_name',
-                        help='Name of the docker-compose project on which to install packages.')
-    parser.add_argument('--os-platform-image', '-p', metavar='OS_PLATFORM_IMAGE_REPO_AND_TAG', dest='platform', type=str,
-                        help='The repo:tag of the OS platform image to use')
-    parser.add_argument('--database-image', '-d', metavar='DATABASE_IMAGE_REPO_AND_TAG', dest='database', type=str,
-                        help='The repo:tag of the database image to use')
-    parser.add_argument('--package-directory', metavar='PATH_TO_DIRECTORY_WITH_PACKAGES', type=str, dest='package_directory',
-                        help='Path to local directory which contains iRODS packages to be installed')
-    parser.add_argument('--package-version', metavar='PACKAGE_VERSION_TO_DOWNLOAD', type=str, dest='package_version',
-                        help='Version of iRODS to download and install. If neither --package-version or --package-directory is specified, the latest available version is used.')
-    parser.add_argument('--odbc-driver-path', metavar='PATH_TO_ODBC_DRIVER_ARCHIVE', dest='odbc_driver', type=str,
-                        help='Path to the ODBC driver archive file on the local machine. If not provided, the driver will be downloaded.')
     parser.add_argument('--fail-fast', dest='fail_fast', action='store_true',
                         help='If indicated, exits on the first command that returns a non-zero exit code.')
     parser.add_argument('--topology', metavar='<provider|consumer>', type=str, choices=['provider', 'consumer'], dest='topology',
                         help='Indicates that the tests should be run in the context of a topology with specification of "from provider" or "from consumer".')
-    parser.add_argument('--verbose', '-v', dest='verbosity', action='count', default=1,
-                        help='Increase the level of output to stdout. CRITICAL and ERROR messages will always be printed.')
 
     args = parser.parse_args()
 
@@ -110,20 +103,7 @@ if __name__ == "__main__":
 
     logs.configure(args.verbosity, os.path.join(output_directory, 'script_output.log'))
 
-    platform = args.platform
-    if not platform:
-        platform = context.image_repo_and_tag_string(
-            context.platform_image_repo_and_tag(project_name)
-        )
-
-        logging.debug('derived os platform image tag [{}]'.format(platform))
-
-    database = args.database
-    if not database:
-        database = context.image_repo_and_tag_string(
-            context.database_image_repo_and_tag(project_name))
-
-        logging.debug('derived database image tag [{}]'.format(database))
+    platform, database = cli.platform_and_database(args.platform, args.database, project_name)
 
     rc = 0
     last_command_to_fail = None
