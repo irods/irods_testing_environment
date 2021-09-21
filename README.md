@@ -32,9 +32,9 @@ cd projects/ubuntu-18.04/postgres-10.12
 # build images and create and run the docker-compose project
 docker-compose up -d
 # install iRODS packages on the appropriate containers
-python ../../../install.py -p ubuntu:18.04 -d postgres:10.12
+python ../../../install.py
 # setup iRODS zone with default settings (tempZone)
-python ../../../setup.py -p ubuntu:18.04 -d postgres:10.12
+python ../../../setup.py
 ```
 Try this to make sure iRODS is running:
 ```bash

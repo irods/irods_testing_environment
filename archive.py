@@ -1,6 +1,8 @@
 # grown-up imports
 import logging
 import os
+import tarfile
+import tempfile
 
 # local modules
 import execute
@@ -11,9 +13,6 @@ def create_archive(members):
     Arguments:
     members -- local files to be placed in the archive
     """
-    import tarfile
-    import tempfile
-
     # TODO: allow for path to be specified
     # TODO: allow for type of archive to be specified
     # Create a tarfile with the packages
@@ -28,6 +27,29 @@ def create_archive(members):
             f.add(m)
 
     return tarfile_path
+
+
+def extract_archive(path_to_archive, path_to_extraction=None):
+    """Extract the contents of an archive to a directory and return the path to the directory.
+
+    Arguments:
+    path_to_archive -- path to the archive file which is to be extracted
+    path_to_extraction -- path to the directory into which the contents will be extracted
+                          (if None is provided, a temporary directory is created)
+    """
+    if path_to_extraction:
+        dest = os.path.abspath(path_to_extraction)
+    else:
+        dest = os.path.join(tempfile.mkdtemp())
+
+    p = os.path.abspath(path_to_archive)
+
+    logging.info('extracting archive [{}] [{}]'.format(p, dest))
+
+    with tarfile.open(p, 'r') as f:
+        f.extractall(path=dest)
+
+    return dest
 
 
 def path_to_archive_in_container(archive_file_path_on_host, extension='.tar'):
@@ -54,3 +76,74 @@ def copy_archive_to_container(container, archive_file_path_on_host, extension='.
 
     return dir_path
 
+
+def copy_from_container(container,
+                        path_to_source_on_container,
+                        path_to_destination_directory_on_host=None,
+                        cleanup=True,
+                        extract=True):
+    """Copies a file or directory from a path inside the specified container to the local host.
+
+    This functions just like `docker cp` on the CLI if the default options are used except
+    `path_to_destination_directory_on_host` will put its contents in a temporary directory if
+    NOne is provided.
+
+    `cleanup` and `extract` can lead to unexpected results if used in certain ways, so the
+    possibilities will be described here:
+
+    cleanup     extract     return                          result
+    --------------------------------------------------------------
+    False       False       path to archive file            no extracted contents, archive file
+    False       True        path to extracted contents      extracted contents, archive file
+    True        False       path to extracted contents      no extracted contents, no archive
+    True        True        path to extracted contents      extracted contents, no archive
+
+    The cleanup == True and extract == False case results in no files and a path to something
+    which does not exist because the archive file is copied out, not extracted, and then
+    deleted. Therefore, a ValueError is raised if this combination is used. The other option
+    combinations are valid use cases.
+
+    Arguments:
+    container -- the Docker container from which the file or directory is to be copied
+    path_to_source_on_container -- path to the source file or directory inside the container
+                                   (this should be an absolute path)
+    path_to_destination_directory_on_host -- the directory into which the file or directory
+                                             will be copied on the host machine (if None is
+                                             provided, a temporary directory is created)
+    cleanup -- if True, removes the archive file after it has been extracted
+    extract -- if True, extracts the contents of the archive file after it has been copied
+    """
+    if cleanup and not extract:
+        raise ValueError(
+            'cleanup without extraction is a no-op so these are considered incompatible options'
+        )
+
+    if path_to_destination_directory_on_host:
+        dest = os.path.abspath(path_to_destination_directory_on_host)
+    else:
+        dest = os.path.join(tempfile.mkdtemp())
+
+    logging.info('copying file [{}] in container [{}] to [{}]'
+                 .format(path_to_source_on_container, container.name, dest))
+
+    archive_path = os.path.join(dest, container.name + '.tar')
+
+    try:
+        bits, _ = container.get_archive(path_to_source_on_container)
+
+        with open(archive_path, 'wb') as f:
+            for chunk in bits:
+                f.write(chunk)
+
+        if extract:
+            return extract_archive(archive_path, dest)
+
+    except Exception as e:
+        logging.error(e)
+        raise
+
+    finally:
+        if cleanup and os.path.exists(archive_path):
+            os.unlink(archive_path)
+
+    return dest if cleanup else archive_path

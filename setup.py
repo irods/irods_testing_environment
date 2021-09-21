@@ -71,50 +71,36 @@ if __name__ == "__main__":
 
     logs.configure(args.verbosity)
 
-    docker_client = docker.from_env()
+    project_directory = os.path.abspath(args.project_directory or os.getcwd())
 
-    project_directory = args.project_directory or os.getcwd()
+    ctx = context.context(docker.from_env(),
+                          compose.cli.command.get_project(
+                              project_dir=project_directory,
+                              project_name=args.project_name))
 
-    compose_project = compose.cli.command.get_project(
-        project_dir=os.path.abspath(project_directory),
-        project_name=args.project_name)
-
-    logging.debug('provided project name [{0}], docker-compose project name [{1}]'
-                  .format(args.project_name, compose_project.name))
+    logging.debug('provided project name [{}], docker-compose project name [{}]'
+                  .format(args.project_name, ctx.compose_project.name))
 
     if len(compose_project.containers()) is 0:
-        logging.critical('no containers found for project [directory=[{0}], name=[{1}]]'
-                         .format(os.path.abspath(project_directory),
-                                 args.project_name))
+        logging.critical('no containers found for project [directory=[{}], name=[{}]]'
+                         .format(os.path.abspath(project_directory), ctx.compose_project.name))
 
         exit(1)
 
-    project_name = args.project_name or compose_project.name
-
-    platform, database = cli.platform_and_database(docker_client, compose_project)
-
     try:
         if args.setup_catalog:
-            database_setup.setup_catalog(docker_client,
-                                         compose_project,
-                                         database,
+            database_setup.setup_catalog(ctx,
                                          service_instance=args.catalog_instance,
                                          force_recreate=args.force_recreate)
 
         if args.setup_csp:
-            irods_setup.setup_irods_catalog_provider(docker_client,
-                                                     compose_project,
-                                                     platform,
-                                                     database,
+            irods_setup.setup_irods_catalog_provider(ctx,
                                                      args.catalog_instance,
                                                      args.irods_csp_instance,
                                                      args.odbc_driver)
 
         if args.setup_cscs:
-            irods_setup.setup_irods_catalog_consumers(docker_client,
-                                                      compose_project,
-                                                      platform,
-                                                      database,
+            irods_setup.setup_irods_catalog_consumers(ctx,
                                                       args.irods_csp_instance,
                                                       args.irods_csc_instances)
 

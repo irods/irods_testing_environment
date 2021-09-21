@@ -4,6 +4,7 @@ import logging
 import os
 
 # local modules
+import archive
 import context
 
 # TODO: Maybe this should be some kind of builder
@@ -23,28 +24,16 @@ def configure(verbosity=1, log_filename=None):
     )
 
 def collect_logs(docker_client, containers, output_directory, logfile_path=None):
-    od = os.path.join(output_directory, 'logs')
-    if not os.path.exists(od):
-        os.makedirs(od)
-
     if not logfile_path:
         logfile_path = os.path.join(context.irods_home(), 'log')
 
     for c in containers:
-        if context.is_catalog_database_container(c): continue
+        od = os.path.join(output_directory, 'logs', c.name)
+        if not os.path.exists(od):
+            os.makedirs(od)
 
-        log_archive_path = os.path.join(od, c.name)
+        logging.info('saving log to [{}] [{}]'.format(od, c.name))
 
-        logging.info('saving log [{}]'.format(log_archive_path))
-
-        try:
-            # TODO: get server version to determine path of the log files
-            bits, _ = docker_client.containers.get(c.name).get_archive(logfile_path)
-
-            with open(log_archive_path, 'wb') as f:
-                for chunk in bits:
-                    f.write(chunk)
-
-        except Exception as e:
-            logging.error('failed to collect log [{}]'.format(log_archive_path))
-            logging.error(e)
+        archive.copy_from_container(docker_client.containers.get(c.name),
+                                    logfile_path,
+                                    path_to_destination_directory_on_host=od)

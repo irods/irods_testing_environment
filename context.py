@@ -1,3 +1,59 @@
+class context(object):
+    """Class for holding Docker/Compose environment and container context information."""
+    def __init__(self, docker_client=None, compose_project=None):
+        """Construct a context object.
+
+        Arguments:
+        self -- required for object construction
+        docker_client -- Docker client environment with which we communicate with the daemon
+        compose_project -- compose.project information
+        """
+        import docker
+        self.docker_client = docker_client or docker.from_env()
+        self.compose_project = compose_project
+        self.platform_image_tag = None
+        self.database_image_tag = None
+
+    def platform(self, platform_service_name=None, platform_service_instance=1):
+        """Return platform Docker image from the specified service in `self.compose_project`.
+
+        Arguments:
+        platform_service_name -- service to target for platform derivation (default: provider)
+        platform_service_instance -- service instance to target for platform derivation
+        """
+        if not self.platform_image_tag:
+            self.platform_image_tag = base_image(self.docker_client.containers.get(
+                container_name(self.compose_project.name,
+                    platform_service_name or irods_catalog_provider_service(),
+                    platform_service_instance)))
+
+        return self.platform_image_tag
+
+    def database(self, database_service_instance=1):
+        """Return database Docker image from the database service in `self.compose_project`.
+
+        Arguments:
+        database_service_instance -- service instance to target for database derivation
+        """
+        if not self.database_image_tag:
+            self.database_image_tag = base_image(self.docker_client.containers.get(
+                irods_catalog_database_container(self.compose_project.name)))
+
+        return self.database_image_tag
+
+    def platform_name(self):
+        """Return the repo name for the OS platform image for this Compose project."""
+        return image_repo(self.platform())
+
+    def database_name(self):
+        """Return the repo name for the database image for this Compose project."""
+        return image_repo(self.database())
+
+    def irods_containers(self):
+        """Return the set of containers running iRODS servers in this Compose project."""
+        return [c for c in self.compose_project.containers()
+                if not is_catalog_database_container(c)]
+
 def is_database_plugin(package_name):
     """Return whether the provided package name is the iRODS database plugin package."""
     return 'irods-database-plugin-' in package_name
@@ -37,6 +93,12 @@ def irods_home():
     """Return the path to the iRODS Linux user's home directory."""
     import os
     return os.path.join('/var', 'lib', 'irods')
+
+
+def server_config():
+    """Return the path to the iRODS server_config.json file."""
+    import os
+    return os.path.join('/etc', 'irods', 'server_config.json')
 
 
 def sanitize(repo_or_tag):
@@ -175,59 +237,67 @@ def image_tag(image_repo_and_tag_string):
 
 
 def irods_catalog_provider_container(project_name, service_instance=1):
+    """Return the name of the container running the iRODS CSP for the specified project.
+
+    Arguments:
+    project_name -- name of the Compose project to inspect
+    service_instance -- the service instance number for the iRODS CSP service
+    """
     return container_name(project_name, irods_catalog_provider_service(), service_instance)
 
 
 def irods_catalog_consumer_container(project_name, service_instance=1):
+    """Return the name of the container running the iRODS CSC for the specified project.
+
+    Arguments:
+    project_name -- name of the Compose project to inspect
+    service_instance -- the service instance number for the iRODS CSC service
+    """
     return container_name(project_name, irods_catalog_consumer_service(), service_instance)
 
 
 def irods_catalog_database_container(project_name, service_instance=1):
+    """Return the name of the container running the database for the specified project.
+
+    Arguments:
+    project_name -- name of the Compose project to inspect
+    service_instance -- the service instance number for the database service
+    """
     return container_name(project_name, irods_catalog_database_service(), service_instance)
 
 
 def is_catalog_database_container(container):
+    """Return True if `container` is the database service. Otherwise, False."""
     return service_name(container.name) == irods_catalog_database_service()
 
 
 def is_irods_catalog_provider_container(container):
+    """Return True if `container` is the iRODS CSP service. Otherwise, False."""
     return service_name(container.name) == irods_catalog_provider_service()
 
 
 def is_irods_catalog_consumer_container(container):
+    """Return True if `container` is the iRODS CSC service. Otherwise, False."""
     return service_name(container.name) == irods_catalog_consumer_service()
 
 
-def platform_image_repo_and_tag(project_name, delimiter='-'):
-    """Derive and return OS platform image tag from structured docker-compose project name.
-
-    NOTE: The platform name and version are expected to match the docker image name and tag
-    combination such that they can be concatenated in a colon-delimited fashion and match an
-    existing docker image tag (e.g. platform:platformversion).
+def is_irods_server_in_local_zone(container, local_zone):
+    """Return True if the iRODS Zone running in `container` matches the info in `local_zone`.
 
     Arguments:
-    project_name -- a project name which contains the OS platform name and version as its
-                    next-to-last two elements in a `delimiter`-delimited string (e.g.
-                    my-project-platform-platformversion-postgres-10.12)
-    delimiter -- optional parameter which changes the delimiter for the project name to parse
+    container -- the container to inspect (if not running iRODS, returns False)
+    local_zone -- zone information against which to compare for the container running iRODS
     """
-    return project_name.split(delimiter)[-4:-2]
+    if is_catalog_database_container(container): return False
 
+    if is_irods_catalog_provider_container(container):
+        return service_instance(container.name) is local_zone.provider_service_instance
 
-def database_image_repo_and_tag(project_name, delimiter='-'):
-    """Derive and return database image tag from structured docker-compose project name.
+    if is_irods_catalog_consumer_container(container):
+        return service_instance(container.name) in local_zone.consumer_service_instances
 
-    NOTE: The database name and version are expected to match the docker image name and tag
-    combination such that they can be concatenated in a colon-delimited fashion and match an
-    existing docker image tag (e.g. database:databaseversion).
+    raise NotImplementedError('service name is not supported [{}]'.format(container.name))
 
-    Arguments:
-    project_name -- a project name which contains the database name and version as its final
-                    two elements in a `delimiter`-delimited string (e.g.
-                    my-project-ubuntu-18.04-database-databaseversion).
-    delimiter -- optional parameter which changes the delimiter for the project name to parse
-    """
-    return project_name.split(delimiter)[-2:]
 
 def topology_hostnames(docker_client, compose_project):
     """Return a map of container names to hostnames for the provided Compose project as a dict.
