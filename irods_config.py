@@ -1,12 +1,34 @@
 # grown-up modules
 import compose.cli.command
 import docker
+import json
 import logging
 import os
 
 # local modules
 import context
 import execute
+
+def get_json_from_file(ctx, container, target_file):
+    """Return a JSON structure read out from a JSON file on the specified container.
+
+    Arguments:
+    ctx -- irods_testing_environment context which contains a docker.client and Compose project
+    container_name -- the name of the container where the target_file is hosted
+    target_file -- the path inside the container with the JSON contents to modify
+    """
+    import archive
+    import shutil
+    json_file = os.path.join(archive.copy_from_container(container, target_file),
+                             os.path.basename(target_file))
+
+    try:
+        with open(json_file) as f:
+            return json.load(f)
+
+    finally:
+        shutil.rmtree(os.path.dirname(json_file), ignore_errors=True)
+
 
 def configure_hosts_config(docker_client, compose_project):
     """Set hostname aliases for all iRODS servers in the compose project via hosts_config.json.
@@ -15,7 +37,6 @@ def configure_hosts_config(docker_client, compose_project):
     docker_client -- docker client for interacting with the docker-compose project
     compose_project -- compose.Project in which the iRODS servers are running
     """
-    import json
     def set_hostnames(docker_client, docker_compose_container, hosts_file):
         container = docker_client.containers.get(docker_compose_container.name)
 
@@ -196,6 +217,69 @@ def configure_irods_testing(docker_client, compose_project):
     configure_hosts_config(docker_client, compose_project)
 
     configure_univmss_script(docker_client, compose_project)
+
+
+def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_run):
+    """Configure iRODS Zones to run the federation test suite.
+
+    Arguments:
+    ctx -- the context object which contains the Docker client and Compose project information
+    remote_zone -- Zone info for what will be considered the "remote" in the tests
+    zone_where_tests_will_run -- Zone info for what will be considered "local" in the tests
+    """
+    container = ctx.docker_client.containers.get(
+        context.irods_catalog_provider_container(
+            ctx.compose_project.name,
+            service_instance=remote_zone.provider_service_instance
+        )
+    )
+
+    execute.execute_command(container, 'iadmin lu', user='irods')
+    execute.execute_command(container, 'iadmin lz', user='irods')
+
+    # create zonehopper user
+    username = '#'.join(['zonehopper', zone_where_tests_will_run.zone_name])
+    mkuser = 'iadmin mkuser {} rodsuser'.format(username)
+    logging.info('creating remote user [{}] [{}]'.format(mkuser, container.name))
+    if execute.execute_command(container, mkuser, user='irods') is not 0:
+        raise RuntimeError('failed to create remote user [{}] [{}]'
+                           .format(username, container.name))
+
+    execute.execute_command(container, 'iadmin lu', user='irods')
+
+    # create passthrough resource
+    ptname = 'federation_remote_passthrough'
+    make_pt = 'iadmin mkresc {} passthru'.format(ptname)
+    logging.info('creating passthrough resource [{}] [{}]'.format(make_pt, container.name))
+    if execute.execute_command(container, make_pt, user='irods') is not 0:
+        raise RuntimeError('failed to create passthrough resource [{}] [{}]'
+                           .format(ptname, container.name))
+
+    # create the storage resource
+    ufsname = 'federation_remote_unixfilesystem_leaf'
+    make_ufs = 'iadmin mkresc {} unixfilesystem {}:{}'.format(
+        ufsname, context.container_hostname(container),
+        os.path.join('/tmp', ufsname))
+    logging.info('creating unixfilesystem resource [{}] [{}]'.format(make_ufs, container.name))
+    if execute.execute_command(container, make_ufs, user='irods') is not 0:
+        raise RuntimeError('failed to create unixfilesystem resource [{}] [{}]'
+                           .format(ufsname, container.name))
+
+    # make the hierarchy
+    make_hier = 'iadmin addchildtoresc {} {}'.format(ptname, ufsname)
+    logging.info('creating hierarchy [{}] [{}]'.format(make_hier, container.name))
+    if execute.execute_command(container, make_hier, user='irods') is not 0:
+        raise RuntimeError('failed to create hierarchy [{};{}] [{}]'
+                           .format(ptname, ufsname, container.name))
+
+    # add specific query to the local zone
+    bug_3466_query = 'select alias, sqlStr from R_SPECIFIC_QUERY'
+    asq = 'iadmin asq \'{}\' {}'.format(bug_3466_query, 'bug_3466_query')
+    logging.info('creating specific query[{}] [{}]'.format(asq, container.name))
+    if execute.execute_command(container, asq, user='irods') is not 0:
+        raise RuntimeError('failed to create specific query [{}] [{}]'
+                           .format(bug_3466_query, container.name))
+
 
 if __name__ == "__main__":
     import argparse

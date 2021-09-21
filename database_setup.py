@@ -327,9 +327,7 @@ def make_strategy(database_image, container=None, database_port=None, root_passw
 
     return eval(strat_name)(container, database_port, root_password)
 
-def setup_catalog(docker_client,
-                  compose_project,
-                  database_image,
+def setup_catalog(ctx,
                   force_recreate=False,
                   database_port=None,
                   service_instance=1,
@@ -340,9 +338,7 @@ def setup_catalog(docker_client,
     """Set up the iRODS catalog on the specified database service.
 
     Arguments:
-    docker_client -- docker client for interacting with containers
-    compose_project -- compose.project in which the iRODS catalog provider is running
-    database_image -- repo:tag for the docker image of the database server
+    force_recreate -- if True, drops any database and user by the specified names
     database_port -- the port on which the database service is listening
     service_instance -- service instance number for the database service being targeted
     database_name -- name of the iRODS database (for testing, this should be 'ICAT')
@@ -351,12 +347,12 @@ def setup_catalog(docker_client,
                          'testpassword')
     root_password -- password for the root database user
     """
-    db_container = docker_client.containers.get(
-        context.irods_catalog_database_container(compose_project.name, service_instance))
+    db_container = ctx.docker_client.containers.get(
+        context.irods_catalog_database_container(ctx.compose_project.name, service_instance))
 
     logging.warning('setting up catalog [{}]'.format(db_container.name))
 
-    strat = make_strategy(database_image, db_container, database_port, root_password)
+    strat = make_strategy(ctx.database(), db_container, database_port, root_password)
 
     ec = strat.create_database(database_name, force_recreate)
     if ec is not 0:

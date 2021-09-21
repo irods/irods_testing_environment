@@ -10,6 +10,49 @@ import database_setup
 import odbc_setup
 import execute
 
+class zone_info(object):
+    """Class to hold information about an iRODS Zone and the containers running the servers."""
+    def __init__(self,
+                 zone_name='tempZone',
+                 zone_key='TEMPORARY_ZONE_KEY',
+                 negotiation_key='32_byte_server_negotiation_key__',
+                 zone_port=1247,
+                 database_service_instance=1,
+                 provider_service_instance=1,
+                 consumer_service_instances=None):
+        """Construct a zone_info object.
+
+        Arguments:
+        zone_name -- name of the iRODS Zone
+        zone_key -- zone_key for the iRODS Zone
+        negotiation_key -- 32-byte negotiation_key for the iRODS Zone
+        zone_port -- zone_port for the iRODS Zone
+        database_service_instance -- service instance for the database container for this Zone
+        provider_service_instance -- service instance for the iRODS CSP container for this Zone
+        consumer_service_instances -- service instances for the iRODS CSC containers for this
+                                      Zone (if None is provided, all running iRODS CSC service
+                                      instances are determined to be part of this Zone, per the
+                                      irods_setup interfaces. list() indicates that no iRODS
+                                      CSCs are in this zone.
+        """
+        self.zone_name = zone_name
+        self.zone_key = zone_key
+        self.negotiation_key = negotiation_key
+        self.zone_port = zone_port
+        self.database_service_instance = database_service_instance
+        self.provider_service_instance = provider_service_instance
+        self.consumer_service_instances = consumer_service_instances
+
+    def provider_hostname(self, ctx):
+        """Return hostname for the container running the iRODS CSP."""
+        return context.container_hostname(
+            ctx.docker_client.containers.get(
+                context.irods_catalog_provider_container(
+                    ctx.compose_project.name,
+                    service_instance=self.provider_service_instance)
+            )
+        )
+
 class setup_input_builder(object):
     """Builder for iRODS setup script inputs.
 
@@ -51,10 +94,30 @@ class setup_input_builder(object):
 
         self.catalog_service_provider_host = 'localhost'
 
-    def service_account(self,
-                        service_account_name='',
-                        service_account_group='',
-                        catalog_service_role=''):
+    def setup(self,
+              service_account_name= None,
+              service_account_group= None,
+              catalog_service_role= None,
+              odbc_driver= None,
+              database_server_hostname= None,
+              database_server_port= None,
+              database_name= None,
+              database_username= None,
+              database_password= None,
+              stored_passwords_salt= None,
+              zone_name= None,
+              catalog_service_provider_host= None,
+              zone_port= None,
+              parallel_port_range_begin= None,
+              parallel_port_range_end= None,
+              control_plane_port= None,
+              schema_validation_base_uri= None,
+              admin_username= None,
+              zone_key = None,
+              negotiation_key = None,
+              control_plane_key = None,
+              admin_password = None,
+              vault_directory = None):
         """Set values for the service account section of the setup script.
 
         Returns this instance of the class.
@@ -63,27 +126,6 @@ class setup_input_builder(object):
         service_account_name -- linux account that will run the iRODS server
         service_account_group -- group of the linux account that will run the iRODS server
         catalog_service_role -- determines whether this server holds a connection to the catalog
-        """
-        self.service_account_name = service_account_name
-        self.service_account_group = service_account_group
-        self.catalog_service_role = catalog_service_role
-
-        return self
-
-
-    def database_connection(self,
-                            odbc_driver='',
-                            database_server_hostname='localhost',
-                            database_server_port=5432,
-                            database_name='ICAT',
-                            database_username='irods',
-                            database_password='testpassword',
-                            stored_passwords_salt=''):
-        """Set values for the database connection section of the setup script.
-
-        Returns this instance of the class.
-
-        Arguments:
         odbc_driver -- driver on the server used to talk to the ODBC database layer
         database_server_hostname -- hostname for the database server
         database_server_port -- port on which database server listens for notifications from
@@ -92,32 +134,6 @@ class setup_input_builder(object):
         database_username -- name of the database user
         database_password -- password for the database user
         stored_passwords_salt -- obfuscates the passwords stored in the database
-        """
-        self.odbc_driver = odbc_driver
-        self.database_server_hostname = database_server_hostname
-        self.database_server_port = database_server_port
-        self.database_name = database_name
-        self.database_username = database_username
-        self.database_password = database_password
-        self.stored_passwords_salt = stored_passwords_salt
-
-        return self
-
-
-    def server_options(self,
-                       zone_name='tempZone',
-                       catalog_service_provider_host='localhost',
-                       zone_port=1247,
-                       parallel_port_range_begin=20000,
-                       parallel_port_range_end=20199,
-                       control_plane_port=1248,
-                       schema_validation_base_uri='',
-                       admin_username='rods'):
-        """Set values for the server options section of the setup script.
-
-        Returns this instance of the class.
-
-        Arguments:
         zone_name -- name of the iRODS zone
         catalog_service_provider_host -- hostname for the iRODS catalog service provider (only
                                          applicable when setting up a catalog service consumer)
@@ -129,48 +145,40 @@ class setup_input_builder(object):
         schema_validation_base_uri -- location of the schema files used to validate the server's
                                       configuration files
         admin_username -- name of the iRODS administration account
-        """
-        self.zone_name = zone_name
-        self.catalog_service_provider_host = catalog_service_provider_host
-        self.zone_port = zone_port
-        self.parallel_port_range_begin = parallel_port_range_begin
-        self.parallel_port_range_end = parallel_port_range_end
-        self.control_plane_port = control_plane_port
-        self.schema_validation_base_uri = schema_validation_base_uri
-        self.admin_username = admin_username
-
-        return self
-
-
-    def keys_and_passwords(self,
-                           zone_key = 'TEMPORARY_ZONE_KEY',
-                           negotiation_key = '32_byte_server_negotiation_key__',
-                           control_plane_key = '32_byte_server_control_plane_key',
-                           admin_password = 'rods'):
-        """Set values for the keys and passwords section of the setup script.
-
-        Arguments:
         zone_key -- secret key used in server-to-server communication
         negotiation_key -- secret key used in server-to-server communication
         control_plane_key -- secret key shared by all servers
         admin_password -- password for the iRODS administration account
-        """
-        self.zone_key = zone_key
-        self.negotiation_key = negotiation_key
-        self.control_plane_key = control_plane_key
-        self.admin_password = admin_password
-
-        return self
-
-
-    def vault_directory(self, vault_directory=''):
-        """Set value for the vault directory section of the setup script.
-
-        Arguments:
         vault_directory -- storage location of the default unixfilesystem resource created
                            during installation
         """
-        self.vault_directory = vault_directory
+        self.service_account_name = service_account_name or self.service_account_name
+        self.service_account_group = service_account_group or self.service_account_group
+        self.catalog_service_role = catalog_service_role or self.catalog_service_role
+
+        self.odbc_driver = odbc_driver or self.odbc_driver
+        self.database_server_hostname = database_server_hostname or self.database_server_hostname
+        self.database_server_port = database_server_port or self.database_server_port
+        self.database_name = database_name or self.database_name
+        self.database_username = database_username or self.database_username
+        self.database_password = database_password or self.database_password
+        self.stored_passwords_salt = stored_passwords_salt or self.stored_passwords_salt
+
+        self.zone_name = zone_name or self.zone_name
+        self.catalog_service_provider_host = catalog_service_provider_host or self.catalog_service_provider_host
+        self.zone_port = zone_port or self.zone_port
+        self.parallel_port_range_begin = parallel_port_range_begin or self.parallel_port_range_begin
+        self.parallel_port_range_end = parallel_port_range_end or self.parallel_port_range_end
+        self.control_plane_port = control_plane_port or self.control_plane_port
+        self.schema_validation_base_uri = schema_validation_base_uri or self.schema_validation_base_uri
+        self.admin_username = admin_username or self.admin_username
+
+        self.zone_key = zone_key or self.zone_key
+        self.negotiation_key = negotiation_key or self.negotiation_key
+        self.control_plane_key = control_plane_key or self.control_plane_key
+        self.admin_password = admin_password or self.admin_password
+
+        self.vault_directory = vault_directory or self.vault_directory
 
         return self
 
@@ -299,45 +307,39 @@ def setup_irods_server(container, setup_input):
         raise RuntimeError('failed to start iRODS server after setup [{}]'.format(container.name))
 
 
-def setup_irods_catalog_provider(docker_client,
-                                 compose_project,
-                                 platform_image,
-                                 database_image,
+def setup_irods_catalog_provider(ctx,
                                  database_service_instance=1,
                                  provider_service_instance=1,
-                                 odbc_driver=None):
+                                 odbc_driver=None,
+                                 **kwargs):
     """Set up iRODS catalog service provider in a docker-compose project.
 
     Arguments:
-    docker_client -- docker client for interacting with the docker-compose project
-    compose_project -- compose.project in which the iRODS catalog provider is running
-    platform_image -- repo:tag for the docker image of the platform running the iRODS servers
-    database_image -- repo:tag for the docker image of the database server
     database_service_instance -- the service instance number of the container running the
                                  database server
     provider_service_instance -- the service instance number of the container being targeted
                                  to run the iRODS catalog service provider
     odbc_driver -- path to the local archive file containing the ODBC driver
     """
-    csp_container = docker_client.containers.get(
+    csp_container = ctx.docker_client.containers.get(
         context.irods_catalog_provider_container(
-            compose_project.name, provider_service_instance
+            ctx.compose_project.name, provider_service_instance
         )
     )
 
-    odbc_setup.configure_odbc_driver(platform_image, database_image, csp_container, odbc_driver)
+    odbc_setup.configure_odbc_driver(ctx.platform(), ctx.database(), csp_container, odbc_driver)
 
-    db_container = docker_client.containers.get(
+    db_container = ctx.docker_client.containers.get(
         context.irods_catalog_database_container(
-            compose_project.name, provider_service_instance
+            ctx.compose_project.name, provider_service_instance
         )
     )
 
     setup_input = (setup_input_builder()
-        .service_account(catalog_service_role='provider')
-        .database_connection(
-            database_server_hostname=context.container_hostname(db_container),
-            database_server_port=database_setup.database_server_port(database_image)
+        .setup(catalog_service_role='provider',
+               database_server_hostname=context.container_hostname(db_container),
+               database_server_port=database_setup.database_server_port(ctx.database()),
+               **kwargs
         )
         .build()
     )
@@ -349,41 +351,36 @@ def setup_irods_catalog_provider(docker_client,
     setup_irods_server(csp_container, setup_input)
 
 
-def setup_irods_catalog_consumer(docker_client,
-                                 compose_project,
-                                 platform_image,
-                                 database_image,
+def setup_irods_catalog_consumer(ctx,
                                  provider_service_instance=1,
-                                 consumer_service_instance=1):
+                                 consumer_service_instance=1,
+                                 **kwargs):
     """Set up iRODS catalog service consumer in a docker-compose project.
 
     Arguments:
-    docker_client -- docker client for interacting with the docker-compose project
-    compose_project -- compose.project in which the iRODS catalog provider is running
-    platform_image -- repo:tag for the docker image of the platform running the iRODS servers
-    database_image -- repo:tag for the docker image of the database server
     provider_service_instance -- the service instance number of the container running the iRODS
                                  catalog service provider
     consumer_service_instance -- the service instance number of the containers being targeted
                                  to run the iRODS catalog service consumer
     """
-    csp_container = docker_client.containers.get(
+    csp_container = ctx.docker_client.containers.get(
         context.irods_catalog_provider_container(
-            compose_project.name, provider_service_instance
+            ctx.compose_project.name, provider_service_instance
         )
     )
 
     setup_input = (setup_input_builder()
-        .service_account(catalog_service_role='consumer')
-        .server_options(catalog_service_provider_host=context.container_hostname(csp_container))
+        .setup(catalog_service_role='consumer',
+               catalog_service_provider_host=context.container_hostname(csp_container),
+               **kwargs)
         .build()
     )
 
     logging.debug('input to setup script [{}]'.format(setup_input))
 
-    csc_container = docker_client.containers.get(
+    csc_container = ctx.docker_client.containers.get(
         context.irods_catalog_consumer_container(
-            compose_project.name, consumer_service_instance
+            ctx.compose_project.name, consumer_service_instance
         )
     )
 
@@ -391,36 +388,35 @@ def setup_irods_catalog_consumer(docker_client,
 
     setup_irods_server(csc_container, setup_input)
 
-def setup_irods_catalog_consumers(docker_client,
-                                  compose_project,
-                                  platform_image,
-                                  database_image,
+def setup_irods_catalog_consumers(ctx,
                                   provider_service_instance=1,
-                                  consumer_service_instances=None):
+                                  consumer_service_instances=None,
+                                  **kwargs):
     """Set up all iRODS catalog service consumers in a docker-compose project in parallel.
 
     Arguments:
-    docker_client -- docker client for interacting with the docker-compose project
-    compose_project -- compose.project in which the iRODS catalog provider is running
-    platform_image -- repo:tag for the docker image of the platform running the iRODS servers
-    database_image -- repo:tag for the docker image of the database server
     provider_service_instance -- the service instance for the iRODS catalog service provider
                                  running in this docker-compose project
     consumer_service_instances -- the service instance number of the containers being targeted
-                                  to run the iRODS catalog service consumer (if None, all
-                                  containers with the iRODS catalog service consumer service
-                                  name in the docker project will be targeted)
+                                  to run the iRODS catalog service consumer. If None is
+                                  provided, all containers with the iRODS catalog service
+                                  consumer service name in the Compose project will be
+                                  targeted. If an empty list is provided, nothing happens.
     """
     import concurrent.futures
 
-    csc_containers = compose_project.containers(
+    csc_containers = ctx.compose_project.containers(
         service_names=[context.irods_catalog_consumer_service()])
 
     if consumer_service_instances:
+        if len(consumer_service_instances) is 0:
+            logging.warning('empty list of iRODS catalog service consumers to set up')
+            return
+
         consumer_service_instances = [context.service_instance(c.name) for c in csc_containers
             if context.service_instance(c.name) in consumer_service_instances]
     else:
-        consumer_service_instances = [i + 1 for i in range(len(csc_containers))]
+        consumer_service_instances = [context.service_instance(c.name) for c in csc_containers]
 
     rc = 0
 
@@ -428,12 +424,7 @@ def setup_irods_catalog_consumers(docker_client,
         futures_to_containers = {
             executor.submit(
                 setup_irods_catalog_consumer,
-                docker_client,
-                compose_project,
-                platform_image,
-                database_image,
-                provider_service_instance,
-                instance
+                ctx, provider_service_instance, instance, **kwargs
             ): instance for instance in consumer_service_instances
         }
 
@@ -441,7 +432,7 @@ def setup_irods_catalog_consumers(docker_client,
 
         for f in concurrent.futures.as_completed(futures_to_containers):
             i = futures_to_containers[f]
-            container_name = context.irods_catalog_consumer_container(compose_project.name,
+            container_name = context.irods_catalog_consumer_container(ctx.compose_project.name,
                                                                       i + 1)
             try:
                 f.result()
@@ -456,3 +447,78 @@ def setup_irods_catalog_consumers(docker_client,
     if rc is not 0:
         raise RuntimeError('failed to set up one or more catalog service consumers, ec=[{}]'
                            .format(rc))
+
+def setup_irods_zone(ctx,
+                     force_recreate=False,
+                     provider_service_instance=1,
+                     database_service_instance=1,
+                     consumer_service_instances=None,
+                     odbc_driver=None,
+                     **kwargs):
+    """Set up an iRODS Zone with the specified settings on the specified service instances.
+
+    Arguments:
+    provider_service_instance -- the service instance for the iRODS catalog service provider
+                                 running in this docker-compose project
+    database_service_instance -- the service instance number of the container running the
+                                 database server
+    consumer_service_instances -- the service instance number of the containers being targeted
+                                  to run the iRODS catalog service consumer. If None is
+                                  provided, all containers with the iRODS catalog service
+                                  consumer service name in the Compose project will be
+                                  targeted. If an empty list is provided, nothing happens.
+    odbc_driver -- path to the local archive file containing the ODBC driver
+    """
+    logging.info('setting up catalog database [{}]'.format(database_service_instance))
+    database_setup.setup_catalog(ctx,
+                                 force_recreate=force_recreate,
+                                 service_instance=database_service_instance)
+
+    logging.info('setting up catalog provider [{}] [{}]'.format(provider_service_instance, database_service_instance))
+    setup_irods_catalog_provider(ctx,
+                                 database_service_instance=database_service_instance,
+                                 provider_service_instance=provider_service_instance,
+                                 odbc_driver=odbc_driver,
+                                 **kwargs)
+
+    logging.info('setting up catalog consumers [{}] [{}]'.format(provider_service_instance, consumer_service_instances))
+    setup_irods_catalog_consumers(ctx,
+                                  provider_service_instance=provider_service_instance,
+                                  consumer_service_instances=consumer_service_instances,
+                                  **kwargs)
+
+def setup_irods_zones(ctx,
+                      zone_info_list,
+                      odbc_driver=None):
+    import concurrent.futures
+
+    rc = 0
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures_to_containers = {
+            executor.submit(setup_irods_zone,
+                            ctx,
+                            provider_service_instance=z.provider_service_instance,
+                            database_service_instance=z.database_service_instance,
+                            consumer_service_instances=z.consumer_service_instances,
+                            odbc_driver=odbc_driver,
+                            zone_name=z.zone_name,
+                            zone_key=z.zone_key,
+                            negotiation_key=z.negotiation_key,
+            ): z for i, z in enumerate(zone_info_list)
+        }
+
+        for f in concurrent.futures.as_completed(futures_to_containers):
+            zone = futures_to_containers[f]
+            try:
+                f.result()
+                logging.debug('iRODS Zone setup completed successfully [{}]'.format(zone))
+
+            except Exception as e:
+                logging.error('exception raised while setting up iRODS Zone [{}]'.format(zone))
+                logging.error(e)
+                rc = 1
+
+    if rc is not 0:
+        raise RuntimeError('failed to set up one or more iRODS Zones, ec=[{}]'.format(rc))
+

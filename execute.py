@@ -23,7 +23,8 @@ def execute_command(container, command, user='', workdir=None, stream_output=Fal
         # Stream output from the executing command. A StopIteration exception is raised
         # by the generator returned by the docker-py API when there is no more output.
         while stream_output:
-            logging.info(next(exec_out).decode(OUTPUT_ENCODING))
+            out = next(exec_out).decode(OUTPUT_ENCODING)
+            logging.info(out)
 
     except StopIteration:
         logging.debug('done')

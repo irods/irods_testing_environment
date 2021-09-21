@@ -72,27 +72,3 @@ def add_common_args(parser):
                             Increase the level of output to stdout. \
                             CRITICAL and ERROR messages will always be printed. \
                             Add more to see more log messages (e.g. -vvv displays DEBUG).'''))
-
-def platform_and_database(docker_client,
-                          compose_project,
-                          platform_service_name=None,
-                          platform_service_instance=1,
-                          database_service_instance=1):
-    '''Return tuple of platform and database Docker image tags, derived from the inputs.
-
-    Arguments:
-    docker_client -- docker client for interacting with the docker-compose project
-    compose_project -- The Compose project from which the platform/database are derived
-    platform_service_name -- service to target for platform derivation (default: provider)
-    platform_service_instance -- service instance to target for platform derivation
-    database_service_instance -- service instance to target for database derivation
-    '''
-    return (
-        context.base_image(docker_client.containers.get(
-            context.container_name(compose_project.name,
-                platform_service_name or context.irods_catalog_provider_service(),
-                platform_service_instance))),
-
-        context.base_image(docker_client.containers.get(
-            context.irods_catalog_database_container(compose_project.name)))
-    )
