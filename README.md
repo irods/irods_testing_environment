@@ -28,7 +28,7 @@ To stand up the latest released version of iRODS in a Zone running on Ubuntu 18.
 
 ```bash
 # --project-directory defaults to `pwd`
-cd projects/ubuntu-18.04/postgres-10.12
+cd projects/ubuntu-18.04/ubuntu-18.04-postgres-10.12
 # build images and create and run the docker-compose project
 docker-compose up -d
 # install iRODS packages on the appropriate containers
@@ -39,7 +39,7 @@ python ../../../setup.py
 Try this to make sure iRODS is running:
 ```bash
 # expected output: "/tempZone/home/rods:"
-docker exec -u irods postgres-1012_irods-catalog-consumer_1 ils
+docker exec -u irods ubuntu-1804-postgres-1012_irods-catalog-consumer_1 ils
 ```
 To stop and remove the containers:
 ```bash
