@@ -9,11 +9,10 @@ import os
 import context
 import execute
 
-def get_json_from_file(ctx, container, target_file):
+def get_json_from_file(container, target_file):
     """Return a JSON structure read out from a JSON file on the specified container.
 
     Arguments:
-    ctx -- irods_testing_environment context which contains a docker.client and Compose project
     container_name -- the name of the container where the target_file is hosted
     target_file -- the path inside the container with the JSON contents to modify
     """
