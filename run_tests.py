@@ -222,8 +222,8 @@ if __name__ == "__main__":
                 context.container_name(ctx.compose_project.name,
                                        context.irods_catalog_provider_service()))
 
-            version = irods_config.get_json_from_file(ctx, remote_container, '/var/lib/irods/VERSION.json')['irods_version']
-            zone = irods_config.get_json_from_file(ctx, remote_container, context.server_config())['zone_name']
+            version = irods_config.get_json_from_file(remote_container, '/var/lib/irods/VERSION.json')['irods_version']
+            zone = irods_config.get_json_from_file(remote_container, context.server_config())['zone_name']
             host = context.topology_hostnames(ctx.docker_client, ctx.compose_project)[
                     context.irods_catalog_provider_container(ctx.compose_project.name)]
 

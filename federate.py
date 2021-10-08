@@ -91,7 +91,7 @@ def federate_zones(ctx, zone_info_list, local_zone, include_consumers=True):
 
         container = ctx.docker_client.containers.get(c.name)
 
-        server_config = irods_config.get_json_from_file(ctx, container, context.server_config())
+        server_config = irods_config.get_json_from_file(container, context.server_config())
 
         for remote_zone in zone_info_list:
             if remote_zone.zone_name == local_zone.zone_name: continue
