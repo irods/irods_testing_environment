@@ -10,8 +10,9 @@ import database_setup
 import execute
 import federate
 import install
-import irods_setup
 import irods_config
+import irods_setup
+import ssl
 
 def job_name(project_name, prefix=None):
     """Construct unique job name based on the docker-compose project name.
@@ -100,6 +101,12 @@ if __name__ == "__main__":
                         help=textwrap.dedent('''\
                             Indicates that the federation test suite should be run and so the \
                             appropriate Zones should be created and configured for testing.'''))
+
+    parser.add_argument('--use-ssl',
+                        dest='use_ssl', action='store_true',
+                        help=textwrap.dedent('''\
+                            Indicates that SSL should be configured and enabled in the test \
+                            Zone.'''))
 
     args = parser.parse_args()
 
@@ -217,13 +224,18 @@ if __name__ == "__main__":
 
             command.extend(['--hostnames', icat_hostname, hostname_1, hostname_2, hostname_3])
 
+        if args.use_ssl:
+            ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
+
+            command.append('--use_ssl')
+
         if args.use_federation:
             remote_container = ctx.docker_client.containers.get(
                 context.container_name(ctx.compose_project.name,
                                        context.irods_catalog_provider_service()))
 
-            version = irods_config.get_json_from_file(remote_container, '/var/lib/irods/VERSION.json')['irods_version']
-            zone = irods_config.get_json_from_file(remote_container, context.server_config())['zone_name']
+            version = irods_config.get_irods_version(remote_container)
+            zone = irods_config.get_irods_zone_name(remote_container)
             host = context.topology_hostnames(ctx.docker_client, ctx.compose_project)[
                     context.irods_catalog_provider_container(ctx.compose_project.name)]
 
