@@ -95,10 +95,16 @@ def irods_home():
     return os.path.join('/var', 'lib', 'irods')
 
 
+def irods_config():
+    """Return the path to the iRODS configuration directory."""
+    import os
+    return os.path.join('/etc', 'irods')
+
+
 def server_config():
     """Return the path to the iRODS server_config.json file."""
     import os
-    return os.path.join('/etc', 'irods', 'server_config.json')
+    return os.path.join(irods_config(), 'server_config.json')
 
 
 def sanitize(repo_or_tag):

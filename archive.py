@@ -7,7 +7,7 @@ import tempfile
 # local modules
 import execute
 
-def create_archive(members):
+def create_archive(members, filename='foo', extension='tar'):
     """Create a local archive file with the files in `members` and return a path to the file.
 
     Arguments:
@@ -16,7 +16,7 @@ def create_archive(members):
     # TODO: allow for path to be specified
     # TODO: allow for type of archive to be specified
     # Create a tarfile with the packages
-    tarfile_name = 'packages.tar'
+    tarfile_name = '.'.join([filename, extension])
     tarfile_path = os.path.join(tempfile.mkdtemp(), tarfile_name)
 
     logging.debug('creating tarfile [{}]'.format(tarfile_path))
@@ -44,7 +44,7 @@ def extract_archive(path_to_archive, path_to_extraction=None):
 
     p = os.path.abspath(path_to_archive)
 
-    logging.info('extracting archive [{}] [{}]'.format(p, dest))
+    logging.debug('extracting archive [{}] [{}]'.format(p, dest))
 
     with tarfile.open(p, 'r') as f:
         f.extractall(path=dest)
@@ -52,11 +52,12 @@ def extract_archive(path_to_archive, path_to_extraction=None):
     return dest
 
 
-def path_to_archive_in_container(archive_file_path_on_host, extension='.tar'):
+def path_to_archive_in_container(archive_file_path_on_host, extension='tar'):
     """Return path to directory containing extracted archive when copied to container."""
-    return '/' + os.path.basename(os.path.abspath(archive_file_path_on_host))[:len(extension) * -1]
+    return '/' + os.path.basename(os.path.abspath(archive_file_path_on_host))[:(len(extension) + 1) * -1]
 
-def copy_archive_to_container(container, archive_file_path_on_host, extension='.tar'):
+
+def copy_archive_to_container(container, archive_file_path_on_host, extension='tar'):
     """Copy local archive file into the specified container in extracted form.
 
     Returns the absolute path inside the container where the archive file was extracted.
@@ -123,8 +124,8 @@ def copy_from_container(container,
     else:
         dest = os.path.join(tempfile.mkdtemp())
 
-    logging.info('copying file [{}] in container [{}] to [{}]'
-                 .format(path_to_source_on_container, container.name, dest))
+    logging.debug('copying file [{}] in container [{}] to [{}]'
+                  .format(path_to_source_on_container, container.name, dest))
 
     archive_path = os.path.join(dest, container.name + '.tar')
 
@@ -147,3 +148,23 @@ def copy_from_container(container,
             os.unlink(archive_path)
 
     return dest if cleanup else archive_path
+
+
+def copy_files_in_container(container, sources_and_destinations):
+    """Copy files in container from source to destination.
+
+    Arguments:
+    container -- the docker.Container in which files will be copied
+    sources_and_destinations -- a list of tuples of source paths and destination paths
+    """
+    tarfile = create_archive([s for s, d in sources_and_destinations], 'ssl')
+    archive_dirname = copy_archive_to_container(container, tarfile)
+
+    for s, d in sources_and_destinations:
+        logging.debug(
+            'copying source [{}] in container to destination in container [{}] [{}]'.format(
+            s, d, container.name))
+
+        if execute.execute_command(container, 'cp {} {}'.format(s, d)) is not 0:
+            raise RuntimeError('failed to copy file src [{}] dest [{}] [{}]'
+                .format(s, d, container.name))

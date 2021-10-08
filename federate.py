@@ -91,7 +91,7 @@ def federate_zones(ctx, zone_info_list, local_zone, include_consumers=True):
 
         container = ctx.docker_client.containers.get(c.name)
 
-        server_config = irods_config.get_json_from_file(container, context.server_config())
+        server_config = json_utils.get_json_from_file(container, context.server_config())
 
         for remote_zone in zone_info_list:
             if remote_zone.zone_name == local_zone.zone_name: continue
@@ -114,11 +114,7 @@ def federate_zones(ctx, zone_info_list, local_zone, include_consumers=True):
                                        .format(container.name))
 
         # Write out the server_config.json to the iRODS server container to complete the federation
-        overwrite_server_config = 'bash -c \'echo "{}" > {}\''.format(
-            json.dumps(server_config).replace('"', '\\"'), context.server_config())
-
-        if execute.execute_command(container, overwrite_server_config) is not 0:
-            raise RuntimeError('failed to update server_config [{}]'.format(container.name))
+        json_utils.put_json_to_file(container, context.server_config(), server_config)
 
 
 def form_federation_clique(ctx, zone_info_list, include_consumers=True):

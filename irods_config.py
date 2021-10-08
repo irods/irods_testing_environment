@@ -8,26 +8,16 @@ import os
 # local modules
 import context
 import execute
+import json_utils
 
-def get_json_from_file(container, target_file):
-    """Return a JSON structure read out from a JSON file on the specified container.
+def get_irods_zone_name(container):
+    """Return the Zone name of the iRODS server running on `container`."""
+    return json_utils.get_json_from_file(container, context.server_config())['zone_name']
 
-    Arguments:
-    container_name -- the name of the container where the target_file is hosted
-    target_file -- the path inside the container with the JSON contents to modify
-    """
-    import archive
-    import shutil
-    json_file = os.path.join(archive.copy_from_container(container, target_file),
-                             os.path.basename(target_file))
-
-    try:
-        with open(json_file) as f:
-            return json.load(f)
-
-    finally:
-        shutil.rmtree(os.path.dirname(json_file), ignore_errors=True)
-
+def get_irods_version(container):
+    """Return the version of the iRODS server running on `container`."""
+    return json_utils.get_json_from_file(container,
+                                         '/var/lib/irods/VERSION.json')['irods_version']
 
 def configure_hosts_config(docker_client, compose_project):
     """Set hostname aliases for all iRODS servers in the compose project via hosts_config.json.
@@ -284,11 +274,10 @@ if __name__ == "__main__":
     import argparse
     import logs
 
-    parser = argparse.ArgumentParser(description='Run iRODS tests in a consistent environment.')
+    parser = argparse.ArgumentParser(description='Configure a running iRODS Zone for running tests.')
 
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
-    cli.add_platform_args(parser)
 
     args = parser.parse_args()
 
