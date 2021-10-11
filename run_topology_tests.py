@@ -28,6 +28,13 @@ if __name__ == "__main__":
     cli.add_irods_package_args(parser)
     cli.add_irods_test_args(parser)
 
+    parser.add_argument('run_on',
+                        metavar='<provider|consumer>',
+                        choices=['provider', 'consumer'],
+                        help=textwrap.dedent('''\
+                            Indicates whether to run tests from provider or from consumer.\
+                            '''))
+
     parser.add_argument('--use-ssl',
                         dest='use_ssl', action='store_true',
                         help=textwrap.dedent('''\
@@ -82,15 +89,33 @@ if __name__ == "__main__":
         logging.info('configuring iRODS containers for testing')
         irods_config.configure_irods_testing(ctx.docker_client, ctx.compose_project)
 
+        run_on_consumer = args.run_on == 'consumer'
+
+        target_service_name = context.irods_catalog_consumer_service() if run_on_consumer \
+                              else context.irods_catalog_provider_service()
+
         # Get the container on which the command is to be executed
         container = ctx.docker_client.containers.get(
             context.container_name(ctx.compose_project.name,
-                                   context.irods_catalog_provider_service(),
+                                   target_service_name,
                                    service_instance=1)
         )
         logging.debug('got container to run on [{}]'.format(container.name))
 
-        options = list()
+        options.append('--topology={}'.format('resource' if run_on_consumer else 'icat'))
+
+        hostname_map = context.topology_hostnames(ctx.docker_client, ctx.compose_project)
+
+        icat_hostname = hostname_map[context.container_name(ctx.compose_project.name,
+                                     context.irods_catalog_provider_service())]
+        hostname_1 = hostname_map[context.container_name(ctx.compose_project.name,
+                                  context.irods_catalog_consumer_service(), 1)]
+        hostname_2 = hostname_map[context.container_name(ctx.compose_project.name,
+                                  context.irods_catalog_consumer_service(), 2)]
+        hostname_3 = hostname_map[context.container_name(ctx.compose_project.name,
+                                  context.irods_catalog_consumer_service(), 3)]
+
+        options.extend(['--hostnames', icat_hostname, hostname_1, hostname_2, hostname_3])
 
         if args.use_ssl:
             ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)

@@ -47,6 +47,36 @@ def add_irods_package_args(parser):
                         help='Path to local directory which contains iRODS externals packages.')
 
 
+def add_irods_test_args(parser):
+    """Add argparse options related to iRODS tests and the test environment.
+
+    Arguments:
+    parser -- argparse.ArgumentParser to augment
+    """
+    parser.add_argument('--tests',
+                        metavar='TESTS',
+                        nargs='+',
+                        help=textwrap.dedent('''\
+                            Space-delimited list of tests to be run. If not provided, \
+                            ALL tests will be run (--run_python-suite).'''))
+
+    parser.add_argument('--output-directory', '-o',
+                        metavar='FULLPATH_TO_DIRECTORY_FOR_OUTPUT',
+                        dest='output_directory',
+                        help='Full path to local directory for output from execution.')
+
+    parser.add_argument('--job-name', '-j',
+                        metavar='JOB_NAME',
+                        dest='job_name',
+                        help='Name of the test run')
+
+    parser.add_argument('--fail-fast',
+                        dest='fail_fast', action='store_true',
+                        help=textwrap.dedent('''\
+                            If indicated, exits on the first test that returns a non-zero exit \
+                            code.'''))
+
+
 def add_database_config_args(parser):
     '''Add argparse options related to setting up and configuring iRODS.
 

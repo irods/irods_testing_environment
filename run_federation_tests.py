@@ -7,10 +7,11 @@ import os
 # local modules
 import context
 import execute
+import federate
 import install
 import irods_config
 import irods_setup
-import ssl
+#import ssl
 import test_utils
 
 if __name__ == "__main__":
@@ -28,11 +29,11 @@ if __name__ == "__main__":
     cli.add_irods_package_args(parser)
     cli.add_irods_test_args(parser)
 
-    parser.add_argument('--use-ssl',
-                        dest='use_ssl', action='store_true',
-                        help=textwrap.dedent('''\
-                            Indicates that SSL should be configured and enabled in the test \
-                            Zone.'''))
+    #parser.add_argument('--use-ssl',
+                        #dest='use_ssl', action='store_true',
+                        #help=textwrap.dedent('''\
+                            #Indicates that SSL should be configured and enabled in the test \
+                            #Zone.'''))
 
     args = parser.parse_args()
 
@@ -66,17 +67,31 @@ if __name__ == "__main__":
     try:
         # Bring up the services
         logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
-        consumer_count = 3
         containers = ctx.compose_project.up(scale_override={
-            context.irods_catalog_consumer_service(): consumer_count
+            context.irods_catalog_database_service(): 2,
+            context.irods_catalog_provider_service(): 2,
+            context.irods_catalog_consumer_service(): 0
         })
+
+        # The catalog consumers are only determined after the containers are running
+        zone_info_list = federate.get_info_for_zones(ctx, ['tempZone', 'otherZone'])
 
         install.install_irods_packages(ctx,
                                        externals_directory=args.irods_externals_package_directory,
                                        package_directory=args.package_directory,
                                        package_version=args.package_version)
 
-        irods_setup.setup_irods_zone(ctx, odbc_driver=args.odbc_driver)
+        for z in zone_info_list:
+            irods_setup.setup_irods_zone(ctx,
+                                         provider_service_instance=z.provider_service_instance,
+                                         database_service_instance=z.database_service_instance,
+                                         consumer_service_instances=z.consumer_service_instances,
+                                         odbc_driver=args.odbc_driver,
+                                         zone_name=z.zone_name,
+                                         zone_key=z.zone_key,
+                                         negotiation_key=z.negotiation_key)
+
+        federate.form_federation_clique(ctx, zone_info_list)
 
         # Configure the containers for running iRODS automated tests
         logging.info('configuring iRODS containers for testing')
@@ -86,24 +101,37 @@ if __name__ == "__main__":
         container = ctx.docker_client.containers.get(
             context.container_name(ctx.compose_project.name,
                                    context.irods_catalog_provider_service(),
-                                   service_instance=1)
+                                   service_instance=2)
         )
         logging.debug('got container to run on [{}]'.format(container.name))
 
         options = list()
 
-        if args.use_ssl:
-            ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
-            options.append('--use_ssl')
+        #if args.use_ssl:
+            #ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
+            #options.append('--use_ssl')
 
-        if args.tests:
-            rc = test_utils.run_specific_tests(container,
-                                               list(args.test),
-                                               options,
-                                               args.fail_fast)
+        remote_container = ctx.docker_client.containers.get(
+            context.container_name(ctx.compose_project.name,
+                                   context.irods_catalog_provider_service()))
 
-        else:
-            rc = test_utils.run_python_test_suite(container, options)
+        version = irods_config.get_irods_version(remote_container)
+        zone = irods_config.get_irods_zone_name(remote_container)
+        host = context.topology_hostnames(ctx.docker_client, ctx.compose_project)[
+                context.irods_catalog_provider_container(ctx.compose_project.name)]
+
+        options.extend(['--federation', version, zone, host])
+
+        # configure federation for testing
+        irods_config.configure_irods_federation_testing(ctx, zone_info_list[0], zone_info_list[1])
+
+        execute.execute_command(container, 'iadmin lu', user='irods')
+        execute.execute_command(container, 'iadmin lz', user='irods')
+
+        rc = run_specific_test(container,
+                               list(args.tests or 'test_federation'),
+                               options,
+                               args.fail_fast)
 
     except Exception as e:
         logging.critical(e)
