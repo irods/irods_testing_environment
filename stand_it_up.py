@@ -11,10 +11,12 @@ import execute
 import install
 import irods_setup
 import services
+import ssl
 
 if __name__ == "__main__":
     import argparse
     import logs
+    import textwrap
 
     import cli
 
@@ -24,6 +26,12 @@ if __name__ == "__main__":
     cli.add_compose_args(parser)
     cli.add_database_config_args(parser)
     cli.add_irods_package_args(parser)
+
+    parser.add_argument('--use-ssl',
+                        dest='use_ssl', action='store_true',
+                        help=textwrap.dedent('''\
+                            Indicates that SSL should be configured and enabled in the Zone.\
+                            '''))
 
     args = parser.parse_args()
 
@@ -48,3 +56,6 @@ if __name__ == "__main__":
                              package_version=args.package_version,
                              odbc_driver=args.odbc_driver,
                              consumer_count=3)
+
+    if args.use_ssl:
+        ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
