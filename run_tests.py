@@ -6,7 +6,6 @@ import os
 
 # local modules
 import context
-import execute
 import install
 import irods_config
 import irods_setup
