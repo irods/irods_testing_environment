@@ -107,6 +107,18 @@ def server_config():
     return os.path.join(irods_config(), 'server_config.json')
 
 
+def core_re():
+    """Return the path to the iRODS core.re file."""
+    import os
+    return os.path.join(irods_config(), 'core.re')
+
+
+def service_account_irods_env():
+    """Return the path to the iRODS service account client environment file."""
+    import os
+    return os.path.join(irods_home(), '.irods', 'irods_environment.json')
+
+
 def sanitize(repo_or_tag):
     """Sanitize the input from special characters rejected by docker-compose.
 
