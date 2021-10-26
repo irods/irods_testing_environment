@@ -12,6 +12,7 @@ import execute
 import install
 import irods_setup
 import irods_config
+import json_utils
 
 def make_negotiation_key(local_zone_name, remote_zone_name=''):
     negotation_key_size_in_bytes = 32
