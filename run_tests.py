@@ -97,7 +97,7 @@ if __name__ == "__main__":
 
         if args.tests:
             rc = test_utils.run_specific_tests(container,
-                                               list(args.test),
+                                               list(args.tests),
                                                options,
                                                args.fail_fast)
 

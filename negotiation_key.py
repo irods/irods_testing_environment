@@ -161,14 +161,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Run negotiation_key test.')
 
     cli.add_common_args(parser)
+    cli.add_compose_args(parser)
 
     args = parser.parse_args()
 
-    project_directory = os.path.join('projects', 'ubuntu-18.04', 'ubuntu-18.04-postgres-10.12')
-
     docker_client = docker.from_env()
 
-    compose_project = compose.cli.command.get_project(os.path.abspath(project_directory))
+    project_directory = os.path.abspath(args.project_directory or os.getcwd())
+
+    compose_project = compose.cli.command.get_project(project_dir=project_directory,
+                                                      project_name=args.project_name)
 
     logs.configure(args.verbosity)
 

@@ -102,6 +102,8 @@ if __name__ == "__main__":
         )
         logging.debug('got container to run on [{}]'.format(container.name))
 
+        options = list()
+
         options.append('--topology={}'.format('resource' if run_on_consumer else 'icat'))
 
         hostname_map = context.topology_hostnames(ctx.docker_client, ctx.compose_project)
@@ -123,7 +125,7 @@ if __name__ == "__main__":
 
         if args.tests:
             rc = test_utils.run_specific_tests(container,
-                                               list(args.test),
+                                               list(args.tests),
                                                options,
                                                args.fail_fast)
 

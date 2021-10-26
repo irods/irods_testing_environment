@@ -128,10 +128,10 @@ if __name__ == "__main__":
         execute.execute_command(container, 'iadmin lu', user='irods')
         execute.execute_command(container, 'iadmin lz', user='irods')
 
-        rc = run_specific_test(container,
-                               list(args.tests or 'test_federation'),
-                               options,
-                               args.fail_fast)
+        rc = test_utils.run_specific_tests(container,
+                                           [args.tests or 'test_federation'],
+                                           options,
+                                           args.fail_fast)
 
     except Exception as e:
         logging.critical(e)
