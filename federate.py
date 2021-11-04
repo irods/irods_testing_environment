@@ -17,8 +17,10 @@ import json_utils
 def make_negotiation_key(local_zone_name, remote_zone_name=''):
     negotation_key_size_in_bytes = 32
     filler = '_' * negotation_key_size_in_bytes
-    prefix = '_'.join([local_zone_name, remote_zone_name])
-    return prefix + filler[:negotation_key_size_in_bytes - len(prefix)]
+    # TODO: need predictable way to generate unique keys
+    #prefix = '_'.join([local_zone_name, remote_zone_name])
+    #return prefix + filler[:negotation_key_size_in_bytes - len(prefix)]
+    return filler
 
 
 def make_zone_key(zone_name):
