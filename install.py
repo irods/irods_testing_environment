@@ -46,6 +46,15 @@ def package_filename_extension(platform):
         raise RuntimeError('unsupported platform [{}]'.format(platform))
 
 
+def package_version_joinery(platform):
+    if 'centos' in platform:
+        return '-'
+    elif 'ubuntu' in platform:
+        return '='
+    else:
+        raise RuntimeError('unsupported platform [{}]'.format(platform))
+
+
 def get_list_of_package_paths(platform_name, package_directory, package_name_list=None):
     import glob
 
@@ -193,7 +202,7 @@ def install_official_irods_packages(ctx, version, containers):
 
     # If a version is not provided, just install the latest
     if version:
-        packages = ['{}={}'.format(p, version)
+        packages = ['{}{}{}'.format(p, package_version_joinery(ctx.platform_name()), version)
                     for p in context.irods_package_names(ctx.database_name())]
     else:
         packages = context.irods_package_names(ctx.database_name())
