@@ -274,6 +274,8 @@ if __name__ == "__main__":
     import argparse
     import logs
 
+    import cli
+
     parser = argparse.ArgumentParser(description='Configure a running iRODS Zone for running tests.')
 
     cli.add_common_args(parser)
