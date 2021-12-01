@@ -63,12 +63,15 @@ def add_irods_test_args(parser):
     parser.add_argument('--output-directory', '-o',
                         metavar='FULLPATH_TO_DIRECTORY_FOR_OUTPUT',
                         dest='output_directory',
-                        help='Full path to local directory for output from execution.')
+                        help='Full path to local directory for output from execution. \
+                              Individual job runs will appear as subdirectories in this \
+                              directory. Defaults to temporary directory.')
 
     parser.add_argument('--job-name', '-j',
                         metavar='JOB_NAME',
                         dest='job_name',
-                        help='Name of the test run')
+                        help='Name of the directory where output from a specific job will \
+                              appear within the output directory. Defaults to a UUID.')
 
     parser.add_argument('--fail-fast',
                         dest='fail_fast', action='store_true',
