@@ -40,8 +40,8 @@ def configure_hosts_config(docker_client, compose_project):
                 {
                     'address_type': 'local',
                     'addresses': [
-                        {'address': context.container_ip(container)},
                         {'address': context.container_hostname(container)},
+                        {'address': context.container_ip(container)},
                         {'address': alias}
                     ]
                 }
