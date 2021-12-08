@@ -74,7 +74,7 @@ def make_mysql_odbcinst_ini(csp_container, container_odbc_driver_dir):
     execute.execute_command(csp_container, 'cat {}'.format(odbcinst_ini_path))
 
 
-def configure_mysql_odbc_driver(csp_container, odbc_driver, extension='.tar.gz'):
+def configure_mysql_odbc_driver(csp_container, odbc_driver, extension='tar.gz'):
     """Configure ODBC driver for mysql and return the ODBC driver path.
 
     Argument:
