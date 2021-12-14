@@ -47,3 +47,41 @@ To stop and remove the containers:
 docker-compose down
 ```
 Note: Compose project names default to the name of the directory which contains the `docker-compose.yml` project file. You may wish to specify a project name using `--project-name` in order to give your images and running containers a more recognizable name.
+
+## Run iRODS Tests
+
+There are 3 main ways to run the iRODS test suite:
+ - Core tests: assumes CSP is the only server
+ - Topology tests: assumes 1 CSP and 3 CSCs
+ - Federation tests: assumes 2 federated CSPs
+
+In order to run the test suite against, for instance, Ubuntu 18.04 using a Postgres 10.12 database to host the catalog, run the following:
+```bash
+# --project-directory defaults to `pwd`
+cd projects/ubuntu-18.04/ubuntu-18.04-postgres-10.12
+# run tests using latest officially released packages
+python run_tests.py
+```
+
+To run a specific test, use the `--tests` option. If none is provided (as shown above), the entire python test suite will be run. Note: The python test suite can take 8-10 hours to run.
+```bash
+python run_tests.py --tests test_resource_types.Test_Resource_Compound
+```
+
+For topology tests:
+```bash
+python run_topology_tests.py provider
+```
+The `provider` option means that the test script will be running on the CSP. To run tests from the CSC, use `consumer` instead. The same options available to `run_tests.py` apply here as well.
+
+Running the federation test suite is very similar. Note: The federation test suite is a separate python `unittest` file, so any `--tests` option used should be a subset of `test_federation`.
+```bash
+# With no `--tests` option provided, it is equivalent to just running test_federation
+python run_federation_tests.py --tests test_federation.Test_ICommands.test_iquest__3466
+```
+
+## Using an ODBC driver
+
+To use the MySQL database plugin, a MySQL ODBC driver file must be provided for use in the server. The scripts have the `--odbc-driver-path` option to specify an existing ODBC driver on the host machine.
+
+If no `--odbc-driver-path` is provided, the appropriate ODBC driver for the given database version and OS will be downloaded to a temporary location on the host machine's local filesystem.
