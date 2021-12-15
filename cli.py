@@ -47,6 +47,31 @@ def add_irods_package_args(parser):
                         help='Path to local directory which contains iRODS externals packages.')
 
 
+def add_irods_plugin_args(parser):
+    """Add argparse options related to iRODS plugin test hooks.
+
+    Arguments:
+    parser -- argparse.ArgumentParser to augment
+    """
+    parser.add_argument('plugin_name',
+                        metavar='PLUGIN_GIT_REPOSITORY_NAME',
+                        help='Repository name for the plugin being installed.')
+
+    parser.add_argument('--plugin-package-directory',
+                        metavar='PATH_TO_DIRECTORY_WITH_PACKAGES',
+                        dest='plugin_package_directory',
+                        help='Path to local directory which contains iRODS plugin packages.')
+
+    # TODO: implement support
+    #parser.add_argument('--plugin-package-version',
+                        #metavar='PACKAGE_VERSION_TO_DOWNLOAD',
+                        #dest='plugin_package_version',
+                        #help=textwrap.dedent('''\
+                            #Version of official iRODS plugin packages to download and install. \
+                            #If neither this or --plugin-package-directory are specified, \
+                            #the latest available version will be installed.'''))
+
+
 def add_irods_test_args(parser):
     """Add argparse options related to iRODS tests and the test environment.
 

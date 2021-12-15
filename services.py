@@ -1,5 +1,6 @@
 # grown-up modules
 import logging
+import os
 
 # local modules
 import context
@@ -35,3 +36,38 @@ def create_topology(ctx,
                                    package_version=package_version)
 
     irods_setup.setup_irods_zone(ctx, odbc_driver=odbc_driver)
+
+
+def clone_repository_to_container(container,
+                                  repo_name,
+                                  url_base='https://github.com/irods',
+                                  branch=None,
+                                  destination_directory=None):
+    """Clone the specified git repository to the specified container.
+
+    Arguments:
+    container -- target container on which the test script will run
+    repo_name -- name of the git repo
+    url_base -- base of the git URL from which the repository will be cloned
+    branch -- branch name to checkout in the cloned repository
+    destination_directory -- path on local filesystem to which git repository will be cloned
+    """
+    import tempfile
+    from git import Repo
+
+    import archive
+
+    url = os.path.join(url_base, '.'.join([repo_name, 'git']))
+
+    repo_path = os.path.abspath(os.path.join(
+                    destination_directory or tempfile.mkdtemp(),
+                    repo_name))
+
+    Repo().clone_from(url=url, to_path=repo_path, branch=branch)
+
+    archive.copy_archive_to_container(container,
+                                      archive.create_archive(
+                                            [os.path.abspath(repo_path)], repo_name))
+
+    return repo_path
+
