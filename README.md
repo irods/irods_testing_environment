@@ -60,19 +60,19 @@ In order to run the test suite against, for instance, Ubuntu 18.04 using a Postg
 # --project-directory defaults to `pwd`
 cd projects/ubuntu-18.04/ubuntu-18.04-postgres-10.12
 # run tests using latest officially released packages
-python run_tests.py
+python run_core_tests.py
 ```
 
 To run a specific test, use the `--tests` option. If none is provided (as shown above), the entire python test suite will be run. Note: The python test suite can take 8-10 hours to run.
 ```bash
-python run_tests.py --tests test_resource_types.Test_Resource_Compound
+python run_core_tests.py --tests test_resource_types.Test_Resource_Compound
 ```
 
 For topology tests:
 ```bash
 python run_topology_tests.py provider
 ```
-The `provider` option means that the test script will be running on the CSP. To run tests from the CSC, use `consumer` instead. The same options available to `run_tests.py` apply here as well.
+The `provider` option means that the test script will be running on the CSP. To run tests from the CSC, use `consumer` instead. The same options available to `run_core_tests.py` apply here as well.
 
 Running the federation test suite is very similar. Note: The federation test suite is a separate python `unittest` file, so any `--tests` option used should be a subset of `test_federation`.
 ```bash
