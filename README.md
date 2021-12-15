@@ -13,13 +13,17 @@ The following database Docker image tags are currently supported:
 
 To add support for a new OS platform/version or database type/version, simply add a new Compose project like those under `projects` and point the scripts at it.
 
+NOTE: iRODS 4.2.x is the only supported series for testing at this time. 4.3.x and others will be added in the future.
+
 ## Quick Start
+
+A recent-ish version of docker, python, and git are required to run this project.
 
 It is *highly recommended* to use a `virtualenv` python virtual environment. You can set one up which installs the Minimum Requirements (see above) like this:
 ```bash
 virtualenv -p python3 ~/irods_testing_environment
 source ~/irods_testing_environment/bin/activate
-pip install docker-compose
+pip install docker-compose GitPython
 pip freeze
 ```
 Compare the output to `requirements.txt`.
@@ -78,6 +82,35 @@ Running the federation test suite is very similar. Note: The federation test sui
 ```bash
 # With no `--tests` option provided, it is equivalent to just running test_federation
 python run_federation_tests.py --tests test_federation.Test_ICommands.test_iquest__3466
+```
+
+## Run iRODS Plugin Tests
+
+For purposes of CI, official iRODS Plugins have followed a convention of providing a "test hook" which will install the appropriate packages and run the appropriate test suite. If a test hook is provided in the prescribed way, any iRODS plugin test suite can be run in the testing environment.
+
+The test hooks generally have the following requirements:
+    - `irods_python_ci_utilities` is installed as a pip package
+    - Path to local directory with built plugin packages (passed by `--built_packages_root_directory`)
+        - Inside the root directory, the `os_specific_directory` must exist and contain the appropriate packages
+        - The `os_specific_directory` must be named like this (image tag -> directory name):
+            - ubuntu:16.04  ->  `Ubuntu_16`
+            - ubuntu:18.04  ->  `Ubuntu_18`
+            - centos:7      ->  `Centos linux_7`
+    - iRODS server is already installed and setup
+
+Your provided built packages should be in an identical directory or symlink following the naming convention above.
+
+In the future, these requirements will be relaxed so that creating a build-and-test workflow will not be as difficult.
+
+### How to run a test hook
+
+We will use the curl microservice plugin as an example. The curl microservice plugin package is assumed to have been built for the target platform. The last argument provided to the script is the name of the git repository from which the test hook will be fetched.
+
+```bash
+# --project-directory defaults to `pwd`
+cd projects/ubuntu-18.04/ubuntu-18.04-postgres-10.12
+# the built packages should be in a directory as described above
+python run_plugin_tests.py --plugin-package-directory /path/to/curl-microservice-plugin irods_microservice_plugins_curl
 ```
 
 ## Using an ODBC driver

@@ -1,10 +1,14 @@
 # grown-up modules
 import logging
 import os
+import tempfile
 
 # local modules
+import archive
 import context
 import execute
+import install
+import services
 
 def path_to_run_tests_script():
     """Return the path to the script which runs the tests."""
@@ -48,7 +52,14 @@ def make_output_directory(dirname, basename):
 
 
 def run_specific_tests(container, tests, options=None, fail_fast=True):
-    # start constructing the run_tests command
+    """Run a set of tests from the python test suite for iRODS.
+
+    Arguments:
+    container -- target container on which the test script will run
+    tests -- a list of strings of the tests to be run
+    options -- list of strings representing script options to pass to the run_tests.py script
+    fail_fast -- if True, stop running after first failure; else, runs all tests
+    """
     command = ['python', path_to_run_tests_script()]
 
     if options: command.extend(options)
@@ -80,7 +91,12 @@ def run_specific_tests(container, tests, options=None, fail_fast=True):
 
 
 def run_python_test_suite(container, options=None):
-    # start constructing the run_tests command
+    """Run the entire python test suite for iRODS.
+
+    Arguments:
+    container -- target container on which the test script will run
+    options -- list of strings representing script options to pass to the run_tests.py script
+    """
     command = ['python', path_to_run_tests_script(), '--run_python_suite']
 
     if options: command.extend(options)
@@ -89,6 +105,36 @@ def run_python_test_suite(container, options=None):
                                  ' '.join(command),
                                  user='irods',
                                  workdir=context.irods_home(),
+                                 stream_output=True)
+
+    if ec is not 0:
+        logging.warning('command exited with error code [{}] [{}] [{}]'
+                        .format(ec, command, container.name))
+
+    return ec
+
+
+def run_test_hook(container, repo_name, branch=None, options=None):
+    """Run the test hook from the specified git repository.
+
+    Arguments:
+    container -- target container on which the test script will run
+    repo_name -- name of the git repo
+    options -- list of strings representing script options to pass to the run_tests.py script
+    """
+    install.install_pip_package_from_repo(container, 'irods_python_ci_utilities')
+
+    repo_path = services.clone_repository_to_container(container, repo_name, branch=branch)
+
+    # TODO: option?
+    path_to_test_hook = os.path.join(repo_path,
+                                     'irods_consortium_continuous_integration_test_hook.py')
+    command = ['python', path_to_test_hook]
+
+    if options: command.extend(options)
+
+    ec = execute.execute_command(container,
+                                 ' '.join(command),
                                  stream_output=True)
 
     if ec is not 0:

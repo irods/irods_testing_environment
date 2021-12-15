@@ -8,6 +8,7 @@ import os
 import archive
 import context
 import execute
+import services
 
 def platform_update_command(platform):
     if 'centos' in platform:
@@ -53,6 +54,27 @@ def package_version_joinery(platform):
         return '='
     else:
         raise RuntimeError('unsupported platform [{}]'.format(platform))
+
+
+def install_pip_package_from_repo(container,
+                                  repo_name,
+                                  url_base='https://github.com/irods',
+                                  branch=None):
+    """Installs a pip package from a git repository cloned from the specified location.
+
+    Arguments:
+    container -- container on which pip packages are to be installed
+    repo_name -- name of the git repository to clone
+    branch -- branch to checkout in cloned git repository
+    """
+    repo_path = services.clone_repository_to_container(container,
+                                                       repo_name,
+                                                       url_base=url_base,
+                                                       branch=branch)
+    ec = execute.execute_command(container, 'pip install -e {}'.format(repo_path))
+    if ec is not 0:
+        raise RuntimeError('Failed to install pip package [{}] [{}]'
+                           .format(repo_path, container.name))
 
 
 def get_list_of_package_paths(platform_name, package_directory, package_name_list=None):
@@ -172,10 +194,6 @@ def install_packages(ctx, package_directory, containers, package_name_list=None)
 
 def install_official_irods_packages(ctx, version, containers):
     def install_packages_(ctx, docker_compose_container, packages_list):
-        # Only the iRODS containers need to have packages installed
-        if context.is_catalog_database_container(docker_compose_container):
-            return 0
-
         container = ctx.docker_client.containers.get(docker_compose_container.name)
 
         package_list = ' '.join([p for p in packages_list if not context.is_database_plugin(p) or context.is_irods_catalog_provider_container(container)])
