@@ -120,15 +120,40 @@ def run_test_hook(container, repo_name, branch=None, options=None):
     Arguments:
     container -- target container on which the test script will run
     repo_name -- name of the git repo
+    branch -- name of the branch to checkout in cloned git repo
     options -- list of strings representing script options to pass to the run_tests.py script
     """
-    install.install_pip_package_from_repo(container, 'irods_python_ci_utilities')
-
     repo_path = services.clone_repository_to_container(container, repo_name, branch=branch)
 
     # TODO: option?
     path_to_test_hook = os.path.join(repo_path,
                                      'irods_consortium_continuous_integration_test_hook.py')
+
+    return run_test_hook_file_in_container(container, path_to_test_hook, options)
+
+
+def run_test_hook_file(container, path_to_test_hook_on_host, options=None):
+    """Run the local test hook in the container.
+
+    Arguments:
+    container -- target container on which the test hook will run
+    path_to_test_hook_on_host -- local filesystem path on host machine to test hook
+    options -- list of strings representing script options to pass to the run_tests.py script
+    """
+    f = os.path.abspath(path_to_test_hook_on_host)
+    archive.copy_archive_to_container(container, archive.create_archive([f]))
+    return run_test_hook_file_in_container(container, f, options)
+
+def run_test_hook_file_in_container(container, path_to_test_hook, options=None):
+    """Run the test hook at the specified path in the container.
+
+    Arguments:
+    container -- target container on which the test script will run
+    path_to_test_hook -- path in the container for the test hook file
+    options -- list of strings representing script options to pass to the run_tests.py script
+    """
+    install.install_pip_package_from_repo(container, 'irods_python_ci_utilities')
+
     command = ['python', path_to_test_hook]
 
     if options: command.extend(options)

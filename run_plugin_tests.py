@@ -34,6 +34,11 @@ parser.add_argument('--leak-containers',
                     action='store_false', dest='cleanup_containers',
                     help='If indicated, the containers will not be torn down.')
 
+parser.add_argument('--test-hook-path',
+                    metavar='PATH_TO_TEST_HOOK_FILE',
+                    dest='test_hook',
+                    help='Path to local test hook file to run.')
+
 args = parser.parse_args()
 
 if args.package_directory and args.package_version:
@@ -99,10 +104,13 @@ try:
     options = ['--output_root_directory', output_directory,
                '--built_packages_root_directory', plugin_package_directory]
 
-    rc = test_utils.run_test_hook(container,
-                                  args.plugin_name,
-                                  branch='4-2-stable',
-                                  options=options)
+    if args.test_hook:
+        rc = test_utils.run_test_hook_file(container, args.test_hook, options)
+    else:
+        rc = test_utils.run_test_hook(container,
+                                      args.plugin_name,
+                                      branch='4-2-stable',
+                                      options=options)
 
 except Exception as e:
     logging.critical(e)
