@@ -10,6 +10,7 @@ RUN apt-get update && \
         rsyslog \
         netcat \
         gnupg \
+        lsb-release \
     && \
     pip install xmlrunner
 
