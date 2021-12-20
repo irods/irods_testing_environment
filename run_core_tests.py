@@ -65,7 +65,7 @@ if __name__ == "__main__":
     try:
         # Bring up the services
         logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
-        consumer_count = 3
+        consumer_count = 0
         containers = ctx.compose_project.up(scale_override={
             context.irods_catalog_consumer_service(): consumer_count
         })

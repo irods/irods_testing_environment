@@ -70,7 +70,7 @@ try:
     if args.do_setup:
         # Bring up the services
         logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
-        consumer_count = 3
+        consumer_count = 0
         # TODO: may need to extend container privileges to allow for mungefs, etc.
         containers = ctx.compose_project.up(scale_override={
             context.irods_catalog_consumer_service(): consumer_count
