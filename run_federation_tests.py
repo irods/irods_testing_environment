@@ -129,7 +129,7 @@ if __name__ == "__main__":
         execute.execute_command(container, 'iadmin lz', user='irods')
 
         rc = test_utils.run_specific_tests(container,
-                                           [args.tests or 'test_federation'],
+                                           args.tests or ['test_federation'],
                                            options,
                                            args.fail_fast)
 
