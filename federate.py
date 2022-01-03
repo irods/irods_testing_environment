@@ -6,20 +6,20 @@ import logging
 import os
 
 # local modules
-import context
-import database_setup
-import execute
-import install
-import irods_setup
-import irods_config
-import json_utils
+from irods_testing_environment import context
+from irods_testing_environment import database_setup
+from irods_testing_environment import execute
+from irods_testing_environment import install
+from irods_testing_environment import irods_setup
+from irods_testing_environment import irods_config
+from irods_testing_environment import json_utils
 
 if __name__ == "__main__":
     import argparse
-    import logs
     import textwrap
 
     import cli
+    from irods_testing_environment import logs
 
     parser = argparse.ArgumentParser(description='Stand up and federate two or more iRODS zones.')
 

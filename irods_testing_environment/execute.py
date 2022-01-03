@@ -5,7 +5,7 @@ import logging
 import os
 
 # local modules
-import context
+from . import context
 
 def execute_command(container, command, user='', workdir=None, stream_output=False):
     OUTPUT_ENCODING = 'utf-8'

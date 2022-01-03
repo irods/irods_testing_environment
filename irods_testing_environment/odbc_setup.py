@@ -4,9 +4,9 @@ import os
 import textwrap
 
 # local modules
-import archive
-import context
-import execute
+from . import archive
+from . import context
+from . import execute
 
 def configure_postgres_odbc_driver(csp_container, odbc_driver):
     """Configure ODBC driver for postgres.

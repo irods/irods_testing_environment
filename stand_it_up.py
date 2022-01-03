@@ -5,20 +5,16 @@ import logging
 import os
 
 # local modules
-import context
-import database_setup
-import execute
-import install
-import irods_setup
-import services
-import ssl
+from irods_testing_environment import context
+from irods_testing_environment import services
+from irods_testing_environment import ssl
 
 if __name__ == "__main__":
     import argparse
-    import logs
     import textwrap
 
     import cli
+    from irods_testing_environment import logs
 
     parser = argparse.ArgumentParser(description='Stand up an iRODS zone.')
 

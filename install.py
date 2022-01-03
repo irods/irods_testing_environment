@@ -5,10 +5,11 @@ import logging
 import os
 
 # local modules
-import archive
-import context
-import execute
-import services
+from irods_testing_environment import archive
+from irods_testing_environment import context
+from irods_testing_environment import execute
+from irods_testing_environment.install import install
+from irods_testing_environment import services
 
 if __name__ == "__main__":
     import argparse
@@ -48,7 +49,7 @@ if __name__ == "__main__":
 
         exit(1)
 
-    exit(install_irods_packages(ctx,
+    exit(install.make_installer(ctx.platform_name()).install_irods_packages(ctx,
                                 externals_directory=args.irods_externals_package_directory,
                                 package_directory=args.package_directory,
                                 package_version=args.package_version)

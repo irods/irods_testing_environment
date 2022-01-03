@@ -3,19 +3,20 @@ import argparse
 import compose.cli.command
 import docker
 import logging
-import logs
 import os
 import textwrap
 
 # local modules
-import archive
+from irods_testing_environment import archive
+from irods_testing_environment import context
+from irods_testing_environment import irods_config
+from irods_testing_environment import irods_setup
+from irods_testing_environment import logs
+from irods_testing_environment import ssl
+from irods_testing_environment import test_utils
+from irods_testing_environment.install import install
+
 import cli
-import context
-import install
-import irods_config
-import irods_setup
-import ssl
-import test_utils
 
 parser = argparse.ArgumentParser(description='Run iRODS plugin test hooks in a consistent environment.')
 
@@ -76,10 +77,11 @@ try:
             context.irods_catalog_consumer_service(): consumer_count
         })
 
-        install.install_irods_packages(ctx,
-                                       externals_directory=args.irods_externals_package_directory,
-                                       package_directory=args.package_directory,
-                                       package_version=args.package_version)
+        install.make_installer(ctx.platform_name()).install_irods_packages(
+            ctx,
+            externals_directory=args.irods_externals_package_directory,
+            package_directory=args.package_directory,
+            package_version=args.package_version)
 
         irods_setup.setup_irods_zone(ctx, odbc_driver=args.odbc_driver)
 

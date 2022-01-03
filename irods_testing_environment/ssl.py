@@ -9,9 +9,9 @@ from cryptography.hazmat.primitives.asymmetric import dh, rsa
 from cryptography.x509.oid import NameOID
 
 # local modules
-import context
-import execute
-import json_utils
+from . import context
+from . import execute
+from . import json_utils
 
 def generate_ssl_certificate_key(directory=None):
     logging.info('generating private key for signing certificate')
@@ -96,7 +96,7 @@ def configure_ssl_on_server(container,
     path_to_cert_file_on_host -- path to file on host containing the self-signed cert
     path_to_dhparams_file_on_host -- path to file on host containing the dhparams PEM file
     """
-    import archive
+    from . import archive
 
     key_file = os.path.join(context.irods_config(), 'server.key')
     dhparams_file = os.path.join(context.irods_config(), 'dhparams.pem')
