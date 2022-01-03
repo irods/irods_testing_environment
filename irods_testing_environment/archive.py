@@ -5,7 +5,7 @@ import tarfile
 import tempfile
 
 # local modules
-import execute
+from . import execute
 
 def create_archive(members, filename='foo', extension='tar'):
     """Create a local archive file with the files in `members` and return a path to the file.

@@ -1,9 +1,9 @@
 # grown-up modules
 import logging
+import textwrap
 
 # local modules
-import context
-import textwrap
+from irods_testing_environment import context
 
 def add_compose_args(parser):
     '''Add argparse options related to Docker Compose project.

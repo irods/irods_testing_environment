@@ -3,9 +3,9 @@ import logging
 import os
 
 # local modules
-import context
-import install
-import irods_setup
+from . import context
+from . import irods_setup
+from .install import install
 
 def create_topology(ctx,
                     externals_directory=None,
@@ -30,10 +30,11 @@ def create_topology(ctx,
         context.irods_catalog_consumer_service(): consumer_count
     })
 
-    install.install_irods_packages(ctx,
-                                   externals_directory=externals_directory,
-                                   package_directory=package_directory,
-                                   package_version=package_version)
+    install.make_installer(ctx.platform_name()).install_irods_packages(
+            ctx,
+            externals_directory=externals_directory,
+            package_directory=package_directory,
+            package_version=package_version)
 
     irods_setup.setup_irods_zone(ctx, odbc_driver=odbc_driver)
 
@@ -55,7 +56,7 @@ def clone_repository_to_container(container,
     import tempfile
     from git import Repo
 
-    import archive
+    from . import archive
 
     url = os.path.join(url_base, '.'.join([repo_name, 'git']))
 

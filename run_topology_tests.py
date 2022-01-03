@@ -5,19 +5,20 @@ import logging
 import os
 
 # local modules
-import context
-import execute
-import install
-import irods_config
-import irods_setup
-import ssl
-import test_utils
+from irods_testing_environment import context
+from irods_testing_environment import execute
+from irods_testing_environment import install
+from irods_testing_environment import irods_config
+from irods_testing_environment import irods_setup
+from irods_testing_environment import services
+from irods_testing_environment import ssl
+from irods_testing_environment import test_utils
 
 if __name__ == "__main__":
     import argparse
-    import logs
     import textwrap
 
+    from irods_testing_environment import logs
     import cli
 
     parser = argparse.ArgumentParser(description='Run iRODS tests in a consistent environment.')
@@ -68,22 +69,17 @@ if __name__ == "__main__":
 
     rc = 0
     last_command_to_fail = None
-    containers = list()
 
     try:
         # Bring up the services
         logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
         consumer_count = 3
-        containers = ctx.compose_project.up(scale_override={
-            context.irods_catalog_consumer_service(): consumer_count
-        })
-
-        install.install_irods_packages(ctx,
-                                       externals_directory=args.irods_externals_package_directory,
-                                       package_directory=args.package_directory,
-                                       package_version=args.package_version)
-
-        irods_setup.setup_irods_zone(ctx, odbc_driver=args.odbc_driver)
+        services.create_topology(ctx,
+                                 externals_directory=args.irods_externals_package_directory,
+                                 package_directory=args.package_directory,
+                                 package_version=args.package_version,
+                                 odbc_driver=args.odbc_driver,
+                                 consumer_count=consumer_count)
 
         # Configure the containers for running iRODS automated tests
         logging.info('configuring iRODS containers for testing')

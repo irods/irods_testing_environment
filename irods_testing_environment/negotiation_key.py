@@ -5,9 +5,9 @@ import logging
 import os
 
 # local modules
-import context
-import execute
-import json_utils
+from . import context
+from . import execute
+from . import json_utils
 
 def backup_file(container, file_path):
     backup_file_path = file_path + '.orig'

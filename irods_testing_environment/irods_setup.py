@@ -5,10 +5,10 @@ import logging
 import os
 
 # local modules
-import context
-import database_setup
-import odbc_setup
-import execute
+from . import context
+from . import database_setup
+from . import odbc_setup
+from . import execute
 
 class zone_info(object):
     """Class to hold information about an iRODS Zone and the containers running the servers."""

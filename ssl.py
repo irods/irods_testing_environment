@@ -9,9 +9,9 @@ from cryptography.hazmat.primitives.asymmetric import dh, rsa
 from cryptography.x509.oid import NameOID
 
 # local modules
-import context
-import execute
-import json_utils
+from irods_testing_environment import context
+from irods_testing_environment import execute
+from irods_testing_environment import json_utils
 
 if __name__ == "__main__":
     import argparse

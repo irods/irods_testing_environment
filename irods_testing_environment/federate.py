@@ -2,10 +2,10 @@
 import logging
 
 # local modules
-import context
-import execute
-import irods_setup
-import json_utils
+from . import context
+from . import execute
+from . import irods_setup
+from . import json_utils
 
 def make_negotiation_key(local_zone_name, remote_zone_name=''):
     negotation_key_size_in_bytes = 32

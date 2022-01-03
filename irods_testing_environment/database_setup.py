@@ -3,8 +3,8 @@ import docker
 import logging
 
 # local modules
-import context
-import execute
+from . import context
+from . import execute
 
 def database_server_port(database_image):
     """Return the default port for the database server indicated by `database_image`.

@@ -4,8 +4,8 @@ import logging
 import os
 
 # local modules
-import archive
-import context
+from . import archive
+from . import context
 
 # TODO: Maybe this should be some kind of builder
 def configure(verbosity=1, log_filename=None):

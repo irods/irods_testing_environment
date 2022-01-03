@@ -9,8 +9,8 @@ def get_json_from_file(container, target_file):
     container -- docker.Container where the target_file is hosted
     target_file -- the path inside the container with the JSON contents to modify
     """
-    import archive
     import shutil
+    from . import archive
     json_file = os.path.join(archive.copy_from_container(container, target_file),
                              os.path.basename(target_file))
 
@@ -30,7 +30,7 @@ def put_json_to_file(container, target_file, json_contents):
     target_file -- the path inside the container with the JSON contents to modify
     json_contents -- JSON contents to write to the target file in the container
     """
-    import execute
+    from . import execute
     # TODO: Should we make a local file and copy it in?
     put_json = 'bash -c \'echo "{}" > {}\''.format(json.dumps(json_contents).replace('"', '\\"'),
                                                    target_file)

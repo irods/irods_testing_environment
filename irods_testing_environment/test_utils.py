@@ -4,11 +4,11 @@ import os
 import tempfile
 
 # local modules
-import archive
-import context
-import execute
-import install
-import services
+from . import archive
+from . import context
+from . import execute
+from . import services
+from .install import install
 
 def path_to_run_tests_script():
     """Return the path to the script which runs the tests."""
