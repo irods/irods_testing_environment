@@ -268,31 +268,3 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
     if execute.execute_command(container, asq, user='irods') is not 0:
         raise RuntimeError('failed to create specific query [{}] [{}]'
                            .format(bug_3466_query, container.name))
-
-
-if __name__ == "__main__":
-    import argparse
-    import logs
-
-    import cli
-
-    parser = argparse.ArgumentParser(description='Configure a running iRODS Zone for running tests.')
-
-    cli.add_common_args(parser)
-    cli.add_compose_args(parser)
-
-    args = parser.parse_args()
-
-    docker_client = docker.from_env()
-
-    compose_project = compose.cli.command.get_project(os.path.abspath(args.project_directory),
-                                                      project_name=args.project_name)
-
-    logs.configure(args.verbosity)
-
-    try:
-        configure_irods_testing(docker_client, compose_project)
-
-    except Exception as e:
-        logging.critical(e)
-        exit(1)
