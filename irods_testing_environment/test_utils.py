@@ -60,7 +60,7 @@ def run_specific_tests(container, tests, options=None, fail_fast=True):
     options -- list of strings representing script options to pass to the run_tests.py script
     fail_fast -- if True, stop running after first failure; else, runs all tests
     """
-    command = ['python', path_to_run_tests_script()]
+    command = ['python3', path_to_run_tests_script()]
 
     if options: command.extend(options)
 
@@ -97,7 +97,7 @@ def run_python_test_suite(container, options=None):
     container -- target container on which the test script will run
     options -- list of strings representing script options to pass to the run_tests.py script
     """
-    command = ['python', path_to_run_tests_script(), '--run_python_suite']
+    command = ['python3', path_to_run_tests_script(), '--run_python_suite']
 
     if options: command.extend(options)
 
@@ -154,7 +154,7 @@ def run_test_hook_file_in_container(container, path_to_test_hook, options=None):
     """
     install.install_pip_package_from_repo(container, 'irods_python_ci_utilities')
 
-    command = ['python', path_to_test_hook]
+    command = ['python3', path_to_test_hook]
 
     if options: command.extend(options)
 
