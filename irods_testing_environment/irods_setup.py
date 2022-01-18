@@ -297,7 +297,7 @@ def setup_irods_server(container, setup_input):
     execute.execute_command(container, 'cat /input')
 
     path_to_setup_script = os.path.join(context.irods_home(), 'scripts', 'setup_irods.py')
-    run_setup_script = 'bash -c \'python {0} < /input\''.format(path_to_setup_script)
+    run_setup_script = 'bash -c \'python3 {0} < /input\''.format(path_to_setup_script)
     ec = execute.execute_command(container, run_setup_script)
     if ec is not 0:
         raise RuntimeError('failed to set up iRODS server [{}]'.format(container.name))
