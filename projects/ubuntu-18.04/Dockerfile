@@ -31,7 +31,9 @@ RUN \
 RUN pip3 install xmlrunner distro
 
 RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - && \
-    echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods.list && \
-    apt-get update
+    echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods.list
+
+RUN wget -qO - https://core-dev.irods.org/irods-core-dev-signing-key.asc | apt-key add - && \
+    echo "deb [arch=amd64] https://core-dev.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods-core-dev.list
 
 ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]
