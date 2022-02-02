@@ -40,6 +40,10 @@ parser.add_argument('--test-hook-path',
                     dest='test_hook',
                     help='Path to local test hook file to run.')
 
+parser.add_argument('--extra-logs-path',
+                    nargs='?', default=None, const='/var/lib/irods/test-reports',
+                    help='Path to an extra log file or directory to be copied out after tests.')
+
 args = parser.parse_args()
 
 if args.package_directory and args.package_version:
@@ -122,6 +126,9 @@ except Exception as e:
 finally:
     logging.warning('collecting logs [{}]'.format(output_directory))
     logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
+
+    if args.extra_logs_path:
+        logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory, logfile_path = args.extra_logs_path)
 
     if args.cleanup_containers:
         ctx.compose_project.down(include_volumes=True, remove_image_type=False)
