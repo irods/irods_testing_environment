@@ -9,10 +9,11 @@ import os
 from irods_testing_environment import context
 from irods_testing_environment import database_setup
 from irods_testing_environment import execute
-from irods_testing_environment import install
 from irods_testing_environment import irods_setup
 from irods_testing_environment import irods_config
 from irods_testing_environment import json_utils
+from irods_testing_environment import federate
+from irods_testing_environment.install import install
 
 if __name__ == "__main__":
     import argparse
@@ -82,17 +83,18 @@ if __name__ == "__main__":
         })
 
         # The catalog consumers are only determined after the containers are running
-        zone_info_list = get_info_for_zones(ctx, zone_names, args.consumers_per_zone)
+        zone_info_list = federate.get_info_for_zones(ctx, zone_names, args.consumers_per_zone)
 
-        install.install_irods_packages(ctx,
-                                       externals_directory=args.irods_externals_package_directory,
-                                       package_directory=args.package_directory,
-                                       package_version=args.package_version)
+        install.make_installer(ctx.platform_name()).install_irods_packages(
+            ctx,
+            externals_directory=args.irods_externals_package_directory,
+            package_directory=args.package_directory,
+            package_version=args.package_version)
 
         irods_setup.setup_irods_zones(ctx, zone_info_list, odbc_driver=args.odbc_driver)
 
     else:
-        zone_info_list = get_info_for_zones(ctx, zone_names, args.consumers_per_zone)
+        zone_info_list = federate.get_info_for_zones(ctx, zone_names, args.consumers_per_zone)
 
-    form_federation_clique(ctx, zone_info_list, args.federate_consumers)
+    federate.form_federation_clique(ctx, zone_info_list, args.federate_consumers)
 
