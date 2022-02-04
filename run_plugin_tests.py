@@ -128,7 +128,10 @@ finally:
     logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
 
     if args.extra_logs_path:
-        logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory, logfile_path = args.extra_logs_path)
+        try:
+            logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory, logfile_path = args.extra_logs_path)
+        except docker.errors.NotFound:
+            logging.warning('Path in container not found for --extra-logs-path {!r}'.format(args.extra_logs_path))
 
     if args.cleanup_containers:
         ctx.compose_project.down(include_volumes=True, remove_image_type=False)
