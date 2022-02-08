@@ -7,57 +7,12 @@ from . import execute
 from . import irods_setup
 from . import json_utils
 
-def make_negotiation_key(local_zone_name, remote_zone_name=''):
-    negotation_key_size_in_bytes = 32
-    filler = '_' * negotation_key_size_in_bytes
-    # TODO: need predictable way to generate unique keys
-    #prefix = '_'.join([local_zone_name, remote_zone_name])
-    #return prefix + filler[:negotation_key_size_in_bytes - len(prefix)]
-    return filler
-
-
-def make_zone_key(zone_name):
-    zone_key_prefix = 'ZONE_KEY_FOR'
-    return '_'.join([zone_key_prefix, zone_name])
-
-
-def get_info_for_zones(ctx, zone_names, consumer_service_instances_per_zone=0):
-    zone_info_list = list()
-
-    for i, zn in enumerate(zone_names):
-        # Divide up the consumers evenly amongst the Zones
-        consumer_service_instances = [
-            context.service_instance(c.name)
-            for c in ctx.compose_project.containers()
-            if context.is_irods_catalog_consumer_container(c)
-            and context.service_instance(c.name) > i * consumer_service_instances_per_zone
-            and context.service_instance(c.name) <= (i + 1) * consumer_service_instances_per_zone
-        ]
-
-        logging.debug('consumer service instances for [{}] [{}] (expected: [{}])'
-                     .format(zn, consumer_service_instances,
-                             list(range((i*consumer_service_instances_per_zone)+1,
-                                        ((i+1)*consumer_service_instances_per_zone)+1))
-                     ))
-
-        zone_info_list.append(
-            irods_setup.zone_info(database_service_instance=i + 1,
-                                  provider_service_instance=i + 1,
-                                  consumer_service_instances=consumer_service_instances,
-                                  zone_name=zn,
-                                  zone_key=make_zone_key(zn),
-                                  negotiation_key=make_negotiation_key(zn))
-        )
-
-    return zone_info_list
-
-
 def make_federation_entry(ctx, local_zone, remote_zone):
     # TODO: Need to have strategies for different version of iRODS, this only works for 4.1/4.2, I think?
     return {
         'catalog_provider_hosts': [remote_zone.provider_hostname(ctx)],
-        'negotiation_key': make_negotiation_key(local_zone.zone_name, remote_zone.zone_name),
-        'zone_key': make_zone_key(remote_zone.zone_name),
+        'negotiation_key': irods_setup.make_negotiation_key(local_zone.zone_name, remote_zone.zone_name),
+        'zone_key': irods_setup.make_zone_key(remote_zone.zone_name),
         'zone_name': remote_zone.zone_name,
         'zone_port': 1247
     }
