@@ -76,7 +76,7 @@ if __name__ == "__main__":
     if args.do_setup:
         # Bring up the services
         logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
-        containers = ctx.compose_project.up(scale_override={
+        ctx.compose_project.up(scale_override={
             context.irods_catalog_database_service(): zone_count,
             context.irods_catalog_provider_service(): zone_count,
             context.irods_catalog_consumer_service(): consumer_count

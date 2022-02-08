@@ -7,6 +7,49 @@ from . import context
 from . import irods_setup
 from .install import install
 
+def create_topologies(ctx,
+                      zone_count,
+                      externals_directory=None,
+                      package_directory=None,
+                      package_version=None,
+                      odbc_driver=None,
+                      zone_name='tempZone',
+                      consumer_count=0):
+    """Create several generic topologies of iRODS servers with the given inputs.
+
+    This is a convenience function for standing up multiple, identical iRODS Zones with the
+    default setup parameters.
+
+    Arguments:
+    ctx -- context object which holds the Docker client and Compose project information
+    zone_count -- number of identical zones to scale up to
+    externals_directory -- path to directory in which iRODS externals packages are housed
+    package_directory -- path to directory in which iRODS packages are housed
+    package_version -- version tag for official iRODS packages to download and install
+    odbc_driver -- path to archive file containing an ODBC driver to use with iRODS CSP
+    consumer_count -- number of iRODS Catalog Service Consumers to create and set up for each
+                      Zone
+    """
+    ctx.compose_project.up(scale_override={
+        context.irods_catalog_database_service(): zone_count,
+        context.irods_catalog_provider_service(): zone_count,
+        context.irods_catalog_consumer_service(): consumer_count * zone_count
+    })
+
+    install.make_installer(ctx.platform_name()).install_irods_packages(
+            ctx,
+            externals_directory=externals_directory,
+            package_directory=package_directory,
+            package_version=package_version)
+
+    zone_names = [zone_name for i in range(zone_count)]
+
+    # This should generate a list of identical zone infos
+    zone_info_list = irods_setup.get_info_for_zones(ctx, zone_names, consumer_count)
+
+    irods_setup.setup_irods_zones(ctx, zone_info_list, odbc_driver=odbc_driver)
+
+
 def create_topology(ctx,
                     externals_directory=None,
                     package_directory=None,
@@ -24,19 +67,16 @@ def create_topology(ctx,
     package_directory -- path to directory in which iRODS packages are housed
     package_version -- version tag for official iRODS packages to download and install
     odbc_driver -- path to archive file containing an ODBC driver to use with iRODS CSP
-    consumer_count -- number of iRODS CSCs to create and set up for the Zone
+    consumer_count -- number of iRODS Catalog Service Consumers to create and set up for the
+                      Zone
     """
-    ctx.compose_project.up(scale_override={
-        context.irods_catalog_consumer_service(): consumer_count
-    })
-
-    install.make_installer(ctx.platform_name()).install_irods_packages(
-            ctx,
-            externals_directory=externals_directory,
-            package_directory=package_directory,
-            package_version=package_version)
-
-    irods_setup.setup_irods_zone(ctx, odbc_driver=odbc_driver)
+    return create_topologies(ctx,
+                             zone_count=1,
+                             externals_directory=externals_directory,
+                             package_directory=package_directory,
+                             package_version=package_version,
+                             odbc_driver=odbc_driver,
+                             consumer_count=consumer_count)
 
 
 def clone_repository_to_container(container,
