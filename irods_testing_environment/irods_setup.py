@@ -29,11 +29,12 @@ class zone_info(object):
         zone_port -- zone_port for the iRODS Zone
         database_service_instance -- service instance for the database container for this Zone
         provider_service_instance -- service instance for the iRODS CSP container for this Zone
-        consumer_service_instances -- service instances for the iRODS CSC containers for this
-                                      Zone (if None is provided, all running iRODS CSC service
-                                      instances are determined to be part of this Zone, per the
-                                      irods_setup interfaces. list() indicates that no iRODS
-                                      CSCs are in this zone.
+        consumer_service_instances -- service instances for the iRODS Catalog Service Consumer
+                                      containers for this Zone (if None is provided, all running
+                                      iRODS Catalog Service Consumer service instances are
+                                      determined to be part of this Zone, per the irods_setup
+                                      interfaces. list() indicates that no iRODS Catalog
+                                      Service Consumers are in this zone.
         """
         self.zone_name = zone_name
         self.zone_key = zone_key
@@ -378,15 +379,16 @@ def setup_irods_catalog_consumer(ctx,
 
     logging.debug('input to setup script [{}]'.format(setup_input))
 
-    csc_container = ctx.docker_client.containers.get(
+    catalog_consumer_container = ctx.docker_client.containers.get(
         context.irods_catalog_consumer_container(
             ctx.compose_project.name, consumer_service_instance
         )
     )
 
-    logging.warning('setting up iRODS catalog consumer [{}]'.format(csc_container.name))
+    logging.warning('setting up iRODS catalog consumer [{}]'
+                    .format(catalog_consumer_container.name))
 
-    setup_irods_server(csc_container, setup_input)
+    setup_irods_server(catalog_consumer_container, setup_input)
 
 def setup_irods_catalog_consumers(ctx,
                                   provider_service_instance=1,
@@ -405,7 +407,7 @@ def setup_irods_catalog_consumers(ctx,
     """
     import concurrent.futures
 
-    csc_containers = ctx.compose_project.containers(
+    catalog_consumer_containers = ctx.compose_project.containers(
         service_names=[context.irods_catalog_consumer_service()])
 
     if consumer_service_instances:
@@ -413,25 +415,30 @@ def setup_irods_catalog_consumers(ctx,
             logging.warning('empty list of iRODS catalog service consumers to set up')
             return
 
-        consumer_service_instances = [context.service_instance(c.name) for c in csc_containers
-            if context.service_instance(c.name) in consumer_service_instances]
+        consumer_service_instances = [
+            context.service_instance(c.name)
+            for c in catalog_consumer_containers
+            if context.service_instance(c.name) in consumer_service_instances
+        ]
     else:
-        consumer_service_instances = [context.service_instance(c.name) for c in csc_containers]
+        consumer_service_instances = [
+            context.service_instance(c.name) for c in catalog_consumer_containers
+        ]
 
     rc = 0
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures_to_containers = {
+        futures_to_catalog_consumer_instances = {
             executor.submit(
                 setup_irods_catalog_consumer,
                 ctx, provider_service_instance, instance, **kwargs
             ): instance for instance in consumer_service_instances
         }
 
-        logging.debug(futures_to_containers)
+        logging.debug(futures_to_catalog_consumer_instances)
 
-        for f in concurrent.futures.as_completed(futures_to_containers):
-            i = futures_to_containers[f]
+        for f in concurrent.futures.as_completed(futures_to_catalog_consumer_instances):
+            i = futures_to_catalog_consumer_instances[f]
             container_name = context.irods_catalog_consumer_container(ctx.compose_project.name,
                                                                       i + 1)
             try:
@@ -474,14 +481,16 @@ def setup_irods_zone(ctx,
                                  force_recreate=force_recreate,
                                  service_instance=database_service_instance)
 
-    logging.info('setting up catalog provider [{}] [{}]'.format(provider_service_instance, database_service_instance))
+    logging.info('setting up catalog provider [{}] [{}]'.format(provider_service_instance,
+                                                                database_service_instance))
     setup_irods_catalog_provider(ctx,
                                  database_service_instance=database_service_instance,
                                  provider_service_instance=provider_service_instance,
                                  odbc_driver=odbc_driver,
                                  **kwargs)
 
-    logging.info('setting up catalog consumers [{}] [{}]'.format(provider_service_instance, consumer_service_instances))
+    logging.info('setting up catalog consumers [{}] [{}]'.format(provider_service_instance,
+                                                                 consumer_service_instances))
     setup_irods_catalog_consumers(ctx,
                                   provider_service_instance=provider_service_instance,
                                   consumer_service_instances=consumer_service_instances,
@@ -522,3 +531,47 @@ def setup_irods_zones(ctx,
     if rc is not 0:
         raise RuntimeError('failed to set up one or more iRODS Zones, ec=[{}]'.format(rc))
 
+
+def make_negotiation_key(local_zone_name, remote_zone_name=''):
+    negotation_key_size_in_bytes = 32
+    filler = '_' * negotation_key_size_in_bytes
+    # TODO: need predictable way to generate unique keys
+    #prefix = '_'.join([local_zone_name, remote_zone_name])
+    #return prefix + filler[:negotation_key_size_in_bytes - len(prefix)]
+    return filler
+
+
+def make_zone_key(zone_name):
+    zone_key_prefix = 'ZONE_KEY_FOR'
+    return '_'.join([zone_key_prefix, zone_name])
+
+
+def get_info_for_zones(ctx, zone_names, consumer_service_instances_per_zone=0):
+    zone_info_list = list()
+
+    for i, zn in enumerate(zone_names):
+        # Divide up the consumers evenly amongst the Zones
+        consumer_service_instances = [
+            context.service_instance(c.name)
+            for c in ctx.compose_project.containers()
+            if context.is_irods_catalog_consumer_container(c)
+            and context.service_instance(c.name) > i * consumer_service_instances_per_zone
+            and context.service_instance(c.name) <= (i + 1) * consumer_service_instances_per_zone
+        ]
+
+        logging.info('consumer service instances for [{}] [{}] (expected: [{}])'
+                     .format(zn, consumer_service_instances,
+                             list(range((i*consumer_service_instances_per_zone)+1,
+                                        ((i+1)*consumer_service_instances_per_zone)+1))
+                     ))
+
+        zone_info_list.append(
+            zone_info(database_service_instance=i + 1,
+                      provider_service_instance=i + 1,
+                      consumer_service_instances=consumer_service_instances,
+                      zone_name=zn,
+                      zone_key=make_zone_key(zn),
+                      negotiation_key=make_negotiation_key(zn))
+        )
+
+    return zone_info_list

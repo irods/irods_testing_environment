@@ -153,27 +153,48 @@ def configure_ssl_in_zone(docker_client, compose_project):
     dhparams_file = generate_ssl_dh_params()
 
     try:
-        # Configure SSL on the catalog service provider first because communication with the
+        rc = 0
+
+        # Configure SSL on the catalog service providers first because communication with the
         # catalog service consumers depends on being able to communicate with the catalog
         # service provider. If SSL is not configured first on the catalog service provider
         # the catalog service consumers will not be able to communicate with it.
-        configure_ssl_on_server(
-            docker_client.containers.get(
-                context.irods_catalog_provider_container(compose_project.name)
-            ),
-            key_file, cert_file, dhparams_file)
+        csps = compose_project.containers(services_names=[
+            context.irods_catalog_provider_service()])
 
-        containers = compose_project.containers(service_names=[
-            context.irods_catalog_consumer_service()])
-
-        rc = 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures_to_containers = {
                 executor.submit(configure_ssl_on_server,
                                 docker_client.containers.get(c.name),
                                 key_file,
                                 cert_file,
-                                dhparams_file): c for c in containers
+                                dhparams_file): c for c in csps
+            }
+
+            for f in concurrent.futures.as_completed(futures_to_containers):
+                container = futures_to_containers[f]
+                try:
+                    f.result()
+
+                except Exception as e:
+                    logging.error('exception raised while configuring SSL [{}]'
+                                  .format(container.name))
+                    logging.error(e)
+                    rc = 1
+
+        if rc is not 0:
+            raise RuntimeError('failed to configure SSL on some service')
+
+        cscs = compose_project.containers(service_names=[
+            context.irods_catalog_consumer_service()])
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            futures_to_containers = {
+                executor.submit(configure_ssl_on_server,
+                                docker_client.containers.get(c.name),
+                                key_file,
+                                cert_file,
+                                dhparams_file): c for c in cscs
             }
 
             for f in concurrent.futures.as_completed(futures_to_containers):
