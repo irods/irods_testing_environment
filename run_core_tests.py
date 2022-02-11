@@ -95,16 +95,9 @@ if __name__ == "__main__":
             ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
             options.append('--use_ssl')
 
-        if args.tests:
-            tests = list(args.tests)
-
-        else:
-            tests = list(test_utils.get_test_list(containers[0]))
-
-
         start_time = time.time()
 
-        rc = test_utils.run_specific_tests(containers, tests, options, args.fail_fast)
+        rc = test_utils.run_specific_tests(containers, args.tests, options, args.fail_fast)
 
         end_time = time.time()
 
