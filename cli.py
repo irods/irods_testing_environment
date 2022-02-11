@@ -104,6 +104,25 @@ def add_irods_test_args(parser):
                             If indicated, exits on the first test that returns a non-zero exit \
                             code.'''))
 
+    parser.add_argument('--concurrent-test-executor-count',
+                        dest='executor_count', type=int, default=1,
+                        help=textwrap.dedent('''\
+                            Number of concurrent exeecutors to run tests at the same time.'''))
+
+    parser.add_argument('--discard-logs',
+                        dest='save_logs', default=True, action='store_false',
+                        help=textwrap.dedent('''\
+                            Indicates that the logs should not be collected from the \
+                            containers.'''))
+
+    parser.add_argument('--leak-containers',
+                        action='store_false', dest='cleanup_containers',
+                        help='If indicated, the containers will not be torn down.')
+
+    parser.add_argument('--skip-setup',
+                        action='store_false', dest='do_setup',
+                        help='If indicated, the iRODS servers will not be set up.')
+
 
 def add_database_config_args(parser):
     '''Add argparse options related to setting up and configuring iRODS.

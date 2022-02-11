@@ -27,14 +27,6 @@ cli.add_irods_package_args(parser)
 cli.add_irods_test_args(parser)
 cli.add_irods_plugin_args(parser)
 
-parser.add_argument('--skip-setup',
-                    action='store_false', dest='do_setup',
-                    help='If indicated, the iRODS servers will not be set up.')
-
-parser.add_argument('--leak-containers',
-                    action='store_false', dest='cleanup_containers',
-                    help='If indicated, the containers will not be torn down.')
-
 parser.add_argument('--test-hook-path',
                     metavar='PATH_TO_TEST_HOOK_FILE',
                     dest='test_hook',
