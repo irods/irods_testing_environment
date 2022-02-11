@@ -27,11 +27,6 @@ if __name__ == "__main__":
     cli.add_irods_package_args(parser)
     cli.add_irods_test_args(parser)
 
-    parser.add_argument('--concurrent-test-executor-count',
-                        dest='executor_count', type=int, default=1,
-                        help=textwrap.dedent('''\
-                            Number of concurrent exeecutors to run tests at the same time.'''))
-
     parser.add_argument('--use-ssl',
                         dest='use_ssl', action='store_true',
                         help=textwrap.dedent('''\
@@ -67,20 +62,21 @@ if __name__ == "__main__":
     last_command_to_fail = None
 
     try:
-        # Bring up the services
-        logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
-        consumer_count = 0
-        services.create_topologies(ctx,
-                                   zone_count=args.executor_count,
-                                   externals_directory=args.irods_externals_package_directory,
-                                   package_directory=args.package_directory,
-                                   package_version=args.package_version,
-                                   odbc_driver=args.odbc_driver,
-                                   consumer_count=consumer_count)
+        if args.do_setup:
+            # Bring up the services
+            logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
+            consumer_count = 0
+            services.create_topologies(ctx,
+                                       zone_count=args.executor_count,
+                                       externals_directory=args.irods_externals_package_directory,
+                                       package_directory=args.package_directory,
+                                       package_version=args.package_version,
+                                       odbc_driver=args.odbc_driver,
+                                       consumer_count=consumer_count)
 
-        # Configure the containers for running iRODS automated tests
-        logging.info('configuring iRODS containers for testing')
-        irods_config.configure_irods_testing(ctx.docker_client, ctx.compose_project)
+            # Configure the containers for running iRODS automated tests
+            logging.info('configuring iRODS containers for testing')
+            irods_config.configure_irods_testing(ctx.docker_client, ctx.compose_project)
 
         # Get the container on which the command is to be executed
         containers = [
@@ -95,7 +91,7 @@ if __name__ == "__main__":
 
         options = list()
 
-        if args.use_ssl:
+        if args.do_setup and args.use_ssl:
             ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
             options.append('--use_ssl')
 
@@ -120,9 +116,11 @@ if __name__ == "__main__":
         raise
 
     finally:
-        logging.warning('collecting logs [{}]'.format(output_directory))
-        logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
+        if args.save_logs:
+            logging.warning('collecting logs [{}]'.format(output_directory))
+            logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
 
-        ctx.compose_project.down(include_volumes=True, remove_image_type=False)
+        if args.cleanup_containers:
+            ctx.compose_project.down(include_volumes=True, remove_image_type=False)
 
     exit(rc)
