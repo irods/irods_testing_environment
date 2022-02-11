@@ -119,6 +119,17 @@ def service_account_irods_env():
     return os.path.join(irods_home(), '.irods', 'irods_environment.json')
 
 
+def run_tests_script():
+    """Return the path to the script which runs the python tests."""
+    import os
+    return os.path.join(irods_home(), 'scripts', 'run_tests.py')
+
+
+def python():
+    """Return the appropriate python interpreter."""
+    return 'python3'
+
+
 def sanitize(repo_or_tag):
     """Sanitize the input from special characters rejected by docker-compose.
 
