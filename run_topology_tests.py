@@ -71,19 +71,20 @@ if __name__ == "__main__":
     last_command_to_fail = None
 
     try:
-        # Bring up the services
-        logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
-        consumer_count = 3
-        services.create_topology(ctx,
-                                 externals_directory=args.irods_externals_package_directory,
-                                 package_directory=args.package_directory,
-                                 package_version=args.package_version,
-                                 odbc_driver=args.odbc_driver,
-                                 consumer_count=consumer_count)
+        if args.do_setup:
+            # Bring up the services
+            logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
+            consumer_count = 3
+            services.create_topology(ctx,
+                                     externals_directory=args.irods_externals_package_directory,
+                                     package_directory=args.package_directory,
+                                     package_version=args.package_version,
+                                     odbc_driver=args.odbc_driver,
+                                     consumer_count=consumer_count)
 
-        # Configure the containers for running iRODS automated tests
-        logging.info('configuring iRODS containers for testing')
-        irods_config.configure_irods_testing(ctx.docker_client, ctx.compose_project)
+            # Configure the containers for running iRODS automated tests
+            logging.info('configuring iRODS containers for testing')
+            irods_config.configure_irods_testing(ctx.docker_client, ctx.compose_project)
 
         run_on_consumer = args.run_on == 'consumer'
 
@@ -115,12 +116,12 @@ if __name__ == "__main__":
 
         options.extend(['--hostnames', icat_hostname, hostname_1, hostname_2, hostname_3])
 
-        if args.use_ssl:
+        if args.do_setup and args.use_ssl:
             ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
             options.append('--use_ssl')
 
         if args.tests:
-            rc = test_utils.run_specific_tests(container,
+            rc = test_utils.run_specific_tests([container],
                                                list(args.tests),
                                                options,
                                                args.fail_fast)
