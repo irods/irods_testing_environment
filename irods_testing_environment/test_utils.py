@@ -8,11 +8,8 @@ from . import archive
 from . import context
 from . import execute
 from . import services
+from . import test_manager
 from .install import install
-
-def path_to_run_tests_script():
-    """Return the path to the script which runs the tests."""
-    return os.path.join(context.irods_home(), 'scripts', 'run_tests.py')
 
 def job_name(project_name, prefix=None):
     """Construct unique job name based on the docker-compose project name.
@@ -50,118 +47,26 @@ def make_output_directory(dirname, basename):
 
     return directory
 
-
-def run_specific_tests(containers, tests, options=None, fail_fast=True):
+def run_specific_tests(containers, test_list=None, options=None, fail_fast=True):
     """Run a set of tests from the python test suite for iRODS.
 
     Arguments:
     containers -- target containers on which the tests will run
-    tests -- a list of strings of the tests to be run
+    test_list -- a list of strings of the tests to be run
     options -- list of strings representing script options to pass to the run_tests.py script
     fail_fast -- if True, stop running after first failure; else, runs all tests
     """
-    import concurrent.futures
+    tests = test_list or get_test_list(containers[0])
 
-    def run_specific_test(options, tests, container, fail_fast):
-        command = ['python', path_to_run_tests_script()]
+    tm = test_manager.test_manager(containers, tests)
 
-        if options: command.extend(options)
+    try:
+        tm.run(fail_fast, options)
 
-        rc = 0
-        failed_tests = list()
+    finally:
+        logging.error(tm.result_string())
 
-        for test in tests:
-            cmd = command + ['--run_specific_test', test]
-            ec = execute.execute_command(container,
-                                         ' '.join(cmd),
-                                         user='irods',
-                                         workdir=context.irods_home(),
-                                         stream_output=True)
-
-            if ec is not 0:
-                rc = ec
-                failed_tests.append(test)
-                last_command_to_fail = cmd
-                logging.warning('[{}]: command exited with error code [{}] [{}] [{}]'
-                                .format(container.name, ec, cmd, container.name))
-
-                if fail_fast:
-                    logging.critical('[{}]: command failed [{}]'.format(container.name, cmd))
-                    break
-
-        if rc is not 0:
-            logging.error('[{}]: last command to fail [{}]'.format(container.name, last_command_to_fail))
-            logging.error('[{}]: tests that failed [{}]'.format(container.name, failed_tests))
-
-        return (rc, failed_tests)
-
-    test_lists = {
-        c.name: {
-            'tests': list(),
-            'rc': 0,
-            'failures': list()
-        }
-        for c in containers
-    }
-    keys = list(test_lists.keys())
-
-    logging.info('keys [{}], tests [{}]'.format(keys, tests))
-
-    # Evenly distribute the tests amongst the containers. The -1 is to avoid going beyond the
-    # end of the list of keys since it is 0-indexed.
-    i = 0
-    for t in tests:
-        logging.debug('test_lists [{}]'.format(test_lists))
-        logging.debug('index [{}], test [{}]'.format(i % len(keys), t))
-        test_lists[keys[i % len(keys)]]['tests'].append(t)
-        i = i + 1
-
-    logging.info('test_lists [{}]'.format(test_lists))
-
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures_to_containers = {
-            executor.submit(
-                run_specific_test,
-                options, test_lists[c.name]['tests'], c, fail_fast
-            ): c for c in containers
-        }
-
-        for f in concurrent.futures.as_completed(futures_to_containers):
-            container = futures_to_containers[f]
-
-            try:
-                rc, failed_tests = f.result()
-                if rc is 0 and len(failed_tests) is 0:
-                    logging.warning('tests completed successfully [{}]'.format(container.name))
-                else:
-                    logging.warning('some tests failed [{}]'.format(container.name))
-
-                test_lists[container.name]['rc'] = rc
-                test_lists[container.name]['failures'] = failed_tests
-
-            except Exception as e:
-                logging.error('exception raised while running iRODS tests [{}]'
-                              .format(container.name))
-                logging.error(e)
-
-                test_lists[container.name]['rc'] = 1
-
-    rc = 0
-    for c in containers:
-        # TODO: it's not really an error, I just want to make sure it gets shown
-        logging.error('-----\nresults for [{}]'.format(c.name))
-        logging.error('\ttests run:')
-        for t in test_lists[c.name]['tests']:
-            logging.error('\t\t[{}]'.format(t))
-        logging.error('\tfailed tests:')
-        for f in test_lists[c.name]['failures']:
-            logging.error('\t\t[{}]'.format(f))
-        ec = test_lists[c.name]['rc']
-        if ec is not 0:
-            rc = ec
-        logging.error('\treturn code:[{}]\n-----\n'.format(ec))
-
-    return rc
+    return tm.return_code()
 
 def run_python_test_suite(container, options=None):
     """Run the entire python test suite for iRODS.
@@ -216,6 +121,7 @@ def run_test_hook_file(container, path_to_test_hook_on_host, options=None):
     f = os.path.abspath(path_to_test_hook_on_host)
     archive.copy_archive_to_container(container, archive.create_archive([f]))
     return run_test_hook_file_in_container(container, f, options)
+
 
 def run_test_hook_file_in_container(container, path_to_test_hook, options=None):
     """Run the test hook at the specified path in the container.
