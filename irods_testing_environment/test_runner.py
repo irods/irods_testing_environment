@@ -143,3 +143,19 @@ class test_runner_irods_python_suite(test_runner):
                                             user='irods',
                                             workdir=context.irods_home(),
                                             stream_output=True)
+
+
+class test_runner_irods_unit_tests(test_runner):
+    def __init__(self, executing_container, tests=None):
+        super(test_runner_irods_unit_tests, self).__init__(executing_container, tests)
+
+
+    def execute_test(self, test):
+        """Execute `test` and return the command run and the return code."""
+        import os
+        cmd = [os.path.join(context.unit_tests(), test)]
+        return cmd, execute.execute_command(self.executor,
+                                            ' '.join(cmd),
+                                            user='irods',
+                                            workdir=context.irods_home(),
+                                            stream_output=True)
