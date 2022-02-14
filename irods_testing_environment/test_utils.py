@@ -47,6 +47,28 @@ def make_output_directory(dirname, basename):
 
     return directory
 
+def run_unit_tests(containers, test_list=None, fail_fast=True):
+    """Run a set of tests from the python test suite for iRODS.
+
+    Arguments:
+    containers -- target containers on which the tests will run
+    test_list -- a list of strings of the tests to be run
+    options -- list of strings representing script options to pass to the run_tests.py script
+    fail_fast -- if True, stop running after first failure; else, runs all tests
+    """
+    tests = test_list or get_unit_test_list(containers[0])
+
+    tm = test_manager.test_manager(containers, tests, test_type='irods_unit_tests')
+
+    try:
+        tm.run(fail_fast)
+
+    finally:
+        logging.error(tm.result_string())
+
+    return tm.return_code()
+
+
 def run_specific_tests(containers, test_list=None, options=None, fail_fast=True):
     """Run a set of tests from the python test suite for iRODS.
 
@@ -67,6 +89,7 @@ def run_specific_tests(containers, test_list=None, options=None, fail_fast=True)
         logging.error(tm.result_string())
 
     return tm.return_code()
+
 
 def run_python_test_suite(container, options=None):
     """Run the entire python test suite for iRODS.
@@ -146,6 +169,20 @@ def run_test_hook_file_in_container(container, path_to_test_hook, options=None):
                         .format(ec, command, container.name))
 
     return ec
+
+
+def get_unit_test_list(container):
+    """Return list of unit tests extracted from unit_tests_list.json file in `container`.
+
+    Arguments:
+    container -- target container from which test list will be extracted
+    """
+    from . import json_utils
+    return json_utils.get_json_from_file(container,
+                                         os.path.join(
+                                             context.unit_tests(),
+                                             'unit_tests_list.json')
+                                         )
 
 
 def get_test_list(container):

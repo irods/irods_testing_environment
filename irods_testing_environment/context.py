@@ -130,6 +130,12 @@ def python():
     return 'python3'
 
 
+def unit_tests():
+    """Return the path to the directory containing packaged unit tests."""
+    import os
+    return os.path.join(irods_home(), 'unit_tests')
+
+
 def sanitize(repo_or_tag):
     """Sanitize the input from special characters rejected by docker-compose.
 
