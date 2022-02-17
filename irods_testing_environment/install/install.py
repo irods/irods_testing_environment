@@ -256,7 +256,9 @@ class installer(object):
 
 
 def make_installer(platform_name):
+    from . import almalinux_installer
     from . import centos_installer
+    from . import debian_installer
     from . import ubuntu_installer
 
     name = '_'.join([platform_name, 'installer'])

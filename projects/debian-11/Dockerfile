@@ -1,15 +1,10 @@
-FROM ubuntu:18.04
+FROM debian:11
 
 RUN \
   apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y \
     wget \
     apt-transport-https \
-    python-pip \
-    python-distro \
-    python-psutil \
-    python-jsonschema \
-    python-requests \
     libfuse2 \
     unixodbc \
     rsyslog \
@@ -32,10 +27,11 @@ RUN pip3 install xmlrunner distro
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - && \
-    echo "deb [arch=amd64] https://packages.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods.list
+# TODO: uncomment when ubuntu:20.04 packages are available
+#RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - && \
+    #echo "deb [arch=amd64] https://packages.irods.org/apt/ focal main" | tee /etc/apt/sources.list.d/renci-irods.list
 
-RUN wget -qO - https://core-dev.irods.org/irods-core-dev-signing-key.asc | apt-key add - && \
-    echo "deb [arch=amd64] https://core-dev.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods-core-dev.list
+#RUN wget -qO - https://core-dev.irods.org/irods-core-dev-signing-key.asc | apt-key add - && \
+    #echo "deb [arch=amd64] https://core-dev.irods.org/apt/ focal main" | tee /etc/apt/sources.list.d/renci-irods-core-dev.list
 
 ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]
