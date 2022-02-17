@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  catalog:
+    image: mysql:5.7
+    environment:
+      - MYSQL_ROOT_PASSWORD=testpassword
+      - MYSQL_USER=irods
+      - MYSQL_PASSWORD=testpassword
+    # Our preferred choice character set encoding and collation scheme is UTF-8, as shown below,
+    # but attempting to use those results in an iRODS setup error. The error is caused by a table
+    # exceeding the maximum row size allowed by MySQL.
+    #
+    #   command: "--transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_bin"
+    #
+    # To get around this, we use latin1_general_cs. Using this option keeps the row size within
+    # the allowed range and makes queries case sensitive (this is required for proper use of iRODS).
+    command: "--transaction-isolation=READ-COMMITTED --collation-server=latin1_general_cs"
+
+  irods-catalog-provider:
+    build:
+      context: ..
+    depends_on:
+      - catalog
+
+  irods-catalog-consumer:
+    build:
+      context: ..
+    depends_on:
+      - irods-catalog-provider
+
