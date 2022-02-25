@@ -5,16 +5,16 @@ import logging
 import os
 
 # local modules
-import context
-import database_setup
-import irods_setup
+from irods_testing_environment import context
+from irods_testing_environment import database_setup
+from irods_testing_environment import irods_setup
 
 if __name__ == "__main__":
     import argparse
-    import logs
     import textwrap
 
     import cli
+    from irods_testing_environment import logs
 
     parser = argparse.ArgumentParser(description='Setup the iRODS catalog, catalog service provider, and catalog service consumers on a running docker-compose project.')
 
@@ -81,7 +81,7 @@ if __name__ == "__main__":
     logging.debug('provided project name [{}], docker-compose project name [{}]'
                   .format(args.project_name, ctx.compose_project.name))
 
-    if len(compose_project.containers()) is 0:
+    if len(ctx.compose_project.containers()) is 0:
         logging.critical('no containers found for project [directory=[{}], name=[{}]]'
                          .format(os.path.abspath(project_directory), ctx.compose_project.name))
 
