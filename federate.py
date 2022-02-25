@@ -83,7 +83,7 @@ if __name__ == "__main__":
         })
 
         # The catalog consumers are only determined after the containers are running
-        zone_info_list = federate.get_info_for_zones(ctx, zone_names, args.consumers_per_zone)
+        zone_info_list = irods_setup.get_info_for_zones(ctx, zone_names, args.consumers_per_zone)
 
         install.make_installer(ctx.platform_name()).install_irods_packages(
             ctx,
@@ -94,7 +94,7 @@ if __name__ == "__main__":
         irods_setup.setup_irods_zones(ctx, zone_info_list, odbc_driver=args.odbc_driver)
 
     else:
-        zone_info_list = federate.get_info_for_zones(ctx, zone_names, args.consumers_per_zone)
+        zone_info_list = irods_setup.get_info_for_zones(ctx, zone_names, args.consumers_per_zone)
 
     federate.form_federation_clique(ctx, zone_info_list, args.federate_consumers)
 

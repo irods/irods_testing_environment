@@ -13,10 +13,10 @@ from irods_testing_environment import services
 
 if __name__ == "__main__":
     import argparse
-    import logs
     import textwrap
 
     import cli
+    from irods_testing_environment import logs
 
     parser = argparse.ArgumentParser(description='Install iRODS packages to a docker-compose project.')
 
