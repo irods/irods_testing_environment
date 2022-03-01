@@ -69,6 +69,7 @@ try:
         logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
         consumer_count = 0
         # TODO: may need to extend container privileges to allow for mungefs, etc.
+        ctx.compose_project.build()
         containers = ctx.compose_project.up(scale_override={
             context.irods_catalog_consumer_service(): consumer_count
         })
