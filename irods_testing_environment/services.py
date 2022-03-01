@@ -30,6 +30,7 @@ def create_topologies(ctx,
     consumer_count -- number of iRODS Catalog Service Consumers to create and set up for each
                       Zone
     """
+    ctx.compose_project.build()
     ctx.compose_project.up(scale_override={
         context.irods_catalog_database_service(): zone_count,
         context.irods_catalog_provider_service(): zone_count,
