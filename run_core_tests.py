@@ -7,7 +7,7 @@ import os
 # local modules
 from irods_testing_environment import context
 from irods_testing_environment import irods_config
-from irods_testing_environment import ssl
+from irods_testing_environment import ssl_setup
 from irods_testing_environment import services
 from irods_testing_environment import test_utils
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         options = list()
 
         if args.do_setup and args.use_ssl:
-            ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
+            ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
             options.append('--use_ssl')
 
         rc = test_utils.run_specific_tests(containers, args.tests, options, args.fail_fast)
