@@ -11,7 +11,7 @@ import federate
 import install
 import irods_config
 import irods_setup
-#import ssl
+#import ssl_setup
 import test_utils
 
 if __name__ == "__main__":
@@ -111,7 +111,7 @@ if __name__ == "__main__":
         options = list()
 
         #if args.do_setup and args.use_ssl:
-            #ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
+            #ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
             #options.append('--use_ssl')
 
         remote_container = ctx.docker_client.containers.get(

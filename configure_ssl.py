@@ -9,6 +9,8 @@ from cryptography.hazmat.primitives.asymmetric import dh, rsa
 from cryptography.x509.oid import NameOID
 
 # local modules
+from irods_testing_environment.ssl_setup import configure_ssl_in_zone
+from irods_testing_environment import logs
 from irods_testing_environment import context
 from irods_testing_environment import execute
 from irods_testing_environment import json_utils
@@ -19,7 +21,6 @@ if __name__ == "__main__":
     import docker
 
     import cli
-    import logs
 
     parser = argparse.ArgumentParser(description='Configure SSL in a running iRODS Zone.')
 

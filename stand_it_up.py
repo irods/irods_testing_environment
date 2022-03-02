@@ -7,7 +7,7 @@ import os
 # local modules
 from irods_testing_environment import context
 from irods_testing_environment import services
-from irods_testing_environment import ssl
+from irods_testing_environment import ssl_setup
 
 if __name__ == "__main__":
     import argparse
@@ -60,4 +60,4 @@ if __name__ == "__main__":
                              consumer_count=args.consumer_count)
 
     if args.use_ssl:
-        ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
+        ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
