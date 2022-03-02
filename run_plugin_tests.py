@@ -12,7 +12,7 @@ from irods_testing_environment import context
 from irods_testing_environment import irods_config
 from irods_testing_environment import irods_setup
 from irods_testing_environment import logs
-from irods_testing_environment import ssl
+from irods_testing_environment import ssl_setup
 from irods_testing_environment import test_utils
 from irods_testing_environment.install import install
 
