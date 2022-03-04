@@ -159,7 +159,7 @@ def configure_ssl_in_zone(docker_client, compose_project):
         # catalog service consumers depends on being able to communicate with the catalog
         # service provider. If SSL is not configured first on the catalog service provider
         # the catalog service consumers will not be able to communicate with it.
-        csps = compose_project.containers(services_names=[
+        csps = compose_project.containers(service_names=[
             context.irods_catalog_provider_service()])
 
         with concurrent.futures.ThreadPoolExecutor() as executor:

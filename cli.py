@@ -107,7 +107,7 @@ def add_irods_test_args(parser):
     parser.add_argument('--concurrent-test-executor-count',
                         dest='executor_count', type=int, default=1,
                         help=textwrap.dedent('''\
-                            Number of concurrent exeecutors to run tests at the same time.'''))
+                            Number of concurrent executors to run tests at the same time.'''))
 
     parser.add_argument('--discard-logs',
                         dest='save_logs', default=True, action='store_false',
