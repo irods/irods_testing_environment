@@ -1,5 +1,6 @@
 # grown-up modules
 import logging
+import time
 
 # local modules
 from . import test_runner
@@ -23,6 +24,8 @@ class test_manager:
         logging.info('[{}]'.format(tests))
         logging.info('[{}]'.format(str(self)))
         logging.info('[{}]'.format(self.test_runners))
+
+        self.duration = -1
 
         for i, t in enumerate(tests):
             index = i % len(self.test_runners)
@@ -65,6 +68,12 @@ class test_manager:
         else:
             r = r + 'All tests passed! :)\n'
 
+        if self.duration > 0:
+            hours = int(self.duration / 60 / 60)
+            minutes = self.duration / 60 - hours * 60
+            r = r + 'time elapsed: [{:9.4}]seconds ([{:4}]hours [{:7.4}]minutes)\n'.format(
+                    self.duration, hours, minutes)
+
         r = r + '==== end of test run results ====\n'
 
         return r
@@ -78,6 +87,8 @@ class test_manager:
         *args -- arguments to be passed along to the `test_runner`'s specific `run` method
         """
         import concurrent.futures
+
+        start_time = time.time()
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures_to_test_runners = {
@@ -102,3 +113,7 @@ class test_manager:
                     tr.rc = 1
 
                     if fail_fast: raise
+
+        end_time = time.time()
+
+        self.duration = end_time - start_time
