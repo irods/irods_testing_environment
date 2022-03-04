@@ -1,5 +1,6 @@
 # grown-up modules
 import logging
+import time
 
 # local modules
 from . import context
@@ -21,9 +22,15 @@ class test_runner:
         # TODO: each test runner is tied to a single container... might need to abstract this out later
         self.executor = executing_container
         self.tests = tests or list()
-        self.passed = list()
-        self.failed = list()
         self.rc = 0
+
+        # When a test completes - whether passing or failing - it will be associated with an
+        # epoch timestamp from the time module representing the time it took to pass or fail.
+        self.passed = dict()
+        self.failed = dict()
+
+        # Start the duration time at -1 to indicate that no tests have run
+        self.duration = -1
 
 
     def __str__(self):
@@ -33,7 +40,8 @@ class test_runner:
             'return_code': self.rc,
             'test_list': self.tests,
             'passed_tests': self.passed_tests(),
-            'failed_tests': self.failed_tests()
+            'failed_tests': self.failed_tests(),
+            'duration': self.duration
         })
 
 
@@ -67,7 +75,7 @@ class test_runner:
 
     def skipped_tests(self):
         """Return the list of tests which have not been executed."""
-        executed_tests = self.passed_tests() + self.failed_tests()
+        executed_tests = [t for t in self.passed_tests()] + [t for t in self.failed_tests()]
         return list(filter(lambda t: t not in executed_tests, self.test_list()))
 
 
@@ -76,18 +84,28 @@ class test_runner:
         r = '-----\nresults for [{}]\n'.format(self.name())
 
         r = r + '\tpassed tests:\n'
-        for t in self.passed_tests():
-            r = r + '\t\t[{}]\n'.format(t)
+        for test, duration in self.passed_tests().items():
+            duration_str = '{:9.4}'.format(duration)
+            r = r + '\t\t[[{:9}]s]\t[{}]\n'.format(duration_str, test)
 
         r = r + '\tskipped tests:\n'
         for t in self.skipped_tests():
             r = r + '\t\t[{}]\n'.format(t)
 
         r = r + '\tfailed tests:\n'
-        for t in self.failed_tests():
-            r = r + '\t\t[{}]\n'.format(t)
+        for test, duration in self.failed_tests().items():
+            duration_str = '{:9.4}'.format(duration)
+            r = r + '\t\t[[{:9}]s]\t[{}]\n'.format(duration_str, test)
 
-        r = r + '\treturn code:[{}]\n-----\n'.format(self.rc)
+        r = r + '\treturn code:[{}]\n'.format(self.rc)
+
+        if self.duration > 0:
+            hours = int(self.duration / 60 / 60)
+            minutes = self.duration / 60 - hours * 60
+            r = r + '\ttime elapsed: [{:9.4}]seconds ([{:4}]hours [{:9.4}]minutes)\n'.format(
+                self.duration, hours, minutes)
+
+        r = r + '-----\n'
 
         return r
 
@@ -99,20 +117,32 @@ class test_runner:
         fail_fast -- if True, the first test to fail ends the run
         *args -- any additional arguments that the test execution can take
         """
+        run_start = time.time()
+
         for t in self.tests:
+            start = time.time()
+
             cmd, ec = self.execute_test(t, *args)
 
+            end = time.time()
+
+            duration = end - start
+
             if ec is 0:
-                self.passed_tests().append(t)
+                self.passed_tests()[t] = duration
                 logging.info('[{}]: cmd succeeded [{}]'.format(self.name(), cmd))
 
             else:
                 self.rc = ec
-                self.failed_tests().append(t)
+                self.failed_tests()[t] = duration
                 logging.warning('[{}]: cmd failed [{}] [{}]'.format(self.name(), ec, cmd))
 
                 if fail_fast:
                     raise RuntimeError('[{}]: command failed [{}]'.format(self.name(), cmd))
+
+        run_end = time.time()
+
+        self.duration = run_end - run_start
 
         if self.rc is not 0:
             logging.error('[{}]: tests that failed [{}]'.format(self.name(), self.failed_tests()))

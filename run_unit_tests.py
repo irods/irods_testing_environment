@@ -14,7 +14,6 @@ from irods_testing_environment import test_utils
 if __name__ == "__main__":
     import argparse
     import textwrap
-    import time
 
     import cli
     from irods_testing_environment import logs
@@ -82,13 +81,7 @@ if __name__ == "__main__":
             for i in range(args.executor_count)
         ]
 
-        start_time = time.time()
-
         rc = test_utils.run_unit_tests(containers, args.tests, args.fail_fast)
-
-        end_time = time.time()
-
-        logging.error('tests completed; time [{}] seconds, success [{}]'.format(end_time - start_time, rc is 0))
 
     except Exception as e:
         logging.critical(e)
@@ -96,9 +89,11 @@ if __name__ == "__main__":
         raise
 
     finally:
-        logging.warning('collecting logs [{}]'.format(output_directory))
-        logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
+        if args.save_logs:
+            logging.warning('collecting logs [{}]'.format(output_directory))
+            logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
 
-        ctx.compose_project.down(include_volumes=True, remove_image_type=False)
+        if args.cleanup_containers:
+            ctx.compose_project.down(include_volumes=True, remove_image_type=False)
 
     exit(rc)

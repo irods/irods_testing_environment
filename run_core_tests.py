@@ -14,7 +14,6 @@ from irods_testing_environment import test_utils
 if __name__ == "__main__":
     import argparse
     import textwrap
-    import time
 
     import cli
     from irods_testing_environment import logs
@@ -95,13 +94,7 @@ if __name__ == "__main__":
             ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
             options.append('--use_ssl')
 
-        start_time = time.time()
-
         rc = test_utils.run_specific_tests(containers, args.tests, options, args.fail_fast)
-
-        end_time = time.time()
-
-        logging.error('tests completed; time [{}] seconds, success [{}]'.format(end_time - start_time, rc is 0))
 
     except Exception as e:
         logging.critical(e)
