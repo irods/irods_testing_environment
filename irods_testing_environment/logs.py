@@ -54,6 +54,5 @@ def collect_logs(docker_client, containers, output_directory):
     """
     return archive.collect_files_from_containers(docker_client,
                                                  containers,
-                                                 [log_directory_for_version((4,3,0)),
-                                                  log_directory_for_version((4,2,0))],
+                                                 [log_directory_for_version((4,2,0))],
                                                  output_directory)
