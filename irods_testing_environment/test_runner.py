@@ -130,12 +130,12 @@ class test_runner:
 
             if ec is 0:
                 self.passed_tests()[t] = duration
-                logging.info('[{}]: cmd succeeded [{}]'.format(self.name(), cmd))
+                logging.error('[{}]: cmd succeeded [{}]'.format(self.name(), cmd))
 
             else:
                 self.rc = ec
                 self.failed_tests()[t] = duration
-                logging.warning('[{}]: cmd failed [{}] [{}]'.format(self.name(), ec, cmd))
+                logging.error('[{}]: cmd failed [{}] [{}]'.format(self.name(), ec, cmd))
 
                 if fail_fast:
                     raise RuntimeError('[{}]: command failed [{}]'.format(self.name(), cmd))
@@ -171,8 +171,7 @@ class test_runner_irods_python_suite(test_runner):
         return cmd, execute.execute_command(self.executor,
                                             ' '.join(cmd),
                                             user='irods',
-                                            workdir=context.irods_home(),
-                                            stream_output=True)
+                                            workdir=context.irods_home())
 
 
 class test_runner_irods_unit_tests(test_runner):
@@ -187,5 +186,4 @@ class test_runner_irods_unit_tests(test_runner):
         return cmd, execute.execute_command(self.executor,
                                             ' '.join(cmd),
                                             user='irods',
-                                            workdir=context.irods_home(),
-                                            stream_output=True)
+                                            workdir=context.irods_home())
