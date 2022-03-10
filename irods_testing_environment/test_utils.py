@@ -83,7 +83,7 @@ def run_specific_tests(containers, test_list=None, options=None, fail_fast=True)
     tm = test_manager.test_manager(containers, tests)
 
     try:
-        tm.run(fail_fast, options)
+        tm.run(fail_fast, options=options)
 
     finally:
         logging.error(tm.result_string())

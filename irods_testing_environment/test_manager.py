@@ -79,12 +79,12 @@ class test_manager:
         return r
 
 
-    def run(self, fail_fast=True, *args):
+    def run(self, fail_fast=True, **kwargs):
         """Run managed `test_runners` in parallel.
 
         Arguments:
         fail_fast -- if True, the first test to fail ends the run
-        *args -- arguments to be passed along to the `test_runner`'s specific `run` method
+        **kwargs -- keyword arguments to be passed to the `test_runner`'s specific `run` method
         """
         import concurrent.futures
 
@@ -92,7 +92,7 @@ class test_manager:
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures_to_test_runners = {
-                executor.submit(tr.run, fail_fast, *args): tr for tr in self.test_runners
+                executor.submit(tr.run, fail_fast, **kwargs): tr for tr in self.test_runners
             }
 
             for f in concurrent.futures.as_completed(futures_to_test_runners):
