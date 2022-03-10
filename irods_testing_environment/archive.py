@@ -168,3 +168,28 @@ def copy_files_in_container(container, sources_and_destinations):
         if execute.execute_command(container, 'cp {} {}'.format(s, d)) is not 0:
             raise RuntimeError('failed to copy file src [{}] dest [{}] [{}]'
                 .format(s, d, container.name))
+
+
+def collect_files_from_containers(docker_client,
+                                  containers,
+                                  paths_to_copy_from_containers,
+                                  output_directory_on_host):
+    """Collect files from containers into a single output directory on the host.
+
+    Arguments:
+    docker_client -- the Docker client for communicating with the daemon
+    containers -- list of Containers from which paths will be copied
+    paths_to_copy_from_containers -- list of path-likes which will be copied from the containers
+    output_directory_on_host -- the output directory on the host where files will be copied
+    """
+    for c in containers:
+        od = os.path.join(output_directory_on_host, 'logs', c.name)
+        if not os.path.exists(od):
+            os.makedirs(od)
+
+        logging.info(f'saving files in [{paths_to_copy_from_containers}] to [{od}] [{c.name}]')
+
+        source_container = docker_client.containers.get(c.name)
+
+        for p in paths_to_copy_from_containers:
+            copy_from_container(source_container, p, od)
