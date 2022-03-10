@@ -88,7 +88,7 @@ if __name__ == "__main__":
         ]
         logging.debug('got containers to run on [{}]'.format(container.name for container in containers))
 
-        options = list()
+        options = ['--xml_output']
 
         if args.do_setup and args.use_ssl:
             ssl.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)

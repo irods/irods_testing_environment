@@ -110,19 +110,19 @@ class test_runner:
         return r
 
 
-    def run(self, fail_fast=True, *args):
+    def run(self, fail_fast=True, **kwargs):
         """Execute test list sequentially on executing container.
 
         Arguments:
         fail_fast -- if True, the first test to fail ends the run
-        *args -- any additional arguments that the test execution can take
+        **kwargs -- keyword arguments for the specific `test_runner` implementation
         """
         run_start = time.time()
 
         for t in self.tests:
             start = time.time()
 
-            cmd, ec = self.execute_test(t, *args)
+            cmd, ec = self.execute_test(t, **kwargs)
 
             end = time.time()
 
@@ -148,7 +148,7 @@ class test_runner:
             logging.error('[{}]: tests that failed [{}]'.format(self.name(), self.failed_tests()))
 
 
-    def execute_test(self, test, *args):
+    def execute_test(self, test, **kwargs):
         """Execute `test` with return the command run and the return code."""
         raise NotImplementedError('test_runner is a base class and should not be used directly')
 
@@ -165,9 +165,14 @@ class test_runner_irods_python_suite(test_runner):
 
 
     def execute_test(self, test, options=None):
-        """Execute `test` with `options` and return the command run and the return code."""
+        """Execute `test` with `options` and return the command run and the return code.
+
+        Arguments:
+        test -- name of the test to execute
+        options -- list of strings which will be appended to the command to execute
+        """
         cmd = self.run_tests_command() + ['--run_specific_test', test]
-        if options: cmd.append(options)
+        if options: cmd.extend(options)
         return cmd, execute.execute_command(self.executor,
                                             ' '.join(cmd),
                                             user='irods',
@@ -179,10 +184,21 @@ class test_runner_irods_unit_tests(test_runner):
         super(test_runner_irods_unit_tests, self).__init__(executing_container, tests)
 
 
-    def execute_test(self, test):
-        """Execute `test` and return the command run and the return code."""
+    def execute_test(self, test, reporter='junit'):
+        """Execute `test` and return the command run and the return code.
+
+        Arguments:
+        test -- name of the test to execute
+        reporter -- Catch2 reporter to use (options: console, compact, junit, xml)
+        """
         import os
-        cmd = [os.path.join(context.unit_tests(), test)]
+
+        output_dir = os.path.join(context.irods_home(), 'log')
+        output_path = os.path.join(output_dir, f'{test}_{reporter}_report.out')
+
+        cmd = [os.path.join(context.unit_tests(), test),
+               '--reporter', reporter,
+               '--out', output_path]
         return cmd, execute.execute_command(self.executor,
                                             ' '.join(cmd),
                                             user='irods',
