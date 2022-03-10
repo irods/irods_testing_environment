@@ -5,6 +5,7 @@ import logging
 import os
 
 # local modules
+from irods_testing_environment import archive
 from irods_testing_environment import context
 from irods_testing_environment import irods_config
 from irods_testing_environment import ssl_setup
@@ -58,7 +59,6 @@ if __name__ == "__main__":
     logs.configure(args.verbosity, os.path.join(output_directory, 'script_output.log'))
 
     rc = 0
-    last_command_to_fail = None
 
     try:
         if args.do_setup:
@@ -104,7 +104,15 @@ if __name__ == "__main__":
     finally:
         if args.save_logs:
             logging.warning('collecting logs [{}]'.format(output_directory))
+
+            # collect the usual logs
             logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
+
+            # and then the test reports
+            archive.collect_files_from_containers(ctx.docker_client,
+                                                  ctx.irods_containers(),
+                                                  [os.path.join(context.irods_home(), 'test-reports')],
+                                                  output_directory)
 
         if args.cleanup_containers:
             ctx.compose_project.down(include_volumes=True, remove_image_type=False)
