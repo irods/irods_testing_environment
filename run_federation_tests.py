@@ -123,7 +123,7 @@ if __name__ == "__main__":
         host = context.topology_hostnames(ctx.docker_client, ctx.compose_project)[
                 context.irods_catalog_provider_container(ctx.compose_project.name)]
 
-        options.extend(['--federation', version, zone, host])
+        options.extend(['--federation', '.'.join(version), zone, host])
 
         # configure federation for testing
         irods_config.configure_irods_federation_testing(ctx, zone_info_list[0], zone_info_list[1])
