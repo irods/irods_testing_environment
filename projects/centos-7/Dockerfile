@@ -22,6 +22,8 @@ RUN yum install -y python3-devel
 
 RUN pip3 install xmlrunner distro psutil pyodbc jsonschema requests
 
+RUN pip install xmlrunner psutil pyodbc jsonschema requests
+
 RUN rpm --import https://packages.irods.org/irods-signing-key.asc && \
     wget -qO - https://packages.irods.org/renci-irods.yum.repo | tee /etc/yum.repos.d/renci-irods.yum.repo
 

@@ -52,8 +52,16 @@ def collect_logs(docker_client, containers, output_directory):
     containers -- list of containers from which logs will be collected
     output_directory -- directory on host into which log files will be collected
     """
-    return archive.collect_files_from_containers(docker_client,
-                                                 containers,
-                                                 [log_directory_for_version((4,3,0)),
-                                                  log_directory_for_version((4,2,0))],
-                                                 output_directory)
+    from . import irods_config
+
+    archive.collect_files_from_containers(docker_client,
+                                          containers,
+                                          [os.path.join(context.irods_home(), 'log')],
+                                          output_directory)
+
+    major, minor, patch = irods_config.get_irods_version(docker_client.containers.get(containers[0].name))
+    if minor > 2:
+        archive.collect_files_from_containers(docker_client,
+                                              containers,
+                                              [log_directory_for_version((major,minor,patch))],
+                                              output_directory)

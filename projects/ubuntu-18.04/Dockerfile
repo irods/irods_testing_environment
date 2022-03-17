@@ -30,6 +30,8 @@ RUN \
 
 RUN pip3 install xmlrunner distro
 
+RUN pip install xmlrunner
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - && \

@@ -159,9 +159,10 @@ class test_runner_irods_python_suite(test_runner):
 
 
     @staticmethod
-    def run_tests_command():
+    def run_tests_command(container):
         """Return a list of strings used as a space-delimited invocation of the test runner."""
-        return [context.python(), context.run_tests_script()]
+        from . import test_utils
+        return [test_utils.python(container), context.run_tests_script()]
 
 
     def execute_test(self, test, options=None):
@@ -171,7 +172,7 @@ class test_runner_irods_python_suite(test_runner):
         test -- name of the test to execute
         options -- list of strings which will be appended to the command to execute
         """
-        cmd = self.run_tests_command() + ['--run_specific_test', test]
+        cmd = self.run_tests_command(self.executor) + ['--run_specific_test', test]
         if options: cmd.extend(options)
         return cmd, execute.execute_command(self.executor,
                                             ' '.join(cmd),
