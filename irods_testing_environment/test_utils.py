@@ -98,7 +98,7 @@ def run_python_test_suite(container, options=None):
     container -- target container on which the test script will run
     options -- list of strings representing script options to pass to the run_tests.py script
     """
-    command = ['python3', context.run_tests_script(), '--run_python_suite']
+    command = [python(container), context.run_tests_script(), '--run_python_suite']
 
     if options: command.extend(options)
 
@@ -199,3 +199,11 @@ def get_test_list(container):
                                              'core_tests_list.json')
                                          )
 
+
+def python(container):
+    """Return command to run python appropriately per detected iRODS version in `container`."""
+    from . import irods_config
+
+    major, minor, patch = irods_config.get_irods_version(container)
+
+    return 'python' if minor < 3 else 'python3'

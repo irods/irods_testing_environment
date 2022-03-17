@@ -13,8 +13,6 @@ The following database Docker image tags are currently supported:
 
 To add support for a new OS platform/version or database type/version, simply add a new Compose project like those under `projects` and point the scripts at it.
 
-NOTE: iRODS 4.2.x is the only supported series for testing at this time. 4.3.x and others will be added in the future.
-
 ## Quick Start
 
 A recent-ish version of docker, python, and git are required to run this project.
@@ -89,14 +87,15 @@ python run_federation_tests.py --tests test_federation.Test_ICommands.test_iques
 For purposes of CI, official iRODS Plugins have followed a convention of providing a "test hook" which will install the appropriate packages and run the appropriate test suite. If a test hook is provided in the prescribed way, any iRODS plugin test suite can be run in the testing environment.
 
 The test hooks generally have the following requirements:
-    - `irods_python_ci_utilities` is installed as a pip package
-    - Path to local directory with built plugin packages (passed by `--built_packages_root_directory`)
-        - Inside the root directory, the `os_specific_directory` must exist and contain the appropriate packages
-        - The `os_specific_directory` must be named like this (image tag -> directory name):
-            - ubuntu:16.04  ->  `Ubuntu_16`
-            - ubuntu:18.04  ->  `Ubuntu_18`
-            - centos:7      ->  `Centos linux_7`
-    - iRODS server is already installed and setup
+
+ - `irods_python_ci_utilities` is installed as a pip package
+ - Path to local directory with built plugin packages (passed by `--built_packages_root_directory`)
+   - Inside the root directory, the `os_specific_directory` must exist and contain the appropriate packages
+     - The `os_specific_directory` must be named like this (image tag -> directory name):
+       - ubuntu:16.04  ->  `Ubuntu_16`
+       - ubuntu:18.04  ->  `Ubuntu_18`
+       - centos:7      ->  `Centos linux_7`
+ - iRODS server is already installed and setup
 
 Your provided built packages should be in an identical directory or symlink following the naming convention above.
 

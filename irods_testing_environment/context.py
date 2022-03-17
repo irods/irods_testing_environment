@@ -125,11 +125,6 @@ def run_tests_script():
     return os.path.join(irods_home(), 'scripts', 'run_tests.py')
 
 
-def python():
-    """Return the appropriate python interpreter."""
-    return 'python3'
-
-
 def unit_tests():
     """Return the path to the directory containing packaged unit tests."""
     import os
