@@ -10,7 +10,6 @@ from . import context
 from . import execute
 from . import services
 from . import test_manager
-from .install import install
 
 def job_name(project_name, prefix=None):
     """Construct unique job name based on the docker-compose project name.
@@ -70,6 +69,40 @@ def run_unit_tests(containers, test_list=None, fail_fast=True):
     return tm.return_code()
 
 
+def run_plugin_tests(containers,
+                     plugin_name,
+                     path_to_test_hook_on_host=None,
+                     test_list=None,
+                     options=None,
+                     fail_fast=True):
+    """Run a set of tests from the test hook for the specified iRODS plugin.
+
+    Arguments:
+    containers -- target containers on which the tests will run
+    plugin_name -- name of the git repo hosting the plugin test hook
+    path_to_test_hook_on_host -- local filesystem path on host machine to test hook
+    test_list -- a list of strings of the tests to be run
+    options -- list of strings representing script options to pass to the run_tests.py script
+    fail_fast -- if True, stop running after first failure; else, runs all tests
+    """
+    #tests = test_list or get_plugin_test_list(containers[0])
+    tests = test_list or [f'test_{plugin_name}']
+
+    tm = test_manager.test_manager(containers, tests, test_type='irods_plugin_tests')
+
+    try:
+        tm.run(fail_fast,
+               plugin_repo_name=plugin_name,
+               plugin_branch=None,
+               path_to_test_hook_on_host=path_to_test_hook_on_host,
+               options=options)
+
+    finally:
+        logging.error(tm.result_string())
+
+    return tm.return_code()
+
+
 def run_specific_tests(containers, test_list=None, options=None, fail_fast=True):
     """Run a set of tests from the python test suite for iRODS.
 
@@ -118,62 +151,6 @@ def run_python_test_suite(container, options=None):
     return ec
 
 
-def run_test_hook(container, repo_name, branch=None, options=None):
-    """Run the test hook from the specified git repository.
-
-    Arguments:
-    container -- target container on which the test script will run
-    repo_name -- name of the git repo
-    branch -- name of the branch to checkout in cloned git repo
-    options -- list of strings representing script options to pass to the run_tests.py script
-    """
-    repo_path = services.clone_repository_to_container(container, repo_name, branch=branch)
-
-    # TODO: option?
-    path_to_test_hook = os.path.join(repo_path,
-                                     'irods_consortium_continuous_integration_test_hook.py')
-
-    return run_test_hook_file_in_container(container, path_to_test_hook, options)
-
-
-def run_test_hook_file(container, path_to_test_hook_on_host, options=None):
-    """Run the local test hook in the container.
-
-    Arguments:
-    container -- target container on which the test hook will run
-    path_to_test_hook_on_host -- local filesystem path on host machine to test hook
-    options -- list of strings representing script options to pass to the run_tests.py script
-    """
-    f = os.path.abspath(path_to_test_hook_on_host)
-    archive.copy_archive_to_container(container, archive.create_archive([f]))
-    return run_test_hook_file_in_container(container, f, options)
-
-
-def run_test_hook_file_in_container(container, path_to_test_hook, options=None):
-    """Run the test hook at the specified path in the container.
-
-    Arguments:
-    container -- target container on which the test script will run
-    path_to_test_hook -- path in the container for the test hook file
-    options -- list of strings representing script options to pass to the run_tests.py script
-    """
-    install.install_pip_package_from_repo(container, 'irods_python_ci_utilities')
-
-    command = [container_info.python(container), path_to_test_hook]
-
-    if options: command.extend(options)
-
-    ec = execute.execute_command(container,
-                                 ' '.join(command),
-                                 stream_output=True)
-
-    if ec is not 0:
-        logging.warning('command exited with error code [{}] [{}] [{}]'
-                        .format(ec, command, container.name))
-
-    return ec
-
-
 def get_unit_test_list(container):
     """Return list of unit tests extracted from unit_tests_list.json file in `container`.
 
@@ -201,3 +178,11 @@ def get_test_list(container):
                                              'scripts',
                                              'core_tests_list.json')
                                          )
+def get_plugin_test_list(container):
+    """Return list of tests extracted from core_tests_list.json file in `container`.
+
+    Arguments:
+    container -- target container from which test list will be extracted
+    """
+    # TODO: implement unittest discovery a la PRC
+    return []

@@ -1,5 +1,6 @@
 # grown-up modules
 import logging
+import os
 import time
 
 # local modules
@@ -192,8 +193,6 @@ class test_runner_irods_unit_tests(test_runner):
         test -- name of the test to execute
         reporter -- Catch2 reporter to use (options: console, compact, junit, xml)
         """
-        import os
-
         output_dir = os.path.join(context.irods_home(), 'log')
         output_path = os.path.join(output_dir, f'{test}_{reporter}_report.out')
 
@@ -204,3 +203,76 @@ class test_runner_irods_unit_tests(test_runner):
                                             ' '.join(cmd),
                                             user='irods',
                                             workdir=context.irods_home())
+
+
+class test_runner_irods_plugin_tests(test_runner):
+    def __init__(self, executing_container, tests=None):
+        super(test_runner_irods_plugin_tests, self).__init__(executing_container, tests)
+
+
+    # TODO: this could likely just be implemented in yet another subclass
+    def stage_test_hook_file_from_repo(self, repo_name, branch=None):
+        """Run the test hook from the specified git repository.
+
+        Arguments:
+        repo_name -- name of the git repo
+        branch -- name of the branch to checkout in cloned git repo
+        options -- list of strings representing script options to pass to the run_tests.py script
+        """
+        from . import services
+        return os.path.join(
+                services.clone_repository_to_container(self.executor, repo_name, branch=branch),
+                'irods_consortium_continuous_integration_test_hook.py')
+
+
+    # TODO: this could likely just be implemented in yet another subclass
+    def stage_custom_test_hook_file(self, path_to_test_hook_on_host):
+        """Run the local test hook in the container.
+
+        Arguments:
+        path_to_test_hook_on_host -- local filesystem path on host machine to test hook
+        options -- list of strings representing script options to pass to the run_tests.py script
+        """
+        from . import archive
+
+        f = os.path.abspath(path_to_test_hook_on_host)
+
+        archive.copy_archive_to_container(self.executor, archive.create_archive([f]))
+
+        return f
+
+
+    def execute_test(self, test, plugin_repo_name=None, plugin_branch=None, path_to_test_hook_on_host=None, options=None):
+        """Execute `test` and return the command run and the return code.
+
+        Arguments:
+        test -- name of the test to execute
+        plugin_repo_name -- name of the git repo hosting the plugin test hook
+        plugin_branch -- name of the branch of the git repo for desired test hook
+        path_to_test_hook_on_host -- path to test hook file on the host
+        options -- list of strings which will be appended to the command to execute
+        """
+        from . import container_info
+
+        if path_to_test_hook_on_host:
+            path_to_test_hook_in_container = self.stage_custom_test_hook_file(path_to_test_hook_on_host)
+        else:
+            path_to_test_hook_in_container = self.stage_test_hook_file_from_repo(plugin_repo_name, plugin_branch)
+
+        cmd = [container_info.python(self.executor), path_to_test_hook_in_container]
+        cmd.extend(['--test', test])
+
+        if test is not self.tests[0]:
+            cmd.append('--skip-setup')
+
+        else:
+            from .install import install
+
+            install.install_pip_package_from_repo(self.executor,
+                                                  'irods_python_ci_utilities',
+                                                  url_base='https://github.com/irods',
+                                                  branch='main')
+
+        if options: cmd.extend(options)
+
+        return cmd, execute.execute_command(self.executor, ' '.join(cmd))
