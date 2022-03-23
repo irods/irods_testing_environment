@@ -119,7 +119,7 @@ if __name__ == "__main__":
                 logging.error(e)
                 logging.error('failed to collect some log files')
 
-                if rc is 0:
+                if rc == 0:
                     rc = 1
 
 

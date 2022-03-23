@@ -4,6 +4,7 @@ import os
 
 # local modules
 from .. import archive
+from .. import container_info
 from .. import context
 from .. import execute
 
@@ -277,7 +278,6 @@ def install_pip_package_from_repo(container,
     repo_name -- name of the git repository to clone
     branch -- branch to checkout in cloned git repository
     """
-    from .. import container_info
     from .. import services
 
     repo_path = services.clone_repository_to_container(container,
