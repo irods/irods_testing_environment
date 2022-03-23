@@ -161,8 +161,8 @@ class test_runner_irods_python_suite(test_runner):
     @staticmethod
     def run_tests_command(container):
         """Return a list of strings used as a space-delimited invocation of the test runner."""
-        from . import test_utils
-        return [test_utils.python(container), context.run_tests_script()]
+        from . import container_info
+        return [container_info.python(container), context.run_tests_script()]
 
 
     def execute_test(self, test, options=None):

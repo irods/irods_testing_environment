@@ -5,6 +5,7 @@ import tempfile
 
 # local modules
 from . import archive
+from . import container_info
 from . import context
 from . import execute
 from . import services
@@ -98,7 +99,9 @@ def run_python_test_suite(container, options=None):
     container -- target container on which the test script will run
     options -- list of strings representing script options to pass to the run_tests.py script
     """
-    command = [python(container), context.run_tests_script(), '--run_python_suite']
+    command = [container_info.python(container),
+               context.run_tests_script(),
+               '--run_python_suite']
 
     if options: command.extend(options)
 
@@ -156,7 +159,7 @@ def run_test_hook_file_in_container(container, path_to_test_hook, options=None):
     """
     install.install_pip_package_from_repo(container, 'irods_python_ci_utilities')
 
-    command = ['python3', path_to_test_hook]
+    command = [container_info.python(container), path_to_test_hook]
 
     if options: command.extend(options)
 
@@ -198,12 +201,3 @@ def get_test_list(container):
                                              'scripts',
                                              'core_tests_list.json')
                                          )
-
-
-def python(container):
-    """Return command to run python appropriately per detected iRODS version in `container`."""
-    from . import irods_config
-
-    major, minor, patch = irods_config.get_irods_version(container)
-
-    return 'python' if minor < 3 else 'python3'

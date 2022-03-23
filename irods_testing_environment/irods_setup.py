@@ -286,7 +286,7 @@ def setup_irods_server(container, setup_input):
     container -- docker.client.container on which the iRODS packages are installed
     setup_input -- string which will be provided as input to the iRODS setup script
     """
-    from . import test_utils
+    from . import container_info
     irodsctl = os.path.join(context.irods_home(), 'irodsctl')
     ec = execute.execute_command(container, '{} stop'.format(irodsctl), user='irods')
     if ec is not 0:
@@ -299,7 +299,8 @@ def setup_irods_server(container, setup_input):
     execute.execute_command(container, 'cat /input')
 
     path_to_setup_script = os.path.join(context.irods_home(), 'scripts', 'setup_irods.py')
-    run_setup_script = 'bash -c \'{} {} < /input\''.format(test_utils.python(container), path_to_setup_script)
+    run_setup_script = 'bash -c \'{} {} < /input\''.format(container_info.python(container),
+                                                           path_to_setup_script)
     ec = execute.execute_command(container, run_setup_script)
     if ec is not 0:
         raise RuntimeError('failed to set up iRODS server [{}]'.format(container.name))
