@@ -112,4 +112,3 @@ def clone_repository_to_container(container,
                                             [os.path.abspath(repo_path)], repo_name))
 
     return repo_path
-
