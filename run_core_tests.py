@@ -103,16 +103,25 @@ if __name__ == "__main__":
 
     finally:
         if args.save_logs:
-            logging.warning('collecting logs [{}]'.format(output_directory))
+            try:
+                logging.warning('collecting logs [{}]'.format(output_directory))
 
-            # collect the usual logs
-            logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
+                # collect the usual logs
+                logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
 
-            # and then the test reports
-            archive.collect_files_from_containers(ctx.docker_client,
-                                                  ctx.irods_containers(),
-                                                  [os.path.join(context.irods_home(), 'test-reports')],
-                                                  output_directory)
+                # and then the test reports
+                archive.collect_files_from_containers(ctx.docker_client,
+                                                      ctx.irods_containers(),
+                                                      [os.path.join(context.irods_home(), 'test-reports')],
+                                                      output_directory)
+
+            except Exception as e:
+                logging.error(e)
+                logging.error('failed to collect some log files')
+
+                if rc is 0:
+                    rc = 1
+
 
         if args.cleanup_containers:
             ctx.compose_project.down(include_volumes=True, remove_image_type=False)
