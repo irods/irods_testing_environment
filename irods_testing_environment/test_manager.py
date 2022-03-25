@@ -71,7 +71,7 @@ class test_manager:
         if self.duration > 0:
             hours = int(self.duration / 60 / 60)
             minutes = self.duration / 60 - hours * 60
-            r = r + 'time elapsed: [{:9.4}]seconds ([{:4}]hours [{:7.4}]minutes)\n'.format(
+            r = r + 'time elapsed: [{:>9.4f}]seconds ([{:>4d}]hours [{:>7.4f}]minutes)\n'.format(
                     self.duration, hours, minutes)
 
         r = r + '==== end of test run results ====\n'

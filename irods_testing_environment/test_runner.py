@@ -86,8 +86,7 @@ class test_runner:
 
         r = r + '\tpassed tests:\n'
         for test, duration in self.passed_tests().items():
-            duration_str = '{:9.4}'.format(duration)
-            r = r + '\t\t[[{:9}]s]\t[{}]\n'.format(duration_str, test)
+            r = r + '\t\t[[{:>9.4f}]s]\t[{}]\n'.format(duration, test)
 
         r = r + '\tskipped tests:\n'
         for t in self.skipped_tests():
@@ -95,8 +94,7 @@ class test_runner:
 
         r = r + '\tfailed tests:\n'
         for test, duration in self.failed_tests().items():
-            duration_str = '{:9.4}'.format(duration)
-            r = r + '\t\t[[{:9}]s]\t[{}]\n'.format(duration_str, test)
+            r = r + '\t\t[[{:>9.4f}]s]\t[{}]\n'.format(duration, test)
 
         r = r + '\treturn code:[{}]\n'.format(self.rc)
 
