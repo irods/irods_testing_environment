@@ -3,26 +3,50 @@ FROM centos:7
 RUN \
   yum update -y && \
   yum install -y \
-    which \
+    authd \
     epel-release \
-    wget \
     gcc-c++ \
+    gnupg \
     make \
+    python \
+    python-pip \
     python3 \
     python3-pip \
     rsyslog \
-    gnupg \
+    sudo \
     unixODBC-devel \
-    authd
-  #&& \
-  #yum clean all && \
-  #rm -rf /var/cache/yum /tmp/* && \
+    wget \
+    which \
+  && \
+  yum clean all && \
+  rm -rf /var/cache/yum /tmp/*
 
-RUN yum install -y python3-devel
+# python 2 and 3 must be installed separately because yum will ignore/discard python2
+RUN \
+  yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && \
+  yum install -y \
+    python3 \
+    python3-devel \
+    python3-pip \
+  && \
+  yum clean all && \
+  rm -rf /var/cache/yum /tmp/*
 
 RUN pip3 install xmlrunner distro psutil pyodbc jsonschema requests
 
-RUN pip install xmlrunner psutil pyodbc jsonschema requests
+RUN \
+  yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && \
+  yum install -y \
+    python \
+    python-devel \
+    python-distro \
+    python-pip \
+    python-requests \
+    python-jsonschema \
+    python-psutil \
+  && \
+  yum clean all && \
+  rm -rf /var/cache/yum /tmp/*
 
 RUN rpm --import https://packages.irods.org/irods-signing-key.asc && \
     wget -qO - https://packages.irods.org/renci-irods.yum.repo | tee /etc/yum.repos.d/renci-irods.yum.repo
