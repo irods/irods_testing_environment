@@ -27,8 +27,10 @@ class test_runner:
 
         # When a test completes - whether passing or failing - it will be associated with an
         # epoch timestamp from the time module representing the time it took to pass or fail.
-        self.passed = dict()
-        self.failed = dict()
+        # These are stored in two lists of tuples. These are not dicts because if the same test
+        # is run multiple times in an executor, there will be naming collisions.
+        self.passed = list()
+        self.failed = list()
 
         # Start the duration time at -1 to indicate that no tests have run
         self.duration = -1
@@ -76,7 +78,7 @@ class test_runner:
 
     def skipped_tests(self):
         """Return the list of tests which have not been executed."""
-        executed_tests = [t for t in self.passed_tests()] + [t for t in self.failed_tests()]
+        executed_tests = [t for t,_ in self.passed_tests()] + [t for t,_ in self.failed_tests()]
         return list(filter(lambda t: t not in executed_tests, self.test_list()))
 
 
@@ -85,7 +87,7 @@ class test_runner:
         r = '-----\nresults for [{}]\n'.format(self.name())
 
         r = r + '\tpassed tests:\n'
-        for test, duration in self.passed_tests().items():
+        for test, duration in self.passed_tests():
             # TODO: a test list of type None may not indicate that all tests ran
             r = r + '\t\t[[{:>9.4f}]s]\t[{}]\n'.format(duration, test or 'all tests')
 
@@ -95,7 +97,7 @@ class test_runner:
             r = r + '\t\t[{}]\n'.format(t or 'all tests')
 
         r = r + '\tfailed tests:\n'
-        for test, duration in self.failed_tests().items():
+        for test, duration in self.failed_tests():
             # TODO: a test list of type None may not indicate that all tests ran
             r = r + '\t\t[[{:>9.4f}]s]\t[{}]\n'.format(duration, test or 'all tests')
 
@@ -131,12 +133,12 @@ class test_runner:
             duration = end - start
 
             if ec is 0:
-                self.passed_tests()[t] = duration
+                self.passed_tests().append((t, duration))
                 logging.error('[{}]: cmd succeeded [{}]'.format(self.name(), cmd))
 
             else:
                 self.rc = ec
-                self.failed_tests()[t] = duration
+                self.failed_tests().append((t, duration))
                 logging.error('[{}]: cmd failed [{}] [{}]'.format(self.name(), ec, cmd))
 
                 if fail_fast:

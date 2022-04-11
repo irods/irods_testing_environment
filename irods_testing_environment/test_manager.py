@@ -70,12 +70,17 @@ class test_manager:
     def result_string(self):
         """Return string showing tests that passed and failed from each `test_runner.`"""
         r = '==== begin test run results ====\n'
+        tests_were_skipped = False
         for tr in self.test_runners:
             r = r + tr.result_string()
+            tests_were_skipped = tests_were_skipped if tests_were_skipped else len(tr.skipped_tests()) > 0
 
         if self.return_code() is not 0:
-            r = r + 'List of failed tests:\n\t{}\n'.format(' '.join([t or 'all tests' for t in self.failed_tests()]))
+            r = r + 'List of failed tests:\n\t{}\n'.format(' '.join([t or 'all tests' for t,_ in self.failed_tests()]))
             r = r + 'Return code:[{}]\n'.format(self.return_code())
+
+        elif tests_were_skipped:
+            r = r + 'Some tests were skipped or did not complete...\n'
 
         else:
             r = r + 'All tests passed! :)\n'
