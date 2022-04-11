@@ -86,15 +86,18 @@ class test_runner:
 
         r = r + '\tpassed tests:\n'
         for test, duration in self.passed_tests().items():
-            r = r + '\t\t[[{:>9.4f}]s]\t[{}]\n'.format(duration, test)
+            # TODO: a test list of type None may not indicate that all tests ran
+            r = r + '\t\t[[{:>9.4f}]s]\t[{}]\n'.format(duration, test or 'all tests')
 
         r = r + '\tskipped tests:\n'
         for t in self.skipped_tests():
-            r = r + '\t\t[{}]\n'.format(t)
+            # TODO: a test list of type None may not indicate that all tests ran
+            r = r + '\t\t[{}]\n'.format(t or 'all tests')
 
         r = r + '\tfailed tests:\n'
         for test, duration in self.failed_tests().items():
-            r = r + '\t\t[[{:>9.4f}]s]\t[{}]\n'.format(duration, test)
+            # TODO: a test list of type None may not indicate that all tests ran
+            r = r + '\t\t[[{:>9.4f}]s]\t[{}]\n'.format(duration, test or 'all tests')
 
         r = r + '\treturn code:[{}]\n'.format(self.rc)
 
@@ -167,12 +170,19 @@ class test_runner_irods_python_suite(test_runner):
     def execute_test(self, test, options=None):
         """Execute `test` with `options` and return the command run and the return code.
 
+        If `test` is `None`, the entire test suite will be run serially using the option
+        `--run_specific_test` from the `run_tests.py` script.
+
         Arguments:
         test -- name of the test to execute
         options -- list of strings which will be appended to the command to execute
         """
-        cmd = self.run_tests_command(self.executor) + ['--run_specific_test', test]
+        cmd = self.run_tests_command(self.executor)
+
+        cmd.extend(['--run_python_suite'] if test is None else ['--run_specific_test', test])
+
         if options: cmd.extend(options)
+
         return cmd, execute.execute_command(self.executor,
                                             ' '.join(cmd),
                                             user='irods',
@@ -187,10 +197,16 @@ class test_runner_irods_unit_tests(test_runner):
     def execute_test(self, test, reporter='junit'):
         """Execute `test` and return the command run and the return code.
 
+        If `test` is `None`, a `TypeError` is raised because the test runner requires that a
+        specific test be indicated by name.
+
         Arguments:
         test -- name of the test to execute
         reporter -- Catch2 reporter to use (options: console, compact, junit, xml)
         """
+        if test is None:
+            raise TypeError('unit tests must be specified by name - try using --tests')
+
         output_dir = os.path.join(context.irods_home(), 'log')
         output_path = os.path.join(output_dir, f'{test}_{reporter}_report.out')
 
@@ -240,8 +256,18 @@ class test_runner_irods_plugin_tests(test_runner):
         return f
 
 
-    def execute_test(self, test, plugin_repo_name=None, plugin_branch=None, path_to_test_hook_on_host=None, options=None):
+    def execute_test(self,
+                     test,
+                     plugin_repo_name=None,
+                     plugin_branch=None,
+                     path_to_test_hook_on_host=None,
+                     options=None):
         """Execute `test` and return the command run and the return code.
+
+        If `test` is `None`, the test hook will be run without any options. This is an
+        implementation detail of each plugin-specific test hook. In general, the plugins
+        usually have a test file packaged with them which is the specific test invoked by
+        default.
 
         Arguments:
         test -- name of the test to execute
@@ -258,12 +284,16 @@ class test_runner_irods_plugin_tests(test_runner):
             path_to_test_hook_in_container = self.stage_test_hook_file_from_repo(plugin_repo_name, plugin_branch)
 
         cmd = [container_info.python(self.executor), path_to_test_hook_in_container]
-        cmd.extend(['--test', test])
 
-        if test is not self.tests[0]:
-            cmd.append('--skip-setup')
+        if test is not None:
+            cmd.extend(['--test', test])
 
-        else:
+            if test != self.tests[0]:
+                cmd.append('--skip-setup')
+
+        # Install irods_python_ci_utilities for the first test to run on this executor. This
+        # will be true even if None is the test being run.
+        if len(self.passed_tests()) == 0 and len(self.failed_tests()) == 0:
             from .install import install
 
             install.install_pip_package_from_repo(self.executor,
