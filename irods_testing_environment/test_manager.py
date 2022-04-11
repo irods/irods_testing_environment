@@ -11,6 +11,14 @@ class test_manager:
     def __init__(self, containers, tests, test_type='irods_python_suite'):
         """Constructor for `test_manager`.
 
+        A note about passing `None` to `tests`:
+        `None` is a special value which indicates that no test list was specified. The test
+        runner implementations should have behavior defined for this case. The intended use
+        is to use the "default" behavior of the script running the tests (i.e. no specific
+        test is passed to the script). The test_manager and test_runners do not have control
+        over how the tests are run at this point, so we must fall back to using one executor
+        regardless of how many exist. The other executors will have empty test lists.
+
         Arguments:
         containers -- list of containers which will be used to construct `test_runner`s
         tests -- list of tests which will run on the `test_runners`
@@ -27,11 +35,15 @@ class test_manager:
 
         self.duration = -1
 
-        for i, t in enumerate(tests):
-            index = i % len(self.test_runners)
+        if tests is None:
+            self.test_runners[0].add_test(None)
 
-            logging.info('index [{}], test [{}]'.format(index, t))
-            self.test_runners[index].add_test(t)
+        else:
+            for i, t in enumerate(tests):
+                index = i % len(self.test_runners)
+
+                logging.info('index [{}], test [{}]'.format(index, t))
+                self.test_runners[index].add_test(t)
 
         logging.info('[{}]'.format(str(self)))
 
@@ -62,7 +74,7 @@ class test_manager:
             r = r + tr.result_string()
 
         if self.return_code() is not 0:
-            r = r + 'List of failed tests:\n\t{}\n'.format(' '.join(self.failed_tests()))
+            r = r + 'List of failed tests:\n\t{}\n'.format(' '.join([t or 'all tests' for t in self.failed_tests()]))
             r = r + 'Return code:[{}]\n'.format(self.return_code())
 
         else:

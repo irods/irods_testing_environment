@@ -85,9 +85,7 @@ def run_plugin_tests(containers,
     options -- list of strings representing script options to pass to the run_tests.py script
     fail_fast -- if True, stop running after first failure; else, runs all tests
     """
-    tests = test_list or [f'test_{plugin_name}']
-
-    tm = test_manager.test_manager(containers, tests, test_type='irods_plugin_tests')
+    tm = test_manager.test_manager(containers, test_list, test_type='irods_plugin_tests')
 
     try:
         tm.run(fail_fast,
