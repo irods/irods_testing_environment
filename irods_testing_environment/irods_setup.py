@@ -9,6 +9,7 @@ from . import context
 from . import database_setup
 from . import odbc_setup
 from . import execute
+from . import irods_config
 
 class zone_info(object):
     """Class to hold information about an iRODS Zone and the containers running the servers."""
@@ -66,6 +67,8 @@ class setup_input_builder(object):
 
         Sets default values for the setup script inputs.
         """
+        self.irods_version = None
+
         self.service_account_name = ''
         self.service_account_group = ''
         self.catalog_service_role = ''
@@ -91,11 +94,14 @@ class setup_input_builder(object):
         self.control_plane_key = '32_byte_server_control_plane_key'
         self.admin_password = 'rods'
 
+        self.provides_local_storage = 'y'
+        self.resource_name = ''
         self.vault_directory = ''
 
         self.catalog_service_provider_host = 'localhost'
 
     def setup(self,
+              irods_version,
               service_account_name= None,
               service_account_group= None,
               catalog_service_role= None,
@@ -118,12 +124,15 @@ class setup_input_builder(object):
               negotiation_key = None,
               control_plane_key = None,
               admin_password = None,
+              provides_local_storage = None,
+              resource_name = None,
               vault_directory = None):
         """Set values for the service account section of the setup script.
 
         Returns this instance of the class.
 
         Arguments:
+        irods_version -- a tuple representing the version of iRODS being configured
         service_account_name -- linux account that will run the iRODS server
         service_account_group -- group of the linux account that will run the iRODS server
         catalog_service_role -- determines whether this server holds a connection to the catalog
@@ -150,9 +159,13 @@ class setup_input_builder(object):
         negotiation_key -- secret key used in server-to-server communication
         control_plane_key -- secret key shared by all servers
         admin_password -- password for the iRODS administration account
+        provides_local_storage -- indicates whether the server should provide storage
+        resource_name -- name used to identify the local storage
         vault_directory -- storage location of the default unixfilesystem resource created
                            during installation
         """
+        self.irods_version = irods_version
+
         self.service_account_name = service_account_name or self.service_account_name
         self.service_account_group = service_account_group or self.service_account_group
         self.catalog_service_role = catalog_service_role or self.catalog_service_role
@@ -179,6 +192,8 @@ class setup_input_builder(object):
         self.control_plane_key = control_plane_key or self.control_plane_key
         self.admin_password = admin_password or self.admin_password
 
+        self.provides_local_storage = provides_local_storage or self.provides_local_storage
+        self.resource_name = resource_name or self.resource_name
         self.vault_directory = vault_directory or self.vault_directory
 
         return self
@@ -192,7 +207,7 @@ class setup_input_builder(object):
         """
         # The setup script defaults catalog service consumer option as 2
         role = 2
-        return '\n'.join([
+        input_args = [
             str(self.service_account_name),
             str(self.service_account_group),
             str(role),
@@ -211,11 +226,19 @@ class setup_input_builder(object):
             str(self.negotiation_key),
             str(self.control_plane_key),
             str(self.admin_password),
-            '', #confirmation of inputs
-
-            str(self.vault_directory),
             '' # confirmation of inputs
-        ])
+        ]
+
+        # Handle the difference between 4.2 servers and 4.3 servers.
+        if self.irods_version >= (4, 3, 0):
+            input_args.insert(3, str(self.provides_local_storage))
+            input_args.insert(4, str(self.resource_name))
+            input_args.insert(5, str(self.vault_directory))
+        else:
+            input_args.append(str(self.vault_directory))
+            input_args.append(str('')) # final confirmation
+
+        return '\n'.join(input_args)
 
     def build_input_for_catalog_provider(self):
         """Generate string to use as input for the setup script.
@@ -224,7 +247,7 @@ class setup_input_builder(object):
         setting up an iRODS catalog service provider.
         """
         role = ''
-        return '\n'.join([
+        input_args = [
             str(self.service_account_name),
             str(self.service_account_group),
             str(role),
@@ -251,11 +274,19 @@ class setup_input_builder(object):
             str(self.negotiation_key),
             str(self.control_plane_key),
             str(self.admin_password),
-            '', # confirmation of inputs
+            '' # confirmation of inputs
+        ]
 
-            str(self.vault_directory),
-            '' # final confirmation
-        ])
+        # Handle the difference between 4.2 servers and 4.3 servers.
+        if self.irods_version >= (4, 3, 0):
+            input_args.insert(11, str(self.provides_local_storage))
+            input_args.insert(12, str(self.resource_name))
+            input_args.insert(13, str(self.vault_directory))
+        else:
+            input_args.append(str(self.vault_directory))
+            input_args.append(str('')) # final confirmation
+
+        return '\n'.join(input_args)
 
     def build(self):
         """Build the string for the setup script input.
@@ -339,7 +370,8 @@ def setup_irods_catalog_provider(ctx,
     )
 
     setup_input = (setup_input_builder()
-        .setup(catalog_service_role='provider',
+        .setup(irods_version=irods_config.get_irods_version(csp_container),
+               catalog_service_role='provider',
                database_server_hostname=context.container_hostname(db_container),
                database_server_port=database_setup.database_server_port(ctx.database()),
                **kwargs
@@ -372,8 +404,15 @@ def setup_irods_catalog_consumer(ctx,
         )
     )
 
+    csc_container = ctx.docker_client.containers.get(
+        context.irods_catalog_consumer_container(
+            ctx.compose_project.name, consumer_service_instance
+        )
+    )
+
     setup_input = (setup_input_builder()
-        .setup(catalog_service_role='consumer',
+        .setup(irods_version=irods_config.get_irods_version(csc_container),
+               catalog_service_role='consumer',
                catalog_service_provider_host=context.container_hostname(csp_container),
                **kwargs)
         .build()
@@ -381,16 +420,10 @@ def setup_irods_catalog_consumer(ctx,
 
     logging.debug('input to setup script [{}]'.format(setup_input))
 
-    catalog_consumer_container = ctx.docker_client.containers.get(
-        context.irods_catalog_consumer_container(
-            ctx.compose_project.name, consumer_service_instance
-        )
-    )
-
     logging.warning('setting up iRODS catalog consumer [{}]'
-                    .format(catalog_consumer_container.name))
+                    .format(csc_container.name))
 
-    setup_irods_server(catalog_consumer_container, setup_input)
+    setup_irods_server(csc_container, setup_input)
 
 def setup_irods_catalog_consumers(ctx,
                                   provider_service_instance=1,

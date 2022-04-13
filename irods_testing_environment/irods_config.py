@@ -16,9 +16,15 @@ def get_irods_zone_name(container):
 
 def get_irods_version(container):
     """Return the version of iRODS running on `container` as a tuple (major, minor, patch)."""
-    return tuple(int(i) for i in
-        json_utils.get_json_from_file(container, '/var/lib/irods/VERSION.json.dist')['irods_version']
-        .split('.'))
+    try:
+        return tuple(int(i) for i in
+            json_utils.get_json_from_file(container, '/var/lib/irods/version.json.dist')['irods_version']
+            .split('.'))
+
+    except:
+        return tuple(int(i) for i in
+            json_utils.get_json_from_file(container, '/var/lib/irods/VERSION.json.dist')['irods_version']
+            .split('.'))
 
 def configure_hosts_config(docker_client, compose_project):
     """Set hostname aliases for all iRODS servers in the compose project via hosts_config.json.
