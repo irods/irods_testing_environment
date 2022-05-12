@@ -26,6 +26,73 @@ def get_irods_version(container):
             json_utils.get_json_from_file(container, '/var/lib/irods/VERSION.json.dist')['irods_version']
             .split('.'))
 
+def configure_users_for_auth_tests(docker_client, compose_project):
+    """Create Linux users and set passwords for authentication testing.
+
+    Arguments:
+    docker_client -- docker client for interacting with the docker-compose project
+    compose_project -- compose.Project in which the iRODS servers are running
+    usernames_and_passwords -- a list of tuples of usernames/passwords (passwords can be empty)
+    """
+    def create_test_users(docker_client, docker_compose_container, usernames_and_passwords):
+        container = docker_client.containers.get(docker_compose_container.name)
+
+        for username, password in usernames_and_passwords:
+            create_user = f'useradd {username}'
+
+            if execute.execute_command(container, create_user) is not 0:
+                raise RuntimeError(f'[{container.name}] failed to create user [{username}]')
+
+            if password is None or password == '':
+                continue
+
+            set_password = f'bash -c "echo \'{username}:{password}\' | chpasswd"'
+
+            if execute.execute_command(container, set_password) is not 0:
+                raise RuntimeError(f'[{container.name}] failed to create hosts_config file')
+
+        return 0
+
+    import concurrent.futures
+
+    containers = compose_project.containers(service_names=[
+        context.irods_catalog_provider_service(),
+        context.irods_catalog_consumer_service()])
+
+    rc = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # TODO: get these names from the test file packaged with the server
+        usernames_and_passwords = [
+            ('irodsauthuser', ';=iamnotasecret')
+        ]
+
+        futures_to_containers = {
+            executor.submit(
+                create_test_users, docker_client, c, usernames_and_passwords
+            ): c for c in containers
+        }
+
+        logging.debug(futures_to_containers)
+
+        for f in concurrent.futures.as_completed(futures_to_containers):
+            container = futures_to_containers[f]
+            try:
+                ec = f.result()
+                if ec is not 0:
+                    logging.error(f'[{container.name}] error while creating test user accounts')
+                    rc = ec
+                else:
+                    logging.info(f'[{container.name}] successfully created test user accounts')
+
+            except Exception as e:
+                logging.error(f'[{container.name}] exception raised while creating test users')
+                logging.error(e)
+                rc = 1
+
+    if rc is not 0:
+        raise RuntimeError('failed to create test user accounts on some service')
+
+
 def configure_hosts_config(docker_client, compose_project):
     """Set hostname aliases for all iRODS servers in the compose project via hosts_config.json.
 
@@ -213,6 +280,8 @@ def configure_irods_testing(docker_client, compose_project):
     configure_hosts_config(docker_client, compose_project)
 
     configure_univmss_script(docker_client, compose_project)
+
+    configure_users_for_auth_tests(docker_client, compose_project)
 
 
 def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_run):
