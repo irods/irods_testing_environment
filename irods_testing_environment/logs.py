@@ -2,6 +2,7 @@
 import docker
 import logging
 import os
+import sys
 
 # local modules
 from . import archive
@@ -12,7 +13,7 @@ def configure(verbosity=1, log_filename=None):
     # CRITICAL messages will always be printed, but anything after that is a function of the number of -v
     level = logging.CRITICAL - 10 * verbosity
 
-    handlers = [logging.StreamHandler()]
+    handlers = [logging.StreamHandler(sys.stdout)]
 
     if log_filename:
         handlers.append(logging.FileHandler(os.path.abspath(log_filename)))
