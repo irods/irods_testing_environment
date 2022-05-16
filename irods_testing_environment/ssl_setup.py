@@ -97,11 +97,18 @@ def configure_ssl_on_server(container,
     path_to_dhparams_file_on_host -- path to file on host containing the dhparams PEM file
     """
     from . import archive
+    from . import negotiation_key
 
     key_file = os.path.join(context.irods_config(), 'server.key')
     dhparams_file = os.path.join(context.irods_config(), 'dhparams.pem')
     chain_file = os.path.join(context.irods_config(), 'chain.pem')
     cert_file = os.path.join(context.irods_config(), 'server.crt')
+
+    irodsctl = os.path.join(context.irods_home(), 'irodsctl')
+    if execute.execute_command(container, '{} stop'.format(irodsctl), user='irods') is not 0:
+        raise RuntimeError(
+            'failed to stop iRODS server before SSL configuration [{}]'
+            .format(container.name))
 
     logging.warning('configuring SSL [{}]'.format(container.name))
 
@@ -130,11 +137,14 @@ def configure_ssl_on_server(container,
 
     json_utils.put_json_to_file(container, service_account_irods_env, irods_env)
 
-    # restart the server
-    irodsctl = os.path.join(context.irods_home(), 'irodsctl')
-    if execute.execute_command(container, '{} restart'.format(irodsctl), user='irods') is not 0:
+    # TODO: consider using a generator to restore the file here...
+    negotiation_key.backup_file(container, context.core_re())
+    negotiation_key.configure_ssl_in_server(container, 'CS_NEG_REQUIRE')
+
+    # start the server again
+    if execute.execute_command(container, '{} start'.format(irodsctl), user='irods') is not 0:
         raise RuntimeError(
-            'failed to restart iRODS server after SSL configuration [{}]'
+            'failed to start iRODS server after SSL configuration [{}]'
             .format(container.name))
 
     logging.warning('SSL configured successfully [{}]'.format(container.name))
