@@ -104,7 +104,7 @@ if __name__ == "__main__":
     finally:
         if args.save_logs:
             try:
-                logging.warning('collecting logs [{}]'.format(output_directory))
+                logging.error('collecting logs [{}]'.format(output_directory))
 
                 # collect the usual logs
                 logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
