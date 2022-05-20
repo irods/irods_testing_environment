@@ -27,11 +27,10 @@ RUN pip3 install xmlrunner distro
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# TODO: uncomment when ubuntu:20.04 packages are available
-#RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - && \
-    #echo "deb [arch=amd64] https://packages.irods.org/apt/ focal main" | tee /etc/apt/sources.list.d/renci-irods.list
+RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - && \
+    echo "deb [arch=amd64] https://packages.irods.org/apt/ focal main" | tee /etc/apt/sources.list.d/renci-irods.list
 
-#RUN wget -qO - https://core-dev.irods.org/irods-core-dev-signing-key.asc | apt-key add - && \
-    #echo "deb [arch=amd64] https://core-dev.irods.org/apt/ focal main" | tee /etc/apt/sources.list.d/renci-irods-core-dev.list
+RUN wget -qO - https://core-dev.irods.org/irods-core-dev-signing-key.asc | apt-key add - && \
+    echo "deb [arch=amd64] https://core-dev.irods.org/apt/ focal main" | tee /etc/apt/sources.list.d/renci-irods-core-dev.list
 
 ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]
