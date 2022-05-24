@@ -307,24 +307,46 @@ class setup_input_builder(object):
             raise NotImplementedError('unsupported catalog service role [{}]'.format(self.catalog_service_role))
 
 
+def restart_rsyslog(container):
+    rsyslog_bin_path = os.path.join('/usr', 'sbin', 'rsyslogd')
+
+    ec = execute.execute_command(container, f'pkill {os.path.basename(rsyslog_bin_path)}')
+    if ec != 0:
+        logging.info(f'[{container.name}] failed to kill rsyslogd')
+
+    ec = execute.execute_command(container, rsyslog_bin_path)
+    if ec != 0:
+        raise RuntimeError(f'[{container.name}] failed to start rsyslogd')
+
+
+def stop_irods(container):
+    irodsctl = os.path.join(context.irods_home(), 'irodsctl')
+    return execute.execute_command(container, f'{irodsctl} stop', user='irods')
+
+
+def restart_irods(container):
+    irodsctl = os.path.join(context.irods_home(), 'irodsctl')
+    return execute.execute_command(container, f'{irodsctl} restart', user='irods')
+
+
 def setup_irods_server(container, setup_input):
     """Set up iRODS server on the given container with the provided input.
 
-    After setup completes, the server is restarted in order to guarantee that the iRODS server
-    is running and available for immediate use after setting it up.
+    After setup completes, rsyslog is restarted to ensure that log messages are being processed
+    and then the server is restarted in order to guarantee that the iRODS server is running and
+    available for immediate use after setting it up.
 
     Arguments:
     container -- docker.client.container on which the iRODS packages are installed
     setup_input -- string which will be provided as input to the iRODS setup script
     """
     from . import container_info
-    irodsctl = os.path.join(context.irods_home(), 'irodsctl')
-    ec = execute.execute_command(container, '{} stop'.format(irodsctl), user='irods')
-    if ec is not 0:
-        logging.debug('failed to stop iRODS server before setup [{}]'.format(container.name))
+
+    if stop_irods(container) != 0:
+        logging.debug(f'[{container.name}] failed to stop iRODS server before setup')
 
     ec = execute.execute_command(container, 'bash -c \'echo "{}" > /input\''.format(setup_input))
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to create setup script input file [{}]'.format(container.name))
 
     execute.execute_command(container, 'cat /input')
@@ -333,12 +355,13 @@ def setup_irods_server(container, setup_input):
     run_setup_script = 'bash -c \'{} {} < /input\''.format(container_info.python(container),
                                                            path_to_setup_script)
     ec = execute.execute_command(container, run_setup_script)
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to set up iRODS server [{}]'.format(container.name))
 
-    ec = execute.execute_command(container, '{} restart'.format(irodsctl), user='irods')
-    if ec is not 0:
-        raise RuntimeError('failed to start iRODS server after setup [{}]'.format(container.name))
+    restart_rsyslog(container)
+
+    if restart_irods(container) != 0:
+        raise RuntimeError(f'[{container.name}] failed to start iRODS server after setup')
 
 
 def setup_irods_catalog_provider(ctx,
@@ -424,6 +447,7 @@ def setup_irods_catalog_consumer(ctx,
                     .format(csc_container.name))
 
     setup_irods_server(csc_container, setup_input)
+
 
 def setup_irods_catalog_consumers(ctx,
                                   provider_service_instance=1,
