@@ -1,6 +1,7 @@
 # grown-up modules
 import docker
 import logging
+import time
 
 # local modules
 from . import context
@@ -218,7 +219,7 @@ class mysql_database_setup_strategy(database_setup_strategy):
         mysql_cmd -- the command to be passed to mysql via --execute
         """
         return execute.execute_command(self.container,
-            'mysql --port {0} --user {1} --password={2} --execute \"{3}\"'
+            'mysql --host 127.0.0.1 --port {0} --user {1} --password={2} --execute \"{3}\"'
             .format(self.port, user, password, mysql_cmd))
 
     def connect_to_database(self,
@@ -231,6 +232,16 @@ class mysql_database_setup_strategy(database_setup_strategy):
         name -- name of the database to check
         as_user -- name of the user/role connecting to the database
         """
+
+        logging.debug('checking if database is accepting connection ...')
+
+        # Make sure the database is ready for connections.
+        while self.execute_mysql_command('SHOW DATABASES;') != 0:
+            logging.debug('database is not accepting connections yet. retrying in 5 seconds ...')
+            time.sleep(5)
+
+        logging.debug('database is ready!')
+
         return self.execute_mysql_command('\\r \'{}\''.format(name),
                                           user=as_user,
                                           password=with_password)
