@@ -19,6 +19,7 @@ RUN \
     python3-pip \
     libcurl4-gnutls-dev \
     unixodbc-dev \
+    systemd \
   && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* /tmp/*
@@ -28,9 +29,9 @@ RUN pip3 install xmlrunner distro
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - && \
-    echo "deb [arch=amd64] https://packages.irods.org/apt/ focal main" | tee /etc/apt/sources.list.d/renci-irods.list
+    echo "deb [arch=amd64] https://packages.irods.org/apt/ bullseye main" | tee /etc/apt/sources.list.d/renci-irods.list
 
 RUN wget -qO - https://core-dev.irods.org/irods-core-dev-signing-key.asc | apt-key add - && \
-    echo "deb [arch=amd64] https://core-dev.irods.org/apt/ focal main" | tee /etc/apt/sources.list.d/renci-irods-core-dev.list
+    echo "deb [arch=amd64] https://core-dev.irods.org/apt/ bullseye main" | tee /etc/apt/sources.list.d/renci-irods-core-dev.list
 
 ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]
