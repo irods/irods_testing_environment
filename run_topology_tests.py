@@ -99,7 +99,7 @@ if __name__ == "__main__":
         )
         logging.debug('got container to run on [{}]'.format(container.name))
 
-        options = list()
+        options = ['--xml_output']
 
         options.append('--topology={}'.format('resource' if run_on_consumer else 'icat'))
 
@@ -120,14 +120,7 @@ if __name__ == "__main__":
             ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
             options.append('--use_ssl')
 
-        if args.tests:
-            rc = test_utils.run_specific_tests([container],
-                                               list(args.tests),
-                                               options,
-                                               args.fail_fast)
-
-        else:
-            rc = test_utils.run_python_test_suite(container, options)
+        rc = test_utils.run_specific_tests([container], args.tests, options, args.fail_fast)
 
     except Exception as e:
         logging.critical(e)
