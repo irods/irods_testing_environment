@@ -5,6 +5,7 @@ import logging
 import os
 
 # local modules
+from irods_testing_environment import archive
 from irods_testing_environment import context
 from irods_testing_environment import execute
 from irods_testing_environment import install
@@ -128,9 +129,28 @@ if __name__ == "__main__":
         raise
 
     finally:
-        logging.warning('collecting logs [{}]'.format(output_directory))
-        logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
+        if args.save_logs:
+            try:
+                logging.error('collecting logs [{}]'.format(output_directory))
 
-        ctx.compose_project.down(include_volumes=True, remove_image_type=False)
+                # collect the usual logs
+                logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
+
+                # and then the test reports
+                archive.collect_files_from_containers(ctx.docker_client,
+                                                      [container],
+                                                      [os.path.join(context.irods_home(), 'test-reports')],
+                                                      output_directory)
+
+            except Exception as e:
+                logging.error(e)
+                logging.error('failed to collect some log files')
+
+                if rc == 0:
+                    rc = 1
+
+
+        if args.cleanup_containers:
+            ctx.compose_project.down(include_volumes=True, remove_image_type=False)
 
     exit(rc)
