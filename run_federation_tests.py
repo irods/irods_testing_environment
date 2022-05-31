@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     project_directory = os.path.abspath(args.project_directory or os.getcwd())
 
-    ctx = context.context(docker.from_env(),
+    ctx = context.context(docker.from_env(use_ssh_client=True),
                           compose.cli.command.get_project(
                               project_dir=project_directory,
                               project_name=args.project_name))
