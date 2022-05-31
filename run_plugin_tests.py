@@ -42,7 +42,7 @@ if args.package_directory and args.package_version:
 
 project_directory = os.path.abspath(args.project_directory or os.getcwd())
 
-ctx = context.context(docker.from_env(),
+ctx = context.context(docker.from_env(use_ssh_client=True),
                       compose.cli.command.get_project(
                           project_dir=project_directory,
                           project_name=args.project_name))

@@ -159,3 +159,34 @@ If all else fails, this script includes a `--help` option which explains what ea
 To use the MySQL database plugin, a MySQL ODBC driver file must be provided for use in the server. The scripts have the `--odbc-driver-path` option to specify an existing ODBC driver on the host machine.
 
 If no `--odbc-driver-path` is provided, the appropriate ODBC driver for the given database version and OS will be downloaded to a temporary location on the host machine's local filesystem.
+
+## Execute Remotely
+
+Any of the above-mentioned scripts can be run on a remote Docker daemon using the ssh client. There are a few prerequisites:
+
+ 1. The remote host must be running a Docker service which accepts remote requests
+ 2. The remote host must use private key authentication
+ 3. The local client must have `ssh-agent` running with the required keys added (see below for instructions)
+
+To run the scripts above on a remote host, the `DOCKER_HOST` environment variable must be set to the remote IP address or hostname. The simplest way to do this is to set it before running the script like this:
+```bash
+DOCKER_HOST="remote-host-1.example.org" python stand_it_up.py --project-directory ./projects/ubuntu-18.04/ubuntu-18.04-postgres-10.12
+```
+
+### Setting up the ssh client
+
+In order to use the remote execution features of Docker, we need to set up an `ssh-agent` and add our authentication keys to the session.
+
+To start an `ssh-agent` session, run the following (note: only tested with bash):
+```bash
+eval $(ssh-agent -s)
+```
+
+To add our private keys to the session, run `ssh-add` like this:
+```bash
+ssh-add -k <path to private keys>
+```
+
+See `ssh-agent` and `ssh-add` man pages for more details.
+
+For more information about remote execution on Docker, read this: [https://www.docker.com/blog/how-to-deploy-on-remote-docker-hosts-with-docker-compose/](https://www.docker.com/blog/how-to-deploy-on-remote-docker-hosts-with-docker-compose/)
