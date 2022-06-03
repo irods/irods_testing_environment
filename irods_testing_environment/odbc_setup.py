@@ -200,20 +200,6 @@ def configure_odbc_driver_ubuntu_1804_mysql_57(csp_container, odbc_driver):
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
 
 
-def configure_odbc_driver_ubuntu_2004_mysql_8029(csp_container, odbc_driver):
-    """Configure ODBC driver for mysql 8.0 on ubuntu 20.04.
-
-    Argument:
-    csp_container -- docker container on which the iRODS catalog service provider is running
-    odbc_driver -- path to local archive file containing the ODBC driver package
-    """
-    if not odbc_driver:
-        odbc_driver = download_mysql_odbc_driver(
-            'https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz')
-
-    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
-
-
 def configure_odbc_driver_centos_7_mysql_57(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 5.7 on centos 7.
 
@@ -228,22 +214,6 @@ def configure_odbc_driver_centos_7_mysql_57(csp_container, odbc_driver):
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
 
 
-# TODO: no .tar.gz available for debian 11...
-def configure_odbc_driver_debian_11_mysql_57(csp_container, odbc_driver):
-    """Configure ODBC driver for mysql 5.7 on debian 11.
-
-    Argument:
-    csp_container -- docker container on which the iRODS catalog service provider is running
-    odbc_driver -- path to local archive file containing the ODBC driver package
-    """
-    if not odbc_driver:
-        odbc_driver = download_mysql_odbc_driver(
-            'https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc_8.0.27-1debian11_amd64.deb')
-
-    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
-
-
-# TODO: no .tar.gz available for RHEL 8...
 def configure_odbc_driver_almalinux_8_mysql_57(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 5.7 on almalinux 8.
 
@@ -253,7 +223,63 @@ def configure_odbc_driver_almalinux_8_mysql_57(csp_container, odbc_driver):
     """
     if not odbc_driver:
         odbc_driver = download_mysql_odbc_driver(
-            'https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-5.3.13-linux-el7-x86-64bit.tar.gz')
+            'https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-5.3.13-linux-glibc2.12-x86-64bit.tar.gz')
+
+    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
+
+
+def configure_odbc_driver_debian_11_mysql_57(csp_container, odbc_driver):
+    """Configure ODBC driver for mysql 5.7 on debian 11.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-5.3.13-linux-glibc2.12-x86-64bit.tar.gz')
+
+    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
+
+
+def configure_odbc_driver_ubuntu_2004_mysql_8029(csp_container, odbc_driver):
+    """Configure ODBC driver for mysql 8.0 on ubuntu 20.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz')
+
+    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
+
+
+def configure_odbc_driver_debian_11_mysql_8029(csp_container, odbc_driver):
+    """Configure ODBC driver for mysql 8.0 on debian 11.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz')
+
+    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
+
+
+def configure_odbc_driver_almalinux_8_mysql_8029(csp_container, odbc_driver):
+    """Configure ODBC driver for mysql 8.0 on almalinux 8.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz')
 
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
 
