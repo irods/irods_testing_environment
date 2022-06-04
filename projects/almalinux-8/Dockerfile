@@ -15,6 +15,7 @@ RUN \
     unixODBC-devel \
     wget \
     which \
+    diffutils \
   && \
   yum clean all && \
   rm -rf /var/cache/yum /tmp/*
