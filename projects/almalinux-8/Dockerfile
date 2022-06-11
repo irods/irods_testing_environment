@@ -46,6 +46,9 @@ RUN yum update -y && \
 
 RUN python3 -m pip install unittest-xml-reporting distro psutil pyodbc jsonschema requests
 
+RUN yum install -y dnf-plugins-core
+RUN yum config-manager --set-enabled powertools
+
 COPY rsyslog.conf /etc/rsyslog.conf
 
 RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
