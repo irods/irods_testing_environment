@@ -53,6 +53,9 @@ RUN rpm --import https://packages.irods.org/irods-signing-key.asc && \
 RUN rpm --import https://core-dev.irods.org/irods-core-dev-signing-key.asc && \
     wget -qO - https://core-dev.irods.org/renci-irods-core-dev.yum.repo | tee /etc/yum.repos.d/renci-irods-core-dev.yum.repo
 
+RUN yum install -y dnf-plugins-core
+RUN yum config-manager --set-enabled powertools
+
 COPY rsyslog.conf /etc/rsyslog.conf
 
 ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]
