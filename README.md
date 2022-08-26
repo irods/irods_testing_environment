@@ -9,9 +9,11 @@ For each combination of supported OS platform/version and database type/version,
  - ubuntu:16.04
  - ubuntu:18.04
  - ubuntu:20.04
+ - ubuntu:22.04
 
 The following database Docker image tags are currently supported (although not for all platforms):
  - postgres:10.12
+ - postgres:14.8
  - mysql:5.7
  - mysql:8
 
@@ -27,6 +29,31 @@ pip install docker-compose GitPython
 pip freeze
 ```
 Compare the output to `requirements.txt`.
+
+### A note about `docker-compose`
+
+`docker-compose` is being phased out by Docker and you may experience problems installing it via `pip`.
+
+If this happens to you, try doing the following:
+
+Clone the Docker Compose Git repository:
+```bash
+git clone https://github.com/docker/compose
+```
+
+Check out the latest tag which was still using the Python implementation:
+```bash
+cd compose
+git checkout 1.29.2
+```
+
+At this point, you can make the modifications needed to fix any problems you may encounter.
+
+Once done, back out and pip install the local directory:
+```bash
+cd -
+pip install ./compose
+```
 
 ## Run iRODS Tests
 
