@@ -56,6 +56,16 @@ def configure_odbc_driver_ubuntu_2004_postgres_148(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+def configure_odbc_driver_ubuntu_2204_postgres_148(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14.8 on ubuntu 22.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_postgres_odbc_driver(csp_container, odbc_driver)
+
+
 def configure_odbc_driver_debian_11_postgres_1012(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 10.12 on ubuntu 20.04.
 
@@ -318,6 +328,20 @@ def configure_odbc_driver_ubuntu_1804_mysql_8029(csp_container, odbc_driver):
 
 def configure_odbc_driver_ubuntu_2004_mysql_8029(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0 on ubuntu 20.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz')
+
+    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
+
+
+def configure_odbc_driver_ubuntu_2204_mysql_8029(csp_container, odbc_driver):
+    """Configure ODBC driver for mysql 8.0 on ubuntu 22.04.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
