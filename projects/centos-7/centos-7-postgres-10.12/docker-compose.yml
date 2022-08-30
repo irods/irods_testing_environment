@@ -11,10 +11,18 @@ services:
       context: ..
     depends_on:
       - catalog
+    volumes:
+      - shared_volume:/irods_testing_environment_mount_dir
 
   irods-catalog-consumer:
     build:
       context: ..
     depends_on:
       - irods-catalog-provider
+    volumes:
+      - shared_volume:/irods_testing_environment_mount_dir
 
+# This volume is mounted on all test servers for detached mode testing which
+# requires a common vault.
+volumes:
+    shared_volume:
