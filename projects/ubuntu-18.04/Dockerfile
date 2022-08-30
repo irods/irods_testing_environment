@@ -40,4 +40,6 @@ RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - 
 RUN wget -qO - https://core-dev.irods.org/irods-core-dev-signing-key.asc | apt-key add - && \
     echo "deb [arch=amd64] https://core-dev.irods.org/apt/ bionic main" | tee /etc/apt/sources.list.d/renci-irods-core-dev.list
 
+RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
+
 ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]

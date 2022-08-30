@@ -55,4 +55,6 @@ RUN rpm --import https://core-dev.irods.org/irods-core-dev-signing-key.asc && \
 
 COPY rsyslog.conf /etc/rsyslog.conf
 
+RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
+
 ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]
