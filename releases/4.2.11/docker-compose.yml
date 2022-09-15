@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+    catalog:
+        build:
+            context: .
+            dockerfile: catalog.Dockerfile
+        environment:
+            - POSTGRES_PASSWORD=testpassword
+
+    irods-catalog-provider:
+        build:
+            context: .
+            dockerfile: irods.Dockerfile
+            args:
+                - irods_server_role=provider
+        depends_on:
+            - catalog
+
+    irods-catalog-consumer:
+        build:
+            context: .
+            dockerfile: irods.Dockerfile
+            args:
+                - irods_server_role=consumer
+#           deploy:
+#               replicas: 0
+        depends_on:
+            - irods-catalog-provider
