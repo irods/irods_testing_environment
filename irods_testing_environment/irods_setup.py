@@ -578,6 +578,9 @@ def setup_irods_zone(ctx,
                                   targeted. If an empty list is provided, nothing happens.
     odbc_driver -- path to the local archive file containing the ODBC driver
     """
+    database_setup.wait_for_database_service(
+        ctx, database_service_instance=database_service_instance)
+
     logging.info('setting up catalog database [{}]'.format(database_service_instance))
     database_setup.setup_catalog(ctx,
                                  force_recreate=force_recreate,

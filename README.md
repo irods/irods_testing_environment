@@ -10,9 +10,10 @@ For each combination of supported OS platform/version and database type/version,
  - ubuntu:18.04
  - ubuntu:20.04
 
-The following database Docker image tags are currently supported:
+The following database Docker image tags are currently supported (although not for all platforms):
  - postgres:10.12
  - mysql:5.7
+ - mysql:8
 
 ## Requirements
 
@@ -153,6 +154,17 @@ docker-compose --project-directory ./projects/ubuntu-18.04/ubuntu-18.04-postgres
 Note: Compose project names default to the name of the directory which contains the `docker-compose.yml` project file. You may wish to specify a project name using `--project-name` in order to give your images and running containers a more recognizable name.
 
 If all else fails, this script includes a `--help` option which explains what each of the options do and how they are supposed to be used.
+
+## Using static images with released iRODS versions
+
+`--use-static-images` enables building and running a Docker image with iRODS packages installed rather than downloading and installing the packages at runtime. This is useful for testing plugins against released versions of iRODS or for quickly reproducing issues on past versions.
+
+This operates by using a couple of environment variables:
+
+ - `dockerfile` - Selects the Dockerfile to build. Valid values are "release.Dockerfile", the default Dockerfile ("Dockerfile"), or an empty string (uses the default).
+ - `irods_package_version` - Build argument used by the `release.Dockerfile` specifying the package version string for the iRODS package to download and install when building the image. Defaults to the latest released iRODS version on the target platform OS.
+
+The reader is encouraged to use the provided scripts for standing up iRODS in containers when using this option because they will take care of these environment variables for you when used with the appropriate CLI options. Caution: If `dockerfile` and `irods_package_version` are defined in your environment, unexpected results could occur. Please unset these before running anything.
 
 ## Using an ODBC driver
 

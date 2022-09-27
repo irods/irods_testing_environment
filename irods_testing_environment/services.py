@@ -14,7 +14,8 @@ def create_topologies(ctx,
                       package_version=None,
                       odbc_driver=None,
                       zone_name='tempZone',
-                      consumer_count=0):
+                      consumer_count=0,
+                      install_packages=True):
     """Create several generic topologies of iRODS servers with the given inputs.
 
     This is a convenience function for standing up multiple, identical iRODS Zones with the
@@ -37,11 +38,12 @@ def create_topologies(ctx,
         context.irods_catalog_consumer_service(): consumer_count * zone_count
     })
 
-    install.make_installer(ctx.platform_name()).install_irods_packages(
-            ctx,
-            externals_directory=externals_directory,
-            package_directory=package_directory,
-            package_version=package_version)
+    if install_packages:
+        install.make_installer(ctx.platform_name()).install_irods_packages(
+                ctx,
+                externals_directory=externals_directory,
+                package_directory=package_directory,
+                package_version=package_version)
 
     zone_names = [zone_name for i in range(zone_count)]
 
@@ -56,7 +58,8 @@ def create_topology(ctx,
                     package_directory=None,
                     package_version=None,
                     odbc_driver=None,
-                    consumer_count=0):
+                    consumer_count=0,
+                    install_packages=True):
     """Create a generic topology of iRODS servers with the given inputs.
 
     This is a convenience function for standing up an iRODS Zone with the default
@@ -77,7 +80,8 @@ def create_topology(ctx,
                              package_directory=package_directory,
                              package_version=package_version,
                              odbc_driver=odbc_driver,
-                             consumer_count=consumer_count)
+                             consumer_count=consumer_count,
+                             install_packages=install_packages)
 
 
 def clone_repository_to_container(container,

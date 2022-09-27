@@ -378,3 +378,43 @@ def setup_catalog(ctx,
         raise RuntimeError('failed to grant privileges to user [{0}] on database [{1}]'.format(database_user, database_name))
 
     strat.list_databases()
+
+def wait_for_database_service(ctx,
+                              database_service_instance=1,
+                              seconds_between_retries=1,
+                              retry_count=60):
+    """Attempt to connect to the database service, looping until successful.
+
+    Arguments:
+    ctx -- context object which contains information about the Docker environment
+    database_service_instance -- the service instance number of the container running the
+                                 database server
+    seconds_between_retries -- seconds to sleep between retries to connect
+    retry_count -- number of times to retry (note: must be a non-negative integer)
+    """
+    import socket
+
+    if retry_count < 0:
+        raise ValueError('retry_count must be a non-negative integer')
+
+    db_container = ctx.docker_client.containers.get(
+        context.irods_catalog_database_container(ctx.compose_project.name, database_service_instance))
+    db_address = context.container_ip(db_container)
+    db_port = database_server_port(context.base_image(db_container))
+
+    logging.info(f'waiting for catalog to be ready [{db_container.name}]')
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        retries = -1
+        while retries < retry_count:
+            try:
+                logging.debug(
+                    f'trying database on [{db_container.name}] ip:[{db_address}] port:[{db_port}]')
+                s.connect((db_address, db_port))
+                return
+
+            except ConnectionRefusedError:
+                retries = retries + 1
+                time.sleep(seconds_between_retries)
+
+        raise RuntimeError(f'maximum retries reached attempting to connect to database [{db_container.name}]')
