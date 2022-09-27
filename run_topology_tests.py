@@ -45,11 +45,20 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if not args.package_version and not args.install_packages:
+        print('--irods-package-version is required when using --use-static-image')
+        exit(1)
+
     if args.package_directory and args.package_version:
-        print('--package-directory and --package-version are incompatible')
+        print('--irods-package-directory and --irods-package-version are incompatible')
         exit(1)
 
     project_directory = os.path.abspath(args.project_directory or os.getcwd())
+
+    if not args.install_packages:
+        os.environ['dockerfile'] = 'release.Dockerfile'
+        if args.package_version:
+            os.environ['irods_package_version'] = args.package_version
 
     ctx = context.context(docker.from_env(use_ssh_client=True),
                           compose.cli.command.get_project(
@@ -75,13 +84,17 @@ if __name__ == "__main__":
         if args.do_setup:
             # Bring up the services
             logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
+            # TODO: remove when parallel topology tests become a thing
+            zone_count = 1
             consumer_count = 3
-            services.create_topology(ctx,
-                                     externals_directory=args.irods_externals_package_directory,
-                                     package_directory=args.package_directory,
-                                     package_version=args.package_version,
-                                     odbc_driver=args.odbc_driver,
-                                     consumer_count=consumer_count)
+            services.create_topologies(ctx,
+                                       zone_count=zone_count,
+                                       externals_directory=args.irods_externals_package_directory,
+                                       package_directory=args.package_directory,
+                                       package_version=args.package_version,
+                                       odbc_driver=args.odbc_driver,
+                                       consumer_count=consumer_count,
+                                       install_packages=args.install_packages)
 
             # Configure the containers for running iRODS automated tests
             logging.info('configuring iRODS containers for testing')

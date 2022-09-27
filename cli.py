@@ -38,13 +38,22 @@ def add_irods_package_args(parser):
                         dest='package_version',
                         help=textwrap.dedent('''\
                             Version of official iRODS packages to download and install. \
-                            If neither this or --package-directory are specified, \
-                            the latest available version will be installed.'''))
+                            If neither this or --irods-package-directory are specified, \
+                            the latest available version will be installed. Can be used \
+                            with --use-static-image to avoid downloading packages.'''))
 
     parser.add_argument('--irods-externals-package-directory',
                         metavar='PATH_TO_DIRECTORY_WITH_IRODS_EXTERNALS_PACKAGES',
                         dest='irods_externals_package_directory',
                         help='Path to local directory which contains iRODS externals packages.')
+
+    parser.add_argument('--use-static-image',
+                        dest='install_packages', default=True, action='store_false',
+                        help=textwrap.dedent('''\
+                            If specified, a Docker image which has pre-installed iRODS \
+                            packages will be used instead of installing the packages at \
+                            runtime. This is incompatible with --irods-package-directory. \
+                            --irods-package-version must be specified to use this option.'''))
 
 
 def add_irods_plugin_args(parser):

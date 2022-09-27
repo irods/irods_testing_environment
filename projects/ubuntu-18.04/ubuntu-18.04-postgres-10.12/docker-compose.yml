@@ -9,6 +9,9 @@ services:
     irods-catalog-provider:
         build:
             context: ..
+            dockerfile: ${dockerfile}
+            args:
+                - irods_package_version=${irods_package_version}
         depends_on:
             - catalog
         volumes:
@@ -17,6 +20,9 @@ services:
     irods-catalog-consumer:
         build:
             context: ..
+            dockerfile: ${dockerfile}
+            args:
+                - irods_package_version=${irods_package_version}
         depends_on:
             - irods-catalog-provider
         volumes:
