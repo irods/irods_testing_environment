@@ -307,16 +307,53 @@ class setup_input_builder(object):
             raise NotImplementedError('unsupported catalog service role [{}]'.format(self.catalog_service_role))
 
 
-def restart_rsyslog(container):
-    rsyslog_bin_path = os.path.join('/usr', 'sbin', 'rsyslogd')
+def configure_rsyslog(container):
+    def restart_rsyslog(container):
+        rsyslog_bin_path = os.path.join('/usr', 'sbin', 'rsyslogd')
 
-    ec = execute.execute_command(container, f'pkill {os.path.basename(rsyslog_bin_path)}')
-    if ec != 0:
-        logging.info(f'[{container.name}] failed to kill rsyslogd')
+        ec = execute.execute_command(container, f'pkill {os.path.basename(rsyslog_bin_path)}')
+        if ec != 0:
+            logging.info(f'[{container.name}] failed to kill rsyslogd')
 
-    ec = execute.execute_command(container, rsyslog_bin_path)
+        ec = execute.execute_command(container, rsyslog_bin_path)
+        if ec != 0:
+            raise RuntimeError(f'[{container.name}] failed to start rsyslogd')
+
+    import textwrap
+    rsyslog_config_file = os.path.join('/etc', 'rsyslog.d', '00-irods.conf')
+    rsyslog_config_contents = textwrap.dedent('''\
+        \$FileCreateMode 0644
+        \$DirCreateMode 0755
+        \$Umask 0000
+        \$template irods_format,\\"%msg%\\n\\"
+        :programname,startswith,\\"irodsServer\\" /var/log/irods/irods.log;irods_format
+        & stop
+        :programname,startswith,\\"irodsDelayServer\\" /var/log/irods/irods.log;irods_format
+        & stop''')
+
+    ec = execute.execute_command(container, f'bash -c \'echo "{rsyslog_config_contents}" > {rsyslog_config_file}\'')
     if ec != 0:
-        raise RuntimeError(f'[{container.name}] failed to start rsyslogd')
+        raise RuntimeError(f'[{container.name}] failed to configure rsyslog')
+
+    logrotate_config_file = os.path.join('/etc', 'logrotate.d', 'irods')
+    logrotate_config_contents = textwrap.dedent('''\
+	/var/log/irods/irods.log {
+	    weekly
+	    rotate 26
+	    copytruncate
+	    delaycompress
+	    compress
+	    dateext
+	    notifempty
+	    missingok
+	    su root root
+	}''')
+
+    ec = execute.execute_command(container, f'bash -c \'echo "{logrotate_config_contents}" > {logrotate_config_file}\'')
+    if ec != 0:
+        raise RuntimeError(f'[{container.name}] failed to configure logrotate')
+
+    restart_rsyslog(container)
 
 
 def stop_irods(container):
@@ -341,6 +378,7 @@ def setup_irods_server(container, setup_input):
     setup_input -- string which will be provided as input to the iRODS setup script
     """
     from . import container_info
+    from . import irods_config
 
     if stop_irods(container) != 0:
         logging.debug(f'[{container.name}] failed to stop iRODS server before setup')
@@ -358,7 +396,12 @@ def setup_irods_server(container, setup_input):
     if ec != 0:
         raise RuntimeError('failed to set up iRODS server [{}]'.format(container.name))
 
-    restart_rsyslog(container)
+    # Only configure rsyslog for versions later than 4.3.0 as this was the first release
+    # which uses syslog. In the future, maybe the syslog implementation used in the
+    # testing environment can be swapped out.
+    version_triple = irods_config.get_irods_version(container)
+    if version_triple[0] >= 4 and version_triple[1] >= 3:
+        configure_rsyslog(container)
 
     if restart_irods(container) != 0:
         raise RuntimeError(f'[{container.name}] failed to start iRODS server after setup')
