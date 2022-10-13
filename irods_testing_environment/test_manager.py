@@ -1,5 +1,6 @@
 # grown-up modules
 import logging
+import queue
 import time
 
 # local modules
@@ -28,22 +29,13 @@ class test_manager:
         tr = eval('.'.join(['test_runner', tr_name]))
         logging.info('[{}]'.format(tr))
         self.test_runners = [tr(c) for c in containers]
+        self.test_list = tests
 
         logging.info('[{}]'.format(tests))
         logging.info('[{}]'.format(str(self)))
         logging.info('[{}]'.format(self.test_runners))
 
         self.duration = -1
-
-        if tests is None:
-            self.test_runners[0].add_test(None)
-
-        else:
-            for i, t in enumerate(tests):
-                index = i % len(self.test_runners)
-
-                logging.info('index [{}], test [{}]'.format(index, t))
-                self.test_runners[index].add_test(t)
 
         logging.info('[{}]'.format(str(self)))
 
@@ -105,11 +97,19 @@ class test_manager:
         """
         import concurrent.futures
 
+        test_queue = queue.Queue()
+
+        if self.test_list is None:
+            test_queue.put(None)
+        else:
+            for t in self.test_list:
+                test_queue.put(t)
+
         start_time = time.time()
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures_to_test_runners = {
-                executor.submit(tr.run, fail_fast, **kwargs): tr for tr in self.test_runners
+                executor.submit(tr.run, test_queue, fail_fast, **kwargs): tr for tr in self.test_runners
             }
 
             for f in concurrent.futures.as_completed(futures_to_test_runners):
