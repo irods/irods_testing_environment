@@ -1,6 +1,7 @@
 # grown-up modules
 import logging
 import os
+import queue
 import time
 
 # local modules
@@ -10,19 +11,15 @@ from . import execute
 class test_runner:
     """A class that manages a list of tests and can execute them on a managed container."""
 
-    def __init__(self, executing_container, tests=None):
+    def __init__(self, executing_container):
         """Constructor for `test_runner`.
-
-        The list of tests is not required to be initialized here. `add_test` will append a
-        test to the end of the test list.
 
         Arguments:
         executing_container -- the container on which tests will be executed
-        tests -- optional list of tests to use with this runner
         """
         # TODO: each test runner is tied to a single container... might need to abstract this out later
         self.executor = executing_container
-        self.tests = tests or list()
+        self.tests = list()
         self.rc = 0
 
         # When a test completes - whether passing or failing - it will be associated with an
@@ -114,35 +111,48 @@ class test_runner:
         return r
 
 
-    def run(self, fail_fast=True, **kwargs):
-        """Execute test list sequentially on executing container.
+    def run(self, test_queue, fail_fast=True, **kwargs):
+        """Execute tests from `test_queue` in executing container.
 
         Arguments:
+        test_queue -- the `Queue` tracking the tests being run by the `test_runner`s
         fail_fast -- if True, the first test to fail ends the run
         **kwargs -- keyword arguments for the specific `test_runner` implementation
         """
         run_start = time.time()
 
-        for t in self.tests:
-            start = time.time()
+        try:
+            # TODO: python >=3.8 - Use while t := test_queue.get(block=False):
+            while True:
+                # TODO: Consider block=True/Queue.join(). May butt heads with current design.
+                # Queue.get will raise queue.Empty when there is nothing in the queue.
+                t = test_queue.get(block=False)
+                self.add_test(t)
 
-            cmd, ec = self.execute_test(t, **kwargs)
+                start = time.time()
 
-            end = time.time()
+                cmd, ec = self.execute_test(t, **kwargs)
 
-            duration = end - start
+                end = time.time()
 
-            if ec is 0:
-                self.passed_tests().append((t, duration))
-                logging.error('[{}]: cmd succeeded [{}]'.format(self.name(), cmd))
+                test_queue.task_done()
 
-            else:
-                self.rc = ec
-                self.failed_tests().append((t, duration))
-                logging.error('[{}]: cmd failed [{}] [{}]'.format(self.name(), ec, cmd))
+                duration = end - start
 
-                if fail_fast:
-                    raise RuntimeError('[{}]: command failed [{}]'.format(self.name(), cmd))
+                if ec is 0:
+                    self.passed_tests().append((t, duration))
+                    logging.error('[{}]: cmd succeeded [{}]'.format(self.name(), cmd))
+
+                else:
+                    self.rc = ec
+                    self.failed_tests().append((t, duration))
+                    logging.error('[{}]: cmd failed [{}] [{}]'.format(self.name(), ec, cmd))
+
+                    if fail_fast:
+                        raise RuntimeError('[{}]: command failed [{}]'.format(self.name(), cmd))
+
+        except queue.Empty:
+            logging.info(f'[{self.name()}]: Queue is empty!')
 
         run_end = time.time()
 
@@ -158,8 +168,8 @@ class test_runner:
 
 
 class test_runner_irods_python_suite(test_runner):
-    def __init__(self, executing_container, tests=None):
-        super(test_runner_irods_python_suite, self).__init__(executing_container, tests)
+    def __init__(self, executing_container):
+        super(test_runner_irods_python_suite, self).__init__(executing_container)
 
 
     @staticmethod
@@ -192,8 +202,8 @@ class test_runner_irods_python_suite(test_runner):
 
 
 class test_runner_irods_unit_tests(test_runner):
-    def __init__(self, executing_container, tests=None):
-        super(test_runner_irods_unit_tests, self).__init__(executing_container, tests)
+    def __init__(self, executing_container):
+        super(test_runner_irods_unit_tests, self).__init__(executing_container)
 
 
     def execute_test(self, test, reporter='junit'):
@@ -222,8 +232,8 @@ class test_runner_irods_unit_tests(test_runner):
 
 
 class test_runner_irods_plugin_tests(test_runner):
-    def __init__(self, executing_container, tests=None):
-        super(test_runner_irods_plugin_tests, self).__init__(executing_container, tests)
+    def __init__(self, executing_container):
+        super(test_runner_irods_plugin_tests, self).__init__(executing_container)
 
 
     # TODO: this could likely just be implemented in yet another subclass
