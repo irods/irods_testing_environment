@@ -119,12 +119,12 @@ class test_manager:
                     f.result()
 
                     if tr.rc is 0 and len(tr.failed_tests()) is 0:
-                        logging.error('tests completed successfully [{}]'.format(tr.name()))
+                        logging.error(f'[{tr.name()}]: tests completed successfully')
                     else:
-                        logging.error('some tests failed [{}]'.format(tr.name()))
+                        logging.error(f'[{tr.name()}]: some tests failed')
 
                 except Exception as e:
-                    logging.error('[{}]: exception raised while running test'.format(tr.name()))
+                    logging.error(f'[{tr.name()}]: exception raised while running test')
                     logging.error(e)
 
                     tr.rc = 1

@@ -20,7 +20,7 @@ def configure(verbosity=1, log_filename=None):
 
     logging.basicConfig(
         level = level if level > logging.NOTSET else logging.DEBUG,
-        format = '%(asctime)-15s %(levelname)s - %(message)s',
+        format = '%(asctime)-15s - %(message)s',
         handlers = handlers
     )
 
