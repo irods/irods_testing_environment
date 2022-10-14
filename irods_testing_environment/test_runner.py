@@ -129,6 +129,8 @@ class test_runner:
                 t = test_queue.get(block=False)
                 self.add_test(t)
 
+                logging.warning(f'[{self.name()}]: running test [{t}]')
+
                 start = time.time()
 
                 cmd, ec = self.execute_test(t, **kwargs)
@@ -139,17 +141,19 @@ class test_runner:
 
                 duration = end - start
 
+                logging.info(f'[{self.name()}]: cmd [{ec}] [{cmd}]')
+
                 if ec is 0:
                     self.passed_tests().append((t, duration))
-                    logging.error('[{}]: cmd succeeded [{}]'.format(self.name(), cmd))
+                    logging.error(f'[{self.name()}]: test passed [[{duration:>9.4f}]s] [{t or "all tests"}]')
 
                 else:
                     self.rc = ec
                     self.failed_tests().append((t, duration))
-                    logging.error('[{}]: cmd failed [{}] [{}]'.format(self.name(), ec, cmd))
+                    logging.error(f'[{self.name()}]: test failed [[{duration:>9.4f}]s] [{t or "all tests"}]')
 
                     if fail_fast:
-                        raise RuntimeError('[{}]: command failed [{}]'.format(self.name(), cmd))
+                        raise RuntimeError(f'[{self.name()}]: command failed [{cmd}]')
 
         except queue.Empty:
             logging.info(f'[{self.name()}]: Queue is empty!')
