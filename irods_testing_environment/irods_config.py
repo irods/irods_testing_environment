@@ -10,21 +10,64 @@ from . import context
 from . import execute
 from . import json_utils
 
+# This dict maps container names to iRODS zone names so that the name of the zone of the iRODS
+# server being run by each container is cached for easy access at any time. This is only meant to
+# be used by get_irods_zone_name and is declared here to extend the lifetime of the dict.
+irods_zone = dict()
+
+# This dict maps container names to iRODS version triples so that the version of iRODS being run
+# by each container is cached for easy access at any time. This is only meant to be used by
+# get_irods_version and is declared here to extend the lifetime of the dict.
+irods_version = dict()
+
 def get_irods_zone_name(container):
     """Return the Zone name of the iRODS server running on `container`."""
-    return json_utils.get_json_from_file(container, context.server_config())['zone_name']
+    global irods_zone
+
+    # If we have the iRODS version cached for this container, return that.
+    if container.name in irods_zone:
+        return irods_zone[container.name]
+
+    irods_zone[container.name] = json_utils.get_json_from_file(
+            container, context.server_config())['zone_name']
+
+    return irods_zone[container.name]
+
 
 def get_irods_version(container):
     """Return the version of iRODS running on `container` as a tuple (major, minor, patch)."""
-    try:
-        return tuple(int(i) for i in
-            json_utils.get_json_from_file(container, '/var/lib/irods/version.json.dist')['irods_version']
+    global irods_version
+
+    # If we have the iRODS version cached for this container, return that.
+    if container.name in irods_version:
+        return irods_version[container.name]
+
+    # The name of the version file changed in iRODS version 4.3.0. The testing environment supports
+    # both 4.3.x and 4.2.x versions, so we want to check for both file names.
+    version_file_locations = [
+            os.path.join(context.irods_home(), 'version.json.dist'),
+            os.path.join(context.irods_home(), 'VERSION.json.dist')
+    ]
+
+    for f in version_file_locations:
+        # Check to see whether the file exists. If not, try the next one.
+        if execute.execute_command(container, f'bash -c "[[ -f {f} ]]"') != 0:
+            logging.debug(f'[{container.name}]: version file [{f}] not found')
+            continue
+
+        logging.debug(f'[{container.name}]: version file [{f}] found')
+
+        # If the file exists, extract the version string and store it in the version
+        # dictionary under this container's name.
+        irods_version[container.name] = tuple(int(i) for i in
+            json_utils.get_json_from_file(container, f)['irods_version']
             .split('.'))
 
-    except:
-        return tuple(int(i) for i in
-            json_utils.get_json_from_file(container, '/var/lib/irods/VERSION.json.dist')['irods_version']
-            .split('.'))
+        return irods_version[container.name]
+
+    # If we reach here, that's no good.
+    raise RuntimeError(f'[{container.name}]: No iRODS version file found')
+
 
 def configure_users_for_auth_tests(docker_client, compose_project):
     """Create Linux users and set passwords for authentication testing.
