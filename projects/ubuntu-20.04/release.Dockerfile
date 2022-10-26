@@ -14,6 +14,9 @@ RUN apt-get update && \
 RUN wget -qO - https://packages.irods.org/irods-signing-key.asc | apt-key add - && \
     echo "deb [arch=amd64] https://packages.irods.org/apt/ focal main" | tee /etc/apt/sources.list.d/renci-irods.list
 
+RUN wget -qO - https://core-dev.irods.org/irods-core-dev-signing-key.asc | apt-key add - && \
+    echo "deb [arch=amd64] https://core-dev.irods.org/apt/ focal main" | tee /etc/apt/sources.list.d/renci-irods-core-dev.list
+
 RUN apt-get update && \
     apt-get install -y \
         libcurl4-gnutls-dev \
@@ -29,7 +32,11 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/*
 
-RUN python3 -m pip install xmlrunner
+RUN python3 -m pip install unittest-xml-reporting
+
+RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
+
+ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]
 
 ARG irods_package_version=4.3.0-1~focal
 
@@ -42,7 +49,3 @@ RUN apt-get update && \
     && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/*
-
-RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
-
-ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]

@@ -13,6 +13,9 @@ RUN yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && 
 RUN rpm --import https://packages.irods.org/irods-signing-key.asc && \
     wget -qO - https://packages.irods.org/renci-irods.yum.repo | tee /etc/yum.repos.d/renci-irods.yum.repo
 
+RUN rpm --import https://core-dev.irods.org/irods-core-dev-signing-key.asc && \
+    wget -qO - https://core-dev.irods.org/renci-irods-core-dev.yum.repo | tee /etc/yum.repos.d/renci-irods-core-dev.yum.repo
+
 # TODO: For some reason, this makes the build fail after adding the iRODS repo
 #RUN yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && \
 RUN yum update -y && \
@@ -41,7 +44,13 @@ RUN yum update -y && \
     yum clean all && \
     rm -rf /var/cache/yum /tmp/*
 
-RUN python3 -m pip install xmlrunner distro psutil pyodbc jsonschema requests
+RUN python3 -m pip install unittest-xml-reporting distro psutil pyodbc jsonschema requests
+
+COPY rsyslog.conf /etc/rsyslog.conf
+
+RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
+
+ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]
 
 ARG irods_package_version=4.3.0-1
 
@@ -56,10 +65,3 @@ RUN yum update -y && \
     && \
     yum clean all && \
     rm -rf /var/cache/yum /tmp/*
-
-COPY rsyslog.conf /etc/rsyslog.conf
-
-RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
-
-ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]
-
