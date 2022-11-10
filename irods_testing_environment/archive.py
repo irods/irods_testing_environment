@@ -212,3 +212,15 @@ def collect_files_from_containers(docker_client,
 
         for p in paths_to_copy_from_containers:
             copy_from_container(source_container, p, od)
+
+
+def put_string_to_file(container, target_file, string):
+    """Echo `string` into `target_file` in `container`, overwriting existing contents.
+
+    Arguments:
+    container -- docker.Container where the target_file is hosted
+    target_file -- the path inside the container with the contents to overwrite
+    string -- contents to echo into the target file
+    """
+    if execute.execute_command(container, f'bash -c \'echo "{string}" > {target_file}\'') != 0:
+        raise RuntimeError(f'[{container.name}] failed to put string to file [{target_file}]')
