@@ -2,6 +2,9 @@
 import json
 import os
 
+# local modules
+from . import archive
+
 def get_json_from_file(container, target_file):
     """Return a JSON structure read out from a JSON file on the specified container.
 
@@ -30,10 +33,4 @@ def put_json_to_file(container, target_file, json_contents):
     target_file -- the path inside the container with the JSON contents to modify
     json_contents -- JSON contents to write to the target file in the container
     """
-    from . import execute
-    # TODO: Should we make a local file and copy it in?
-    put_json = 'bash -c \'echo "{}" > {}\''.format(json.dumps(json_contents).replace('"', '\\"'),
-                                                   target_file)
-    if execute.execute_command(container, put_json) is not 0:
-        raise RuntimeError('failed to put json to file [{}] [{}}'.format(target_file,
-                                                                         container.name))
+    archive.put_string_to_file(container, target_file, json.dumps(json_contents).replace('"', '\\"'))

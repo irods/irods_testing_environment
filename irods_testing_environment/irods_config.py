@@ -324,6 +324,8 @@ def configure_irods_testing(docker_client, compose_project):
 
     configure_univmss_script(docker_client, compose_project)
 
+    configure_pam_for_auth_plugin(docker_client, compose_project)
+
     configure_users_for_auth_tests(docker_client, compose_project)
 
 
@@ -387,3 +389,65 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
     if execute.execute_command(container, asq, user='irods') is not 0:
         raise RuntimeError('failed to create specific query [{}] [{}]'
                            .format(bug_3466_query, container.name))
+
+
+def configure_pam_for_auth_plugin(docker_client, compose_project):
+    """Add lines required for PAM legacy/pam_password auth plugin to work across all platforms.
+
+    Arguments:
+    docker_client -- docker client for interacting with the docker-compose project
+    compose_project -- compose.Project in which the iRODS servers are running
+    """
+    from . import archive
+
+    import concurrent.futures
+    import textwrap
+
+    def configure_pam(docker_client, docker_compose_container, path_to_config, contents):
+        container = docker_client.containers.get(docker_compose_container.name)
+
+        archive.put_string_to_file(container, path_to_config, contents)
+
+        # TODO #133: run /usr/sbin/irodsPamAuthCheck here to make sure it's okay
+
+        return 0
+
+    path_to_config = os.path.join('/etc', 'pam.d', 'irods')
+
+    contents = textwrap.dedent('''\
+    auth        required      pam_env.so
+    auth        sufficient    pam_unix.so
+    auth        requisite     pam_succeed_if.so uid >= 500 quiet
+    auth        required      pam_deny.so
+    ''')
+
+    containers = compose_project.containers(service_names=[
+        context.irods_catalog_provider_service(),
+        context.irods_catalog_consumer_service()])
+
+    rc = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures_to_containers = {
+            executor.submit(
+                configure_pam, docker_client, c, path_to_config, contents
+            ): c for c in containers
+        }
+
+        for f in concurrent.futures.as_completed(futures_to_containers):
+            container = futures_to_containers[f]
+            try:
+                ec = f.result()
+                if ec != 0:
+                    logging.error(f'[{container.name}] error configuring pam')
+                    rc = ec
+                else:
+                    logging.info(f'[{container.name}] successfully configured pam')
+
+            except Exception as e:
+                logging.error(f'[{container.name}] exception raised while configuring pam')
+                logging.error(e)
+                rc = 1
+
+    if rc != 0:
+        raise RuntimeError('failed to configure pam on some service')
+
