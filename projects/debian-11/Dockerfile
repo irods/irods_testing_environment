@@ -26,13 +26,14 @@ RUN apt-get update && \
         python3-pip \
         python3-psutil \
         python3-requests \
-        python3-xmlrunner \
         rsyslog \
         systemd \
         unixodbc \
     && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/*
+
+RUN python3 -m pip install unittest-xml-reporting
 
 RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
 
