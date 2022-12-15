@@ -5,13 +5,14 @@ import logging
 import os
 
 # local modules
+from irods_testing_environment import archive
 from irods_testing_environment import context
 from irods_testing_environment import execute
 from irods_testing_environment import federate
 from irods_testing_environment.install import install
 from irods_testing_environment import irods_config
 from irods_testing_environment import irods_setup
-#from irods_testing_environment import ssl_setup
+from irods_testing_environment import ssl_setup
 from irods_testing_environment import test_utils
 
 if __name__ == "__main__":
@@ -29,11 +30,11 @@ if __name__ == "__main__":
     cli.add_irods_package_args(parser)
     cli.add_irods_test_args(parser)
 
-    #parser.add_argument('--use-ssl',
-                        #dest='use_ssl', action='store_true',
-                        #help=textwrap.dedent('''\
-                            #Indicates that SSL should be configured and enabled in the test \
-                            #Zone.'''))
+    parser.add_argument('--use-ssl',
+                        dest='use_ssl', action='store_true',
+                        help=textwrap.dedent('''\
+                            Indicates that SSL should be configured and enabled in each Zone.\
+                            '''))
 
     args = parser.parse_args()
 
@@ -130,12 +131,14 @@ if __name__ == "__main__":
 
         options = ['--xml_output', '--federation', '.'.join(str(v) for v in version), zone, host]
 
-        #if args.do_setup and args.use_ssl:
-            #ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
-            #options.append('--use_ssl')
+        if args.use_ssl:
+            options.append('--use_ssl')
+            if args.do_setup:
+                ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
 
         # configure federation for testing
-        irods_config.configure_irods_federation_testing(ctx, zone_info_list[0], zone_info_list[1])
+        if args.do_setup:
+            irods_config.configure_irods_federation_testing(ctx, zone_info_list[0], zone_info_list[1])
 
         execute.execute_command(container, 'iadmin lu', user='irods')
         execute.execute_command(container, 'iadmin lz', user='irods')
@@ -151,9 +154,27 @@ if __name__ == "__main__":
         raise
 
     finally:
-        logging.warning('collecting logs [{}]'.format(output_directory))
-        logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
+        if args.save_logs:
+            try:
+                logging.error('collecting logs [{}]'.format(output_directory))
 
-        ctx.compose_project.down(include_volumes=True, remove_image_type=False)
+                # collect the usual logs
+                logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory)
+
+                # and then the test reports
+                archive.collect_files_from_containers(ctx.docker_client,
+                                                      [container],
+                                                      [os.path.join(context.irods_home(), 'test-reports')],
+                                                      output_directory)
+
+            except Exception as e:
+                logging.error(e)
+                logging.error('failed to collect some log files')
+
+                if rc == 0:
+                    rc = 1
+
+        if args.cleanup_containers:
+            ctx.compose_project.down(include_volumes=True, remove_image_type=False)
 
     exit(rc)
