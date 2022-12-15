@@ -100,9 +100,10 @@ if __name__ == "__main__":
 
         options = ['--xml_output']
 
-        if args.do_setup and args.use_ssl:
-            ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
+        if args.use_ssl:
             options.append('--use_ssl')
+            if args.do_setup:
+                ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
 
         rc = test_utils.run_specific_tests(containers, args.tests, options, args.fail_fast)
 

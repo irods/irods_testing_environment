@@ -62,6 +62,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    if not args.package_version and not args.install_packages:
+        print('--irods-package-version is required when using --use-static-image')
+        exit(1)
+
     if args.package_directory and args.package_version:
         print('--package-directory and --package-version are incompatible')
         exit(1)
@@ -69,6 +73,11 @@ if __name__ == "__main__":
     zone_names = args.zone_names or ['tempZone', 'otherZone']
 
     project_directory = os.path.abspath(args.project_directory or os.getcwd())
+
+    if not args.install_packages:
+        os.environ['dockerfile'] = 'release.Dockerfile'
+        if args.package_version:
+            os.environ['irods_package_version'] = args.package_version
 
     ctx = context.context(docker.from_env(),
                           compose.cli.command.get_project(
@@ -93,11 +102,12 @@ if __name__ == "__main__":
         # The catalog consumers are only determined after the containers are running
         zone_info_list = irods_setup.get_info_for_zones(ctx, zone_names, args.consumers_per_zone)
 
-        install.make_installer(ctx.platform_name()).install_irods_packages(
-            ctx,
-            externals_directory=args.irods_externals_package_directory,
-            package_directory=args.package_directory,
-            package_version=args.package_version)
+        if args.install_packages:
+            install.make_installer(ctx.platform_name()).install_irods_packages(
+                ctx,
+                externals_directory=args.irods_externals_package_directory,
+                package_directory=args.package_directory,
+                package_version=args.package_version)
 
         irods_setup.setup_irods_zones(ctx, zone_info_list, odbc_driver=args.odbc_driver)
 
