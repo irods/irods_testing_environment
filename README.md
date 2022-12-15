@@ -202,3 +202,26 @@ ssh-add -k <path to private keys>
 See `ssh-agent` and `ssh-add` man pages for more details.
 
 For more information about remote execution on Docker, read this: [https://www.docker.com/blog/how-to-deploy-on-remote-docker-hosts-with-docker-compose/](https://www.docker.com/blog/how-to-deploy-on-remote-docker-hosts-with-docker-compose/)
+
+## View results with `xunit-viewer`
+
+An `xunit-viewer` (https://github.com/lukejpreston/xunit-viewer) Dockerfile was added so that the JUnit XML reports can be viewed a little more easily.
+
+To view test results, build the Docker image and run the container. Build the image like this:
+```bash
+docker build -t xunit-viewer -f xunit_viewer.Dockerfile .
+```
+
+Run the viewer like this:
+```bash
+docker run --rm -d \
+    -v /path/to/test-results/logs:/results:ro \
+    -p 3000:3000 \
+    xunit-viewer -r /results -s
+```
+
+This does the following:
+ 1. Runs the `xunit-viewer1 container with the specified test results as a server on the default port.
+ 2. Provides `/results` as a volume mount in the container. `/path/to/test-results` is the location of the test results as specified by the `--output-directory`/`-o` option for the test-running scripts.
+ 3. Exposes port 3000 in the container as 3000 on the host. This is the default port for the `xunit-viewer` server.
+

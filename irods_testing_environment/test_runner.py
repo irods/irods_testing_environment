@@ -223,8 +223,9 @@ class test_runner_irods_unit_tests(test_runner):
         if test is None:
             raise TypeError('unit tests must be specified by name - try using --tests')
 
+        extension = 'xml' if reporter == 'junit' else 'out'
         output_dir = os.path.join(context.irods_home(), 'log')
-        output_path = os.path.join(output_dir, f'{test}_{reporter}_report.out')
+        output_path = os.path.join(output_dir, f'{test}_{reporter}_report.{extension}')
 
         cmd = [os.path.join(context.unit_tests(), test),
                '--reporter', reporter,
