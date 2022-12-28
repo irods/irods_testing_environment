@@ -101,21 +101,21 @@ def make_mysql_odbcinst_ini(csp_container, container_odbc_driver_dir):
         logging.debug('configuring odbcinst.ini with MySQL 8.0 drivers')
         odbcinst_ini_contents = textwrap.dedent("""\
             [MySQL ANSI]
-            Description = MySQL OCBC 8.0 ANSI Driver
+            Description = MySQL ODBC 8.0 ANSI Driver
             Driver = {0}/lib/libmyodbc8a.so
 
             [MySQL Unicode]
-            Description = MySQL OCBC 8.0  Unicode Driver
+            Description = MySQL ODBC 8.0 Unicode Driver
             Driver = {0}/lib/libmyodbc8w.so""".format(container_odbc_driver_dir))
     else:
         logging.debug('configuring odbcinst.ini with MySQL 5.3 drivers')
         odbcinst_ini_contents = textwrap.dedent("""\
             [MySQL ANSI]
-            Description = MySQL OCBC 5.3 ANSI Driver
+            Description = MySQL ODBC 5.3 ANSI Driver
             Driver = {0}/lib/libmyodbc5a.so
 
             [MySQL Unicode]
-            Description = MySQL OCBC 5.3  Unicode Driver
+            Description = MySQL ODBC 5.3 Unicode Driver
             Driver = {0}/lib/libmyodbc5w.so""".format(container_odbc_driver_dir))
 
     cmd = 'bash -c \'echo "{0}" > {1}\''.format(odbcinst_ini_contents, odbcinst_ini_path)
@@ -234,6 +234,20 @@ def configure_odbc_driver_centos_7_mysql_57(csp_container, odbc_driver):
     if not odbc_driver:
         odbc_driver = download_mysql_odbc_driver(
             'https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-5.3.13-linux-el7-x86-64bit.tar.gz')
+
+    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
+
+
+def configure_odbc_driver_centos_7_mysql_8029(csp_container, odbc_driver):
+    """Configure ODBC driver for mysql 8.0 on centos 7.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz')
 
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
 
