@@ -8,10 +8,18 @@ from . import irods_setup
 from . import json_utils
 
 def make_federation_entry(ctx, local_zone, remote_zone):
+    """Create an entry for the federation stanza to federate two zones together.
+
+    Arguments:
+    ctx -- context object which contains information about the Docker environment
+    local_zone -- name of the local iRODS zone
+    remote_zone -- name of the remote iRODS zone with which `local_zone` is federating
+    """
     # TODO: Need to have strategies for different version of iRODS, this only works for 4.1/4.2, I think?
+    negotiation_key_prefix = '_'.join(sorted([local_zone.zone_name, remote_zone.zone_name]))
     return {
         'catalog_provider_hosts': [remote_zone.provider_hostname(ctx)],
-        'negotiation_key': irods_setup.make_negotiation_key(local_zone.zone_name, remote_zone.zone_name),
+        'negotiation_key': irods_setup.make_negotiation_key(negotiation_key_prefix),
         'zone_key': irods_setup.make_zone_key(remote_zone.zone_name),
         'zone_name': remote_zone.zone_name,
         'zone_port': 1247

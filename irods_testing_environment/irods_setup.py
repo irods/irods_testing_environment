@@ -637,13 +637,23 @@ def setup_irods_zones(ctx,
         raise RuntimeError('failed to set up one or more iRODS Zones, ec=[{}]'.format(rc))
 
 
-def make_negotiation_key(local_zone_name, remote_zone_name=''):
+def make_negotiation_key(prefix=''):
+    """Generate a 32-byte negotiation key with an optional prefix.
+
+    The generated key will be 32 bytes in length. If a longer string is passed in, it will be
+    truncated to 32 bytes. If the string is shorter than 32 bytes, the remaining space will be
+    filled by underscores.
+
+    Arguments:
+    prefix -- optional prefix to use to make the key unique
+    """
     negotation_key_size_in_bytes = 32
+
+    if len(prefix) > negotation_key_size_in_bytes:
+        return prefix[:negotiation_key_size_in_bytes]
+
     filler = '_' * negotation_key_size_in_bytes
-    # TODO: need predictable way to generate unique keys
-    #prefix = '_'.join([local_zone_name, remote_zone_name])
-    #return prefix + filler[:negotation_key_size_in_bytes - len(prefix)]
-    return filler
+    return prefix + filler[:negotation_key_size_in_bytes - len(prefix)]
 
 
 def make_zone_key(zone_name):
