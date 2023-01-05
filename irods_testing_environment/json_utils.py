@@ -33,4 +33,5 @@ def put_json_to_file(container, target_file, json_contents):
     target_file -- the path inside the container with the JSON contents to modify
     json_contents -- JSON contents to write to the target file in the container
     """
-    archive.put_string_to_file(container, target_file, json.dumps(json_contents).replace('"', '\\"'))
+    json_str = json.dumps(json_contents, sort_keys=True, indent=4).replace('"', '\\"')
+    archive.put_string_to_file(container, target_file, json_str)
