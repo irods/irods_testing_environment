@@ -69,6 +69,8 @@ if __name__ == "__main__":
 
     rc = 0
 
+    containers = None
+
     try:
         if args.do_setup:
             # Bring up the services
@@ -113,6 +115,10 @@ if __name__ == "__main__":
         raise
 
     finally:
+        if containers:
+            # Just grab the version and sha from the first container since they are all running the same thing.
+            cli.log_irods_version_and_commit_id(containers[0])
+
         if args.save_logs:
             try:
                 logging.error('collecting logs [{}]'.format(output_directory))

@@ -78,7 +78,7 @@ if __name__ == "__main__":
     logs.configure(args.verbosity, os.path.join(output_directory, 'script_output.log'))
 
     rc = 0
-    last_command_to_fail = None
+    container = None
 
     try:
         if args.do_setup:
@@ -142,6 +142,10 @@ if __name__ == "__main__":
         raise
 
     finally:
+        if container:
+            # Just grab the version and sha from the test container since it is what is being tested.
+            cli.log_irods_version_and_commit_id(container)
+
         if args.save_logs:
             try:
                 logging.error('collecting logs [{}]'.format(output_directory))

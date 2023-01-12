@@ -20,6 +20,11 @@ irods_zone = dict()
 # get_irods_version and is declared here to extend the lifetime of the dict.
 irods_version = dict()
 
+# This dict maps container names to iRODS version SHAs so that the exact commit of the iRODS build being run
+# by each container is cached for easy access at any time. This is only meant to be used by get_irods_sha and
+# is declared here to extend the lifetime of the dict.
+irods_commit_id = dict()
+
 def get_irods_zone_name(container):
     """Return the Zone name of the iRODS server running on `container`."""
     global irods_zone
@@ -35,13 +40,48 @@ def get_irods_zone_name(container):
 
 
 def get_irods_version(container):
-    """Return the version of iRODS running on `container` as a tuple (major, minor, patch)."""
+    """Return the version of iRODS running on `container` as a tuple (major, minor, patch).
+
+    Arguments:
+    container -- container in which file is found
+    """
     global irods_version
 
     # If we have the iRODS version cached for this container, return that.
     if container.name in irods_version:
         return irods_version[container.name]
 
+    irods_version[container.name] = tuple(
+        int(i) for i in get_irods_version_info(container, 'irods_version').split('.')
+    )
+
+    return irods_version[container.name]
+
+
+def get_irods_commit_id(container):
+    """Return the commit ID of the build of iRODS running on `container`.
+
+    Arguments:
+    container -- container in which file is found
+    """
+    global irods_commit_id
+
+    # If we have the iRODS commit ID cached for this container, return that.
+    if container.name in irods_commit_id:
+        return irods_commit_id[container.name]
+
+    irods_commit_id[container.name] = get_irods_version_info(container, 'commit_id')
+
+    return irods_commit_id[container.name]
+
+
+def get_irods_version_info(container, version_file_key):
+    """Returns the information from the iRODS version JSON file.
+
+    Arguments:
+    container -- container in which file is found
+    version_file_key -- key to look for in the JSON file
+    """
     # The name of the version file changed in iRODS version 4.3.0. The testing environment supports
     # both 4.3.x and 4.2.x versions, so we want to check for both file names.
     version_file_locations = [
@@ -59,11 +99,7 @@ def get_irods_version(container):
 
         # If the file exists, extract the version string and store it in the version
         # dictionary under this container's name.
-        irods_version[container.name] = tuple(int(i) for i in
-            json_utils.get_json_from_file(container, f)['irods_version']
-            .split('.'))
-
-        return irods_version[container.name]
+        return json_utils.get_json_from_file(container, f)[version_file_key]
 
     # If we reach here, that's no good.
     raise RuntimeError(f'[{container.name}]: No iRODS version file found')

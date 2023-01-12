@@ -61,6 +61,7 @@ if __name__ == "__main__":
     logs.configure(args.verbosity, os.path.join(output_directory, 'script_output.log'))
 
     rc = 0
+    containers = None
 
     try:
         if args.do_setup:
@@ -98,6 +99,10 @@ if __name__ == "__main__":
         raise
 
     finally:
+        if containers:
+            # Just grab the version and sha from the first container since they are all running the same thing.
+            cli.log_irods_version_and_commit_id(containers[0])
+
         if args.save_logs:
             logging.warning('collecting logs [{}]'.format(output_directory))
 
