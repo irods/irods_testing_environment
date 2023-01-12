@@ -392,10 +392,13 @@ def wait_for_database_service(ctx,
     seconds_between_retries -- seconds to sleep between retries to connect
     retry_count -- number of times to retry (note: must be a non-negative integer)
     """
-    import socket
+    from . import container_info
 
     if retry_count < 0:
         raise ValueError('retry_count must be a non-negative integer')
+
+    irods_container = ctx.docker_client.containers.get(
+        context.irods_catalog_provider_container(ctx.compose_project.name))
 
     db_container = ctx.docker_client.containers.get(
         context.irods_catalog_database_container(ctx.compose_project.name, database_service_instance))
@@ -404,17 +407,24 @@ def wait_for_database_service(ctx,
 
     logging.info(f'waiting for catalog to be ready [{db_container.name}]')
 
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        retries = -1
-        while retries < retry_count:
-            try:
-                logging.debug(
-                    f'trying database on [{db_container.name}] ip:[{db_address}] port:[{db_port}]')
-                s.connect((db_address, db_port))
-                return
+    retries = -1
+    while retries < retry_count:
+        logging.debug(
+            f'[{irods_container.name}] trying database on [{db_container.name}] ip:[{db_address}] port:[{db_port}]')
 
-            except ConnectionRefusedError:
-                retries = retries + 1
-                time.sleep(seconds_between_retries)
+        socket_cmd = str('import socket; '
+            's = socket.socket(socket.AF_INET, socket.SOCK_STREAM); '
+            f'ec = s.connect_ex((\'{db_address}\', {db_port})); '
+            's.close(); print(ec); exit(ec)'
+        )
 
-        raise RuntimeError(f'maximum retries reached attempting to connect to database [{db_container.name}]')
+        cmd = ' '.join([container_info.python(irods_container), '-c', f'"{socket_cmd}"'])
+        if execute.execute_command(irods_container, cmd) == 0:
+            logging.debug(
+                f'[{irods_container.name}] database service ready on [{db_container.name}]')
+            return
+
+        retries = retries + 1
+        time.sleep(seconds_between_retries)
+
+    raise RuntimeError(f'maximum retries reached attempting to connect to database [{db_container.name}]')
