@@ -1,5 +1,4 @@
 # grown-up modules
-import logging
 import textwrap
 
 # local modules
@@ -158,3 +157,18 @@ def add_common_args(parser):
                             Increase the level of output to stdout. \
                             CRITICAL and ERROR messages will always be printed. \
                             Add more to see more log messages (e.g. -vvv displays DEBUG).'''))
+
+
+def log_irods_version_and_commit_id(container):
+    '''Prints the version and commit_id found in the JSON version file.
+
+    Arguments:
+    container -- Container which has the version file
+    '''
+    import logging
+    from irods_testing_environment import irods_config
+
+    version = ".".join([str(i) for i in irods_config.get_irods_version(container)])
+    sha = irods_config.get_irods_commit_id(container)
+    logging.error(f'version:[{version}]')
+    logging.error(f'sha:[{sha}]')
