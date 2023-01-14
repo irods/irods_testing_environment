@@ -383,12 +383,27 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
     execute.execute_command(container, 'iadmin lu', user='irods')
     execute.execute_command(container, 'iadmin lz', user='irods')
 
-    # create zonehopper user
+    # create zonehopper#<local_zone> user
     username = '#'.join(['zonehopper', zone_where_tests_will_run.zone_name])
     mkuser = 'iadmin mkuser {} rodsuser'.format(username)
-    logging.info('creating remote user [{}] [{}]'.format(mkuser, container.name))
+    logging.info('creating user [{}] in container [{}]'.format(username, container.name))
     if execute.execute_command(container, mkuser, user='irods') is not 0:
         raise RuntimeError('failed to create remote user [{}] [{}]'
+                           .format(username, container.name))
+
+    # create zonehopper#<remote_zone> user
+    username = '#'.join(['zonehopper', remote_zone.zone_name])
+    mkuser = 'iadmin mkuser {} rodsuser'.format(username)
+    logging.info('creating user [{}] in container [{}]'.format(username, container.name))
+    if execute.execute_command(container, mkuser, user='irods') is not 0:
+        raise RuntimeError('failed to create remote user [{}] [{}]'
+                           .format(username, container.name))
+
+    # set password of zonehopper#<remote_zone> user
+    moduser = 'iadmin moduser {} password 53CR37'.format(username)
+    logging.info('setting password of user [{}] in container [{}]'.format(username, container.name))
+    if execute.execute_command(container, moduser, user='irods') is not 0:
+        raise RuntimeError('failed to set password for remote user [{}] [{}]'
                            .format(username, container.name))
 
     execute.execute_command(container, 'iadmin lu', user='irods')
