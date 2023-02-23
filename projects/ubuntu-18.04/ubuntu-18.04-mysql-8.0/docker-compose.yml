@@ -20,7 +20,7 @@ services:
         #    (you *might* want to use the less safe log_bin_trust_function_creators
         #    variable)
         #
-        command: "--transaction-isolation=READ-COMMITTED --collation-server=utf8mb4_0900_as_cs --disable-log-bin"
+        command: "--transaction-isolation=READ-COMMITTED --character-set-server=latin1 --collation-server=latin1_general_cs --disable-log-bin"
 
         # The default docker security profile restricts several things to protect the OS. This results
         # in the MySQL container logging the following on each interaction:
