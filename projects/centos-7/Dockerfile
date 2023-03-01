@@ -43,7 +43,13 @@ RUN yum update -y && \
     yum clean all && \
     rm -rf /var/cache/yum /tmp/*
 
-RUN python3 -m pip install unittest-xml-reporting distro psutil pyodbc jsonschema requests
+RUN python3 -m pip install \
+    distro \
+    jsonschema \
+    psutil \
+    pyodbc \
+    requests \
+    'unittest-xml-reporting<3.1.0'
 
 COPY rsyslog.conf /etc/rsyslog.conf
 

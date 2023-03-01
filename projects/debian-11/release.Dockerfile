@@ -33,7 +33,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/*
 
-RUN python3 -m pip install unittest-xml-reporting
+RUN python3 -m pip install 'unittest-xml-reporting<3.1.0'
 
 RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
 
