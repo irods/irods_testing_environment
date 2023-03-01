@@ -20,8 +20,6 @@ RUN wget -qO - https://core-dev.irods.org/irods-core-dev-signing-key.asc | apt-k
 RUN apt-get update && \
     apt-get install -y \
         libcurl4-gnutls-dev \
-        libxml2 \
-        libxslt1-dev \
         python-distro \
         python-jsonschema \
         python-pip \
