@@ -27,17 +27,12 @@ class test_manager:
         """
         tr_name = '_'.join(['test_runner', test_type])
         tr = eval('.'.join(['test_runner', tr_name]))
-        logging.info('[{}]'.format(tr))
+
         self.test_runners = [tr(c) for c in containers]
         self.test_list = tests
-
-        logging.info('[{}]'.format(tests))
-        logging.info('[{}]'.format(str(self)))
-        logging.info('[{}]'.format(self.test_runners))
-
         self.duration = -1
 
-        logging.info('[{}]'.format(str(self)))
+        logging.debug(f'tr:[{tr}], tests:[{tests}], runners:[{self.test_runners}]')
 
 
     def __str__(self):
@@ -88,14 +83,23 @@ class test_manager:
         return r
 
 
-    def run(self, fail_fast=True, **kwargs):
+    def run(self, fail_fast=True, options=None, **kwargs):
         """Run managed `test_runners` in parallel.
 
         Arguments:
         fail_fast -- if True, the first test to fail ends the run
+        options -- A list of lists of strings representing options to pass to the scripts running tests
         **kwargs -- keyword arguments to be passed to the `test_runner`'s specific `run` method
         """
         import concurrent.futures
+
+        if options is None:
+            options = [str() for _ in range(len(self.test_runners))]
+
+        if type(options) != list or len(options) != len(self.test_runners):
+            raise ValueError('options must be a list having a size equal to the number of concurrent executors')
+
+        logging.info(f'options:{options}')
 
         test_queue = queue.Queue()
 
@@ -109,7 +113,13 @@ class test_manager:
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures_to_test_runners = {
-                executor.submit(tr.run, test_queue, fail_fast, **kwargs): tr for tr in self.test_runners
+                executor.submit(
+                    tr.run,
+                    test_queue,
+                    fail_fast,
+                    options=options[i],
+                    **kwargs
+                ): tr for i, tr in enumerate(self.test_runners)
             }
 
             for f in concurrent.futures.as_completed(futures_to_test_runners):

@@ -107,7 +107,7 @@ if __name__ == "__main__":
             if args.do_setup:
                 ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
 
-        rc = test_utils.run_specific_tests(containers, args.tests, options, args.fail_fast)
+        rc = test_utils.run_specific_tests(containers, args.tests, [options] * args.executor_count, args.fail_fast)
 
     except Exception as e:
         logging.critical(e)

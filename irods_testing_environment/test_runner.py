@@ -166,7 +166,7 @@ class test_runner:
             logging.error('[{}]: tests that failed [{}]'.format(self.name(), self.failed_tests()))
 
 
-    def execute_test(self, test, **kwargs):
+    def execute_test(self, test, options=None, **kwargs):
         """Execute `test` with return the command run and the return code."""
         raise NotImplementedError('test_runner is a base class and should not be used directly')
 
@@ -210,7 +210,7 @@ class test_runner_irods_unit_tests(test_runner):
         super(test_runner_irods_unit_tests, self).__init__(executing_container)
 
 
-    def execute_test(self, test, reporter='junit'):
+    def execute_test(self, test, options=None, reporter='junit'):
         """Execute `test` and return the command run and the return code.
 
         If `test` is `None`, a `TypeError` is raised because the test runner requires that a
@@ -218,6 +218,7 @@ class test_runner_irods_unit_tests(test_runner):
 
         Arguments:
         test -- name of the test to execute
+        options -- list of strings which will be appended to the command to execute
         reporter -- Catch2 reporter to use (options: console, compact, junit, xml)
         """
         if test is None:
@@ -227,9 +228,8 @@ class test_runner_irods_unit_tests(test_runner):
         output_dir = os.path.join(context.irods_home(), 'log')
         output_path = os.path.join(output_dir, f'{test}_{reporter}_report.{extension}')
 
-        cmd = [os.path.join(context.unit_tests(), test),
-               '--reporter', reporter,
-               '--out', output_path]
+        cmd = [os.path.join(context.unit_tests(), test)] + (options or ['--reporter', reporter, '--out', output_path])
+
         return cmd, execute.execute_command(self.executor,
                                             ' '.join(cmd),
                                             user='irods',
@@ -275,10 +275,10 @@ class test_runner_irods_plugin_tests(test_runner):
 
     def execute_test(self,
                      test,
+                     options=None,
                      plugin_repo_name=None,
                      plugin_branch=None,
-                     path_to_test_hook_on_host=None,
-                     options=None):
+                     path_to_test_hook_on_host=None):
         """Execute `test` and return the command run and the return code.
 
         If `test` is `None`, the test hook will be run without any options. This is an
@@ -288,10 +288,10 @@ class test_runner_irods_plugin_tests(test_runner):
 
         Arguments:
         test -- name of the test to execute
+        options -- list of strings which will be appended to the command to execute
         plugin_repo_name -- name of the git repo hosting the plugin test hook
         plugin_branch -- name of the branch of the git repo for desired test hook
         path_to_test_hook_on_host -- path to test hook file on the host
-        options -- list of strings which will be appended to the command to execute
         """
         from . import container_info
 

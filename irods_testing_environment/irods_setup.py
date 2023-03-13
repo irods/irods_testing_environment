@@ -45,15 +45,50 @@ class zone_info(object):
         self.provider_service_instance = provider_service_instance
         self.consumer_service_instances = consumer_service_instances
 
+
+    def provider_container(self, ctx):
+        """Return Docker Container running the iRODS CSP."""
+        return ctx.docker_client.containers.get(
+            context.irods_catalog_provider_container(
+                ctx.compose_project.name,
+                service_instance=self.provider_service_instance)
+        )
+
+
+    def consumer_container(self, ctx, instance):
+        """Return Docker Container running an iRODS CSC with specified instance."""
+        return ctx.docker_client.containers.get(
+            context.irods_catalog_consumer_container(
+                ctx.compose_project.name,
+                service_instance=instance)
+        )
+
+
+    def consumer_containers(self, ctx):
+        """Return list of Docker Containers running the iRODS CSCs."""
+        return [self.consumer_container(ctx, i) for i in self.consumer_service_instances]
+
+
     def provider_hostname(self, ctx):
         """Return hostname for the container running the iRODS CSP."""
+        return context.container_hostname(self.provider_container(ctx))
+
+
+    def consumer_hostname(self, ctx, instance):
+        """Return hostname for the container running an iRODS CSC with specified instance."""
         return context.container_hostname(
             ctx.docker_client.containers.get(
                 context.irods_catalog_provider_container(
                     ctx.compose_project.name,
-                    service_instance=self.provider_service_instance)
+                    service_instance=instance)
             )
         )
+
+
+    def consumer_hostnames(self, ctx):
+        """Return list of hostnames for the containers running the iRODS CSCs."""
+        return [self.consumer_hostname(ctx, i) for i in self.consumer_service_instances]
+
 
 class setup_input_builder(object):
     """Builder for iRODS setup script inputs.
