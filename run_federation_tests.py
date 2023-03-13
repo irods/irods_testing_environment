@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
         version = irods_config.get_irods_version(remote_container)
         zone = irods_config.get_irods_zone_name(remote_container)
-        host = context.topology_hostnames(ctx.docker_client, ctx.compose_project)[
+        host = context.project_hostnames(ctx.docker_client, ctx.compose_project)[
                 context.irods_catalog_provider_container(ctx.compose_project.name)]
 
         options = ['--xml_output', '--federation', '.'.join(str(v) for v in version), zone, host]
@@ -144,7 +144,7 @@ if __name__ == "__main__":
 
         rc = test_utils.run_specific_tests([container],
                                            args.tests or ['test_federation'],
-                                           options,
+                                           [options] * args.executor_count,
                                            args.fail_fast)
 
     except Exception as e:

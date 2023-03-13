@@ -329,7 +329,7 @@ def is_irods_server_in_local_zone(container, local_zone):
     raise NotImplementedError('service name is not supported [{}]'.format(container.name))
 
 
-def topology_hostnames(docker_client, compose_project):
+def project_hostnames(docker_client, compose_project):
     """Return a map of container names to hostnames for the provided Compose project as a dict.
 
     Arguments:

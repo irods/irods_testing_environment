@@ -106,7 +106,7 @@ def run_specific_tests(containers, test_list=None, options=None, fail_fast=True)
     Arguments:
     containers -- target containers on which the tests will run
     test_list -- a list of strings of the tests to be run
-    options -- list of strings representing script options to pass to the run_tests.py script
+    options -- A list of lists of strings representing options to pass to the scripts running tests
     fail_fast -- if True, stop running after first failure; else, runs all tests
     """
     tests = test_list or get_test_list(containers[0])
