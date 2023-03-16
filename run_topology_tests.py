@@ -108,15 +108,21 @@ if __name__ == "__main__":
         else:
             target_service_name = context.irods_catalog_provider_service()
 
-        # Get the container on which the command is to be executed
-        containers = [
-            ctx.docker_client.containers.get(
-                context.container_name(ctx.compose_project.name,
-                                       target_service_name,
-                                       service_instance=i + 1)
-                )
-            for i in range(args.executor_count)
-        ]
+        # Get the containers on which the command is to be executed
+        containers = list()
+        for i in range(args.executor_count):
+            if run_on_consumer:
+                service_instance = i * consumer_count + 1
+            else:
+                service_instance = i + 1
+
+            containers.append(
+                ctx.docker_client.containers.get(
+                    context.container_name(ctx.compose_project.name,
+                                           target_service_name,
+                                           service_instance=service_instance)
+                    )
+            )
         logging.debug('got containers to run on [{}]'.format(container.name for container in containers))
 
         options_base = ['--xml_output']
