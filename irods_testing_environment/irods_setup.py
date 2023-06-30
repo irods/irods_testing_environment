@@ -350,8 +350,29 @@ def configure_rsyslog(container):
         if ec != 0:
             logging.info(f'[{container.name}] failed to kill rsyslogd')
 
-        ec = execute.execute_command(container, rsyslog_bin_path)
-        if ec != 0:
+        # TODO: Remove multiple attempts when a more appropriate solution is found
+        MAX_NUMBER_OF_ATTEMPTS = 3
+        num_attempts = 1
+
+        logging.debug("[{}] Attempting startup of rsyslogd".format(container.name))
+
+        while num_attempts <= MAX_NUMBER_OF_ATTEMPTS:
+            logging.debug("[{}] running startup attempt [#{}]".format(container.name, num_attempts))
+            ec = execute.execute_command(container, rsyslog_bin_path)
+            logging.debug("[{}] startup attempt [#{}] {status}.".format(container.name, num_attempts, status="succeeded" if ec == 0 else "failed"))
+
+            logging.debug("[{}] checking to see if rsyslogd started up in the background.".format(container.name))
+            is_alive = execute.execute_command(container, f'pgrep {os.path.basename(rsyslog_bin_path)}') == 0
+            logging.debug("[{}] result of checking if rsyslogd is running: [{}]".format(container.name, is_alive))
+
+            # If we started an instance successfully, or it's restarted by another mechanism, we're satisfied
+            if ec == 0 or is_alive:
+                break
+
+            num_attempts += 1
+
+        # Ensure we don't end up in a loop of failed start attempts, and that we log the failure
+        if num_attempts > MAX_NUMBER_OF_ATTEMPTS:
             raise RuntimeError(f'[{container.name}] failed to start rsyslogd')
 
     import textwrap
