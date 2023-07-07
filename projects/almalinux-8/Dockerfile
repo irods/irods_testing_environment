@@ -6,7 +6,9 @@ RUN yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && 
         epel-release \
         gnupg \
         wget \
+        dnf-plugins-core \
     && \
+    yum config-manager --set-enabled powertools && \
     yum clean all && \
     rm -rf /var/cache/yum /tmp/*
 
@@ -45,9 +47,6 @@ RUN yum update -y && \
     rm -rf /var/cache/yum /tmp/*
 
 RUN python3 -m pip install unittest-xml-reporting distro psutil pyodbc jsonschema requests
-
-RUN yum install -y dnf-plugins-core
-RUN yum config-manager --set-enabled powertools
 
 COPY rsyslog.conf /etc/rsyslog.conf
 
