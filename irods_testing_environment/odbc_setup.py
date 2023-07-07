@@ -47,6 +47,14 @@ def configure_odbc_driver_ubuntu_2004_postgres_1012(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+def configure_odbc_driver_ubuntu_2004_postgres_148(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14.8 on ubuntu 20.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_postgres_odbc_driver(csp_container, odbc_driver)
 
 def configure_odbc_driver_debian_11_postgres_1012(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 10.12 on ubuntu 20.04.
