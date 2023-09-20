@@ -6,6 +6,7 @@ For each combination of supported OS platform/version and database type/version,
  - almalinux:8
  - centos:7
  - debian:11
+ - debian:12
  - ubuntu:16.04
  - ubuntu:18.04
  - ubuntu:20.04
