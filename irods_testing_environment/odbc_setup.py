@@ -112,6 +112,14 @@ def configure_odbc_driver_rockylinux_8_postgres_1012(csp_container, odbc_driver)
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+def configure_odbc_driver_rockylinux_9_postgres_148(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14.8 on rockylinux 9.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_postgres_odbc_driver(csp_container, odbc_driver)
 
 def make_mysql_odbcinst_ini(csp_container, container_odbc_driver_dir):
     """Generate content for the /etc/odbcinst.ini configuration file used by mysql.
@@ -415,6 +423,18 @@ def configure_odbc_driver_rockylinux_8_mysql_8029(csp_container, odbc_driver):
 
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
 
+def configure_odbc_driver_rockylinux_9_mysql_8029(csp_container, odbc_driver):
+    """Configure ODBC driver for mysql 8.0 on rockylinux 9.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz')
+
+    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
 
 def configure_odbc_driver(platform_image, database_image, csp_container, odbc_driver=None):
     """Make an ODBC setup strategy for the given database type.
