@@ -137,6 +137,7 @@ if __name__ == "__main__":
 
         options_list = list()
         for i in range(args.executor_count):
+            logging.debug('hostname_map:{}'.format(hostname_map))
             hostnames_option = [
                 '--hostnames',
                 hostname_map[
@@ -145,25 +146,29 @@ if __name__ == "__main__":
                 ]
             ]
 
-            consumer_hostnames = list()
+            consumer_hostname_map = {}
             for c in ctx.compose_project.containers():
                 container_service_instance = context.service_instance(c.name)
                 # The range of service instances for the catalog service consumers for a given zone will be a
                 # consecutive range of size consumer_count starting with 1.
                 consumer_service_instances_for_this_zone = range(i * consumer_count + 1, (i + 1) * consumer_count + 1)
+                logging.debug('consumer_service_instances_for_this_zone:[{}]'.format([inst for inst in consumer_service_instances_for_this_zone]))
                 container_is_consumer_for_this_zone = \
                     context.is_irods_catalog_consumer_container(c) and \
                     container_service_instance in consumer_service_instances_for_this_zone
                 if container_is_consumer_for_this_zone:
-                    hostnames_option.append(
-                        hostname_map[
-                            context.container_name(
-                                ctx.compose_project.name,
-                                context.irods_catalog_consumer_service(),
-                                context.service_instance(c.name)
+                    consumer_hostname_map[c.name] = hostname_map[
+                        context.container_name(
+                            ctx.compose_project.name,
+                            context.irods_catalog_consumer_service(),
+                            context.service_instance(c.name)
                             )
                         ]
-                    )
+
+            # The hostnames cannot be indiscriminately inserted into the hostnames_option because the consumer
+            # containers will not necessarily be in order. Therefore, a map of the container names to hostnames is
+            # built up and sorted by keys to ensure that the hostnames provided to run_tests.py is in order.
+            hostnames_option.extend([consumer_hostname_map[k] for k in sorted(consumer_hostname_map)])
 
             options_list.append(options_base + hostnames_option)
 
