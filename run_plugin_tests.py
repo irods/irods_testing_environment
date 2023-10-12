@@ -112,7 +112,7 @@ try:
                                      args.plugin_name,
                                      args.test_hook,
                                      args.tests,
-                                     [options],
+                                     [options] * args.executor_count,
                                      args.fail_fast)
 
 except Exception as e:
