@@ -64,4 +64,3 @@ services:
 # requires a common vault.
 volumes:
     shared_volume:
-
