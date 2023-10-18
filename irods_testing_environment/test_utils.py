@@ -2,6 +2,7 @@
 import logging
 import os
 import tempfile
+import errno
 
 # local modules
 from . import archive
