@@ -43,20 +43,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
 
-      # build and push the development image. The docker v3 action automatically handles the git checkout.
+      # build and push the development image.
       - name: Build/Push the development image to the registry
         uses: docker/build-push-action@v3
         with:
           context: ./projects/${{ matrix.os_name }}
           file: ./projects/${{ matrix.os_name }}/Dockerfile
           push: true
-          tags:  ${{ secrets.CR_HOST }}${{ secrets.CR }}${{ matrix.os_name }}:latest
+          tags: ${{ secrets.CR_HOST }}${{ secrets.CR }}${{ matrix.os_name }}:latest
 
-      # build and push the release image. The docker v3 action automatically handles the git checkout.
+      # build and push the release image.
       - name: Build/Push the release image to the registry
         uses: docker/build-push-action@v3
         with:
           context: ./projects/${{ matrix.os_name }}
           file: ./projects/${{ matrix.os_name }}/release.Dockerfile
           push: true
-          tags:  ${{ secrets.CR_HOST }}${{ secrets.CR }}${{ matrix.os_name }}.release:latest
+          tags: ${{ secrets.CR_HOST }}${{ secrets.CR }}${{ matrix.os_name }}.release:latest
