@@ -51,4 +51,4 @@ jobs:
           context: ./projects/${{ matrix.os_name }}
           file: ./projects/${{ matrix.os_name }}/Dockerfile
           push: true
-          tags:  ${{ secrets.CR_HOST }}${{ secrets.CR }}irods-${{ matrix.os_name }}:latest
+          tags:  ${{ secrets.CR_HOST }}${{ secrets.CR }}${{ matrix.os_name }}:latest
