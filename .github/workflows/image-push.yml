@@ -22,11 +22,12 @@ jobs:
           - almalinux-8
           - centos-7
           - debian-11
-          - debian-12
           - rockylinux-8
-          - rockylinux-9
           - ubuntu-20.04
-          - ubuntu-22.04
+# the following os versions do not have a release.Dockerfile that builds properly:
+#          - debian-12
+#          - rockylinux-9
+#          - ubuntu-22.04
 
     # job steps
     steps:
@@ -42,11 +43,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v1
 
-      # build and push the image. The docker v3 action automatically handles the git checkout.
-      - name: Build/Push the image to the registry
+      # build and push the development image. The docker v3 action automatically handles the git checkout.
+      - name: Build/Push the development image to the registry
         uses: docker/build-push-action@v3
         with:
           context: ./projects/${{ matrix.os_name }}
           file: ./projects/${{ matrix.os_name }}/Dockerfile
           push: true
           tags:  ${{ secrets.CR_HOST }}${{ secrets.CR }}${{ matrix.os_name }}:latest
+
+      # build and push the release image. The docker v3 action automatically handles the git checkout.
+      - name: Build/Push the release image to the registry
+        uses: docker/build-push-action@v3
+        with:
+          context: ./projects/${{ matrix.os_name }}
+          file: ./projects/${{ matrix.os_name }}/release.Dockerfile
+          push: true
+          tags:  ${{ secrets.CR_HOST }}${{ secrets.CR }}${{ matrix.os_name }}.release:latest
