@@ -193,7 +193,7 @@ def base_image(container, tag=0):
     """Return the base image for the specified docker.container.
 
     The base image is the last (read: oldest) item in the history() of a Docker image that has a
-    valid ID (read: not "<missing>").
+    valid ID (read: not "<missing>" or "sha256:<missing>").
 
     Arguments:
     container -- docker.container from which the OS platform is to be extracted
@@ -203,7 +203,7 @@ def base_image(container, tag=0):
                 container.client.images.get(
                     container.client.api.inspect_container(container.name)['Config']['Image']
                 ).history()
-            if image['Id'] != '<missing>'][-1]['Tags'][tag]
+            if '<missing>' not in image['Id']][-1]['Tags'][tag]
 
 
 def container_hostname(container):
