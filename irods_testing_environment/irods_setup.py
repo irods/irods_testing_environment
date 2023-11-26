@@ -436,8 +436,17 @@ def setup_irods_server(container, setup_input):
     from . import container_info
     from . import irods_config
 
-    if stop_irods(container) != 0:
-        logging.debug(f'[{container.name}] failed to stop iRODS server before setup')
+    try:
+        if stop_irods(container) != 0:
+            logging.debug(f'[{container.name}] failed to stop iRODS server before setup')
+    except Exception as e:
+        error_msg = f'[{container.name}] failed to stop iRODS server before setup: {str(e)}'
+        if "unable to find user irods" in str(e):
+            # If the user didn't exist at this point then the service probably wasn't started.
+           logging.debug(error_msg)
+        else:
+           logging.error(error_msg)
+           raise e
 
     ec = execute.execute_command(container, 'bash -c \'echo "{}" > /input\''.format(setup_input))
     if ec != 0:
