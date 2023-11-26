@@ -27,7 +27,7 @@ class context(object):
                     platform_service_name or irods_catalog_provider_service(),
                     platform_service_instance)))
 
-        return self.platform_image_tag
+        return self.platform_image_tag.split('/')[-1]
 
     def database(self, database_service_instance=1):
         """Return database Docker image from the database service in `self.compose_project`.
@@ -39,7 +39,7 @@ class context(object):
             self.database_image_tag = base_image(self.docker_client.containers.get(
                 irods_catalog_database_container(self.compose_project.name)))
 
-        return self.database_image_tag
+        return self.database_image_tag.split('/')[-1]
 
     def platform_name(self):
         """Return the repo name for the OS platform image for this Compose project."""
