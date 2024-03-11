@@ -39,7 +39,8 @@ def log_directory_for_version(version):
         return os.path.join(context.irods_home(), 'iRODS', 'log')
     elif int(minor) < 3:
         return os.path.join(context.irods_home(), 'log')
-    elif int(minor) < 4:
+    else:
+        # Until we change how logging works in iRODS, anything in 4.3 or beyond should have logs here.
         return os.path.join('/var', 'log', 'irods')
 
     raise NotImplementedError('the detected iRODS version does not exist yet')
