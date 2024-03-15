@@ -277,10 +277,10 @@ def configure_univmss_script(docker_client, compose_project):
     compose_project -- compose.Project in which the iRODS servers are running
     """
     def modify_script(docker_client, docker_compose_container, script):
-        chown_msiexec = 'chown irods:irods {}'.format(os.path.dirname(univmss_script))
-        copy_from_template = 'cp {0}.template {0}'.format(univmss_script)
-        remove_template_from_commands = 'sed -i \"s/template-//g\" {}'.format(univmss_script)
-        make_script_executable = 'chmod 544 {}'.format(univmss_script)
+        chown_msiexec = 'chown irods:irods {}'.format(os.path.dirname(script))
+        copy_from_template = 'cp {0}.template {0}'.format(script)
+        remove_template_from_commands = 'sed -i \"s/template-//g\" {}'.format(script)
+        make_script_executable = 'chmod 544 {}'.format(script)
 
         on_container = docker_client.containers.get(docker_compose_container.name)
         if execute.execute_command(on_container, chown_msiexec) is not 0:
