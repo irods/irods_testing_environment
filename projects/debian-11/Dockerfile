@@ -20,6 +20,7 @@ RUN wget -qO - https://core-dev.irods.org/irods-core-dev-signing-key.asc | apt-k
 RUN apt-get update && \
     apt-get install -y \
         libcurl4-gnutls-dev \
+        procps \
         python3 \
         python3-distro \
         python3-jsonschema \
