@@ -24,6 +24,7 @@ RUN yum update -y && \
         diffutils \
         gcc-c++ \
         make \
+        procps \
         rsyslog \
         sudo \
         unixODBC-devel \
