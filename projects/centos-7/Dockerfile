@@ -4,6 +4,7 @@ RUN yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && 
     yum install -y \
         ca-certificates \
         epel-release \
+        centos-release-scl \
         gnupg \
         wget \
     && \
