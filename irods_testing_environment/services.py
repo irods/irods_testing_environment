@@ -109,7 +109,7 @@ def clone_repository_to_container(container,
                     destination_directory or tempfile.mkdtemp(),
                     repo_name))
 
-    Repo().clone_from(url=url, to_path=repo_path, branch=branch)
+    Repo.clone_from(url=url, to_path=repo_path, branch=branch)
 
     archive.copy_archive_to_container(container,
                                       archive.create_archive(
