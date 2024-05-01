@@ -9,11 +9,13 @@ RUN dnf update -y || [ "$?" -eq 100 ] && \
     rm -rf /tmp/*
 
 RUN dnf install -y \
+        dnf-plugins-core \
         ca-certificates \
         epel-release \
         gnupg \
         wget \
     && \
+    dnf config-manager --set-enabled crb && \
     rm -rf /tmp/*
 
 RUN dnf install -y \
