@@ -15,7 +15,6 @@ For each combination of supported OS platform/version and database type/version,
 The following database Docker image tags are currently supported (although not for all platforms):
  - postgres:10.12
  - postgres:14.8
- - mysql:5.7
  - mysql:8
 
 ## Requirements
