@@ -18,16 +18,6 @@ def configure_postgres_odbc_driver(csp_container, odbc_driver):
     logging.debug('no ODBC driver setup required for postgres 10.12 [{}]'.format(csp_container))
 
 
-def configure_odbc_driver_ubuntu_1804_postgres_1012(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 10.12 on ubuntu 18.04.
-
-    Argument:
-    csp_container -- docker container on which the iRODS catalog service provider is running
-    odbc_driver -- path to local archive file containing the ODBC driver package
-    """
-    configure_postgres_odbc_driver(csp_container, odbc_driver)
-
-
 def configure_odbc_driver_ubuntu_2004_postgres_1012(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 10.12 on ubuntu 20.04.
 
@@ -205,20 +195,6 @@ def download_mysql_odbc_driver(url, destination=None, always_download=False):
     return destination
 
 
-def configure_odbc_driver_ubuntu_1804_mysql_57(csp_container, odbc_driver):
-    """Configure ODBC driver for mysql 5.7 on ubuntu 18.04.
-
-    Argument:
-    csp_container -- docker container on which the iRODS catalog service provider is running
-    odbc_driver -- path to local archive file containing the ODBC driver package
-    """
-    if not odbc_driver:
-        odbc_driver = download_mysql_odbc_driver(
-            'https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-5.3.13-linux-ubuntu18.04-x86-64bit.tar.gz')
-
-    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
-
-
 def configure_odbc_driver_ubuntu_2004_mysql_57(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 5.7 on ubuntu 20.04.
 
@@ -299,20 +275,6 @@ def configure_odbc_driver_debian_11_mysql_57(csp_container, odbc_driver):
     if not odbc_driver:
         odbc_driver = download_mysql_odbc_driver(
             'https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-5.3.13-linux-glibc2.12-x86-64bit.tar.gz')
-
-    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
-
-
-def configure_odbc_driver_ubuntu_1804_mysql_8029(csp_container, odbc_driver):
-    """Configure ODBC driver for mysql 8.0 on ubuntu 18.04.
-
-    Argument:
-    csp_container -- docker container on which the iRODS catalog service provider is running
-    odbc_driver -- path to local archive file containing the ODBC driver package
-    """
-    if not odbc_driver:
-        odbc_driver = download_mysql_odbc_driver(
-            'https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz')
 
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
 
