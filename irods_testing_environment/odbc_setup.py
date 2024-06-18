@@ -27,8 +27,8 @@ def configure_odbc_driver_ubuntu_2004_postgres_1012(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
-def configure_odbc_driver_ubuntu_2004_postgres_148(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 14.8 on ubuntu 20.04.
+def configure_odbc_driver_ubuntu_2004_postgres_14(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14 on ubuntu 20.04.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
@@ -45,8 +45,8 @@ def configure_odbc_driver_ubuntu_2004_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
-def configure_odbc_driver_ubuntu_2204_postgres_148(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 14.8 on ubuntu 22.04.
+def configure_odbc_driver_ubuntu_2204_postgres_14(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14 on ubuntu 22.04.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
@@ -63,8 +63,8 @@ def configure_odbc_driver_ubuntu_2204_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
-def configure_odbc_driver_ubuntu_2404_postgres_148(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 14.8 on ubuntu 24.04.
+def configure_odbc_driver_ubuntu_2404_postgres_14(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14 on ubuntu 24.04.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
@@ -99,8 +99,8 @@ def configure_odbc_driver_debian_11_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
-def configure_odbc_driver_debian_12_postgres_148(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 14.8 on debian 12.
+def configure_odbc_driver_debian_12_postgres_14(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14 on debian 12.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
@@ -171,8 +171,8 @@ def configure_odbc_driver_rockylinux_8_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
-def configure_odbc_driver_rockylinux_9_postgres_148(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 14.8 on rockylinux 9.
+def configure_odbc_driver_rockylinux_9_postgres_14(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14 on rockylinux 9.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
