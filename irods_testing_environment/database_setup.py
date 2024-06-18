@@ -171,7 +171,11 @@ class postgres_database_setup_strategy(database_setup_strategy):
         database -- name of the database on which privileges are being granted
         username -- name of the user for whom privileges are being granted
         """
-        return self.execute_psql_command('grant all privileges on database \\\"{0}\\\" to {1};'
+        ec = self.execute_psql_command('grant all privileges on database \\\"{0}\\\" to {1};'
+            .format(database, username))
+        if ec is not 0:
+            return ec
+        return self.execute_psql_command('alter database \\\"{0}\\\" owner to {1};'
             .format(database, username))
 
     def drop_database(self, name):
