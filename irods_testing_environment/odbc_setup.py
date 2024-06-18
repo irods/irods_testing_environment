@@ -17,16 +17,6 @@ def configure_postgres_odbc_driver(csp_container, odbc_driver):
     """
     logging.debug('no ODBC driver setup required for postgres [{}]'.format(csp_container))
 
-
-def configure_odbc_driver_ubuntu_2004_postgres_1012(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 10.12 on ubuntu 20.04.
-
-    Argument:
-    csp_container -- docker container on which the iRODS catalog service provider is running
-    odbc_driver -- path to local archive file containing the ODBC driver package
-    """
-    configure_postgres_odbc_driver(csp_container, odbc_driver)
-
 def configure_odbc_driver_ubuntu_2004_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on ubuntu 20.04.
 
@@ -81,8 +71,8 @@ def configure_odbc_driver_ubuntu_2404_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
-def configure_odbc_driver_debian_11_postgres_1012(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 10.12 on debian 11.
+def configure_odbc_driver_debian_11_postgres_14(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14 on debian 11.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
@@ -117,8 +107,8 @@ def configure_odbc_driver_debian_12_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
-def configure_odbc_driver_centos_7_postgres_1012(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 10.12 on centos 7.
+def configure_odbc_driver_centos_7_postgres_14(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14 on centos 7.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
@@ -135,8 +125,8 @@ def configure_odbc_driver_centos_7_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
-def configure_odbc_driver_almalinux_8_postgres_1012(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 10.12 on almalinux 8.
+def configure_odbc_driver_almalinux_8_postgres_14(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14 on almalinux 8.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
@@ -153,8 +143,8 @@ def configure_odbc_driver_almalinux_8_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
-def configure_odbc_driver_rockylinux_8_postgres_1012(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 10.12 on rockylinux 8.
+def configure_odbc_driver_rockylinux_8_postgres_14(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14 on rockylinux 8.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
