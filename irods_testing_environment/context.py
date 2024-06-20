@@ -69,7 +69,9 @@ def irods_package_names(database_name=None):
     irods_package_names = ['irods-runtime', 'irods-icommands', 'irods-server']
 
     if database_name:
-       irods_package_names.append('irods-database-plugin-{}'.format(database_name))
+        if database_name == 'mariadb':
+            database_name = 'mysql'
+        irods_package_names.append('irods-database-plugin-{}'.format(database_name))
 
     return irods_package_names
 

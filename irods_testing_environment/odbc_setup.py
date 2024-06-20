@@ -396,6 +396,322 @@ def configure_odbc_driver_rockylinux_9_mysql_8029(csp_container, odbc_driver):
 
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
 
+def make_mariadb_odbcinst_ini(csp_container, container_odbc_lib_dir):
+    """Generate content for the /etc/odbcinst.ini configuration file used by mariadb.
+
+    Arguments:
+    csp_container -- container running iRODS catalog service provider using the ODBC driver
+    container_odbc_lib_dir -- path in `csp_container` containing the ODBC driver library
+    """
+    odbcinst_ini_path = os.path.join('/etc', 'odbcinst.ini')
+
+    odbcinst_ini_contents = textwrap.dedent("""\
+        [MariaDB]
+        Description = MariaDB ODBC Connector
+        Driver      = {0}/libmaodbc.so
+        Threading   = 0
+        """.format(container_odbc_lib_dir))
+
+    cmd = 'bash -c \'echo "{0}" > {1}\''.format(odbcinst_ini_contents, odbcinst_ini_path)
+    ec = execute.execute_command(csp_container, cmd)
+    if ec is not 0:
+        raise RuntimeError('failed to populate odbcinst.ini [ec=[{0}], container=[{1}]]'
+            .format(ec, csp_container))
+
+    execute.execute_command(csp_container, 'cat {}'.format(odbcinst_ini_path))
+
+def configure_mariadb_odbc_driver_apt(csp_container, odbc_driver):
+    """Configure ODBC driver package for mariadb (via apt)
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    odbc_driver_archive = archive.create_archive([odbc_driver])
+    archive.copy_archive_to_container(csp_container, odbc_driver_archive)
+
+    execute.execute_command(csp_container, 'apt-get update')
+    execute.execute_command(csp_container, 'apt-get install {}'.format(odbc_driver))
+
+    make_mariadb_odbcinst_ini(csp_container, '/usr/lib/x86_64-linux-gnu')
+
+def configure_mariadb_odbc_driver_dnf(csp_container, odbc_driver):
+    """Configure ODBC driver package for mariadb (via yum)
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    odbc_driver_archive = archive.create_archive([odbc_driver])
+    archive.copy_archive_to_container(csp_container, odbc_driver_archive)
+
+    execute.execute_command(csp_container, 'dnf install -y {}'.format(odbc_driver))
+
+    make_mariadb_odbcinst_ini(csp_container, '/usr/lib64')
+
+def configure_odbc_driver_ubuntu_2004_mariadb(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb on ubuntu 20.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-ubu2004-amd64.deb')
+
+    configure_mariadb_odbc_driver_apt(csp_container, os.path.abspath(odbc_driver))
+
+def configure_odbc_driver_ubuntu_2004_mariadb_106(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.6 on ubuntu 20.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_ubuntu_2004_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_ubuntu_2004_mariadb_1011(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.11 on ubuntu 20.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_ubuntu_2004_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_ubuntu_2204_mariadb(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb on ubuntu 22.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-ubu2204-amd64.deb')
+
+    configure_mariadb_odbc_driver_apt(csp_container, os.path.abspath(odbc_driver))
+
+def configure_odbc_driver_ubuntu_2204_mariadb_106(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.6 on ubuntu 22.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_ubuntu_2204_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_ubuntu_2204_mariadb_1011(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.11 on ubuntu 22.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_ubuntu_2204_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_ubuntu_2204_mariadb_114(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 11.4 on ubuntu 22.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_ubuntu_2204_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_ubuntu_2404_mariadb(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb on ubuntu 24.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            # package is for 22.04, but works on 24.04
+            'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-ubu2204-amd64.deb')
+
+    configure_mariadb_odbc_driver_apt(csp_container, os.path.abspath(odbc_driver))
+
+def configure_odbc_driver_ubuntu_2404_mariadb_1011(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.11 on ubuntu 24.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_ubuntu_2404_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_ubuntu_2404_mariadb_114(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 11.4 on ubuntu 24.04.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_ubuntu_2404_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb on debian 11.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-deb11-amd64.deb')
+
+    configure_mariadb_odbc_driver_apt(csp_container, os.path.abspath(odbc_driver))
+
+def configure_odbc_driver_debian_11_mariadb_106(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.6 debian 11.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_debian_11_mariadb_1011(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.11 debian 11.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_debian_12_mariadb(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb on debian 12.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-deb12-amd64.deb')
+
+    configure_mariadb_odbc_driver_apt(csp_container, os.path.abspath(odbc_driver))
+
+def configure_odbc_driver_debian_12_mariadb_1011(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.11 debian 12.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_debian_12_mariadb_114(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 11.4 debian 12.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb on EL 8.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-rhel8-amd64.rpm')
+
+    configure_mariadb_odbc_driver_dnf(csp_container, os.path.abspath(odbc_driver))
+
+def configure_odbc_driver_almalinux_8_mariadb_106(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.6 almalinux 8.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_almalinux_8_mariadb_1011(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.11 almalinux 8.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_almalinux_8_mariadb_114(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 11.4 almalinux 8.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_rockylinux_8_mariadb_106(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.6 rockylinux 8.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_rockylinux_8_mariadb_1011(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.11 rockylinux 8.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_rockylinux_8_mariadb_114(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 11.4 rockylinux 8.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb on EL 9.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    if not odbc_driver:
+        odbc_driver = download_mysql_odbc_driver(
+            'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-rhel9-amd64.rpm')
+
+    configure_mariadb_odbc_driver_dnf(csp_container, os.path.abspath(odbc_driver))
+
+def configure_odbc_driver_rockylinux_9_mariadb_1011(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.11 rockylinux 9.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_rockylinux_9_mariadb_114(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 11.4 rockylinux 9.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver)
+
 def configure_odbc_driver(platform_image, database_image, csp_container, odbc_driver=None):
     """Make an ODBC setup strategy for the given database type.
 
