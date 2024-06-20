@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  catalog:
+    image: mariadb:11.4
+    environment:
+      - MARIADB_ROOT_PASSWORD=testpassword
+      - MARIADB_USER=irods
+      - MARIADB_PASSWORD=testpassword
+    # For parity with mysql 8.0, we use utf8mb4 charset and utf8mb4_uca1400_as_cs collation (for case sensitivity), and disable the binary log
+    command: "--transaction-isolation=READ-COMMITTED --character-set-server=utf8mb4 --collation-server=utf8mb4_uca1400_as_cs --disable-log-bin"
+
+  irods-catalog-provider:
+    build:
+      context: ..
+      dockerfile: ${dockerfile}
+    depends_on:
+      - catalog
+    volumes:
+      - shared_volume:/irods_testing_environment_mount_dir
+
+  irods-catalog-consumer:
+    build:
+      context: ..
+      dockerfile: ${dockerfile}
+    depends_on:
+      - irods-catalog-provider
+    volumes:
+      - shared_volume:/irods_testing_environment_mount_dir
+
+# This volume is mounted on all test servers for detached mode testing which
+# requires a common vault.
+volumes:
+    shared_volume:
