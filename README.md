@@ -11,6 +11,7 @@ For each combination of supported OS platform/version and database type/version,
  - debian:12
  - ubuntu:20.04
  - ubuntu:22.04
+ - ubuntu:24.04
 
 The following database Docker image tags are currently supported (although not for all platforms):
  - postgres:14
