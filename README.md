@@ -20,6 +20,7 @@ The following database Docker image tags are currently supported (although not f
  - mariadb:10.11
  - mariadb:11.4
  - mysql:8.0
+ - mysql:8.4
 
 ## Requirements
 
