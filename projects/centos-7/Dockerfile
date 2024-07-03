@@ -42,44 +42,24 @@ RUN yum update -y && \
     yum clean all && \
     rm -rf /var/cache/yum /tmp/*
 
-# python 2 and 3 must be installed separately because yum will ignore/discard python2
-# TODO: For some reason, this makes the build fail after adding the iRODS repo
-#RUN yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && \
 RUN yum update -y && \
     yum install -y \
         python3 \
         python3-devel \
         python3-pip \
+        python36-distro \
+        python36-jsonschema \
+        python36-psutil \
+        python36-requests \
     && \
     yum clean all && \
     rm -rf /var/cache/yum /tmp/*
 
 RUN python3 -m pip install \
-    distro \
-    jsonschema \
-    psutil \
     pyodbc \
-    requests \
     'unittest-xml-reporting<3.1.0'
 
 COPY rsyslog.conf /etc/rsyslog.conf
-
-# TODO: For some reason, this makes the build fail after adding the iRODS repo
-#RUN yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && \
-RUN yum update -y && \
-    yum install -y \
-        python \
-        python-devel \
-        python-distro \
-        python-pip \
-        python-requests \
-        python-jsonschema \
-        python-psutil \
-    && \
-    yum clean all && \
-    rm -rf /var/cache/yum /tmp/*
-
-RUN python2 -m pip install xmlrunner
 
 RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
 
