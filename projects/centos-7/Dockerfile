@@ -1,6 +1,11 @@
 FROM centos:7
 
-RUN yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && \
+RUN sed -i \
+        -e 's/mirror.centos.org/vault.centos.org/g' \
+        -e 's/^#.*baseurl=http/baseurl=http/g' \
+        -e 's/^mirrorlist=http/#mirrorlist=http/g' \
+        /etc/yum.repos.d/*.repo && \
+    yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && \
     yum install -y \
         ca-certificates \
         epel-release \
@@ -8,6 +13,11 @@ RUN yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && 
         gnupg \
         wget \
     && \
+    sed -i \
+        -e 's/mirror.centos.org/vault.centos.org/g' \
+        -e 's/^#.*baseurl=http/baseurl=http/g' \
+        -e 's/^mirrorlist=http/#mirrorlist=http/g' \
+        /etc/yum.repos.d/*.repo && \
     yum clean all && \
     rm -rf /var/cache/yum /tmp/*
 
