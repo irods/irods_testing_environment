@@ -757,6 +757,18 @@ def configure_odbc_driver_rockylinux_9_mariadb_114(csp_container, odbc_driver):
     """
     configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver)
 
+def configure_odbc_driver_centos_7_mariadb_106(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.6 centos 7.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    # This function assumes that irods/irods#7323 will not be resolved before the removal of all centos 7 projects.
+    # Therefore, we will hard-code usage of the mysql 8.0 ODBC driver for the mariadb 10.6 project until this is
+    # removed on resolution of #217.
+    configure_odbc_driver_centos_7_mysql_80(csp_container, odbc_driver)
+
 def configure_odbc_driver(platform_image, database_image, csp_container, odbc_driver=None):
     """Make an ODBC setup strategy for the given database type.
 
