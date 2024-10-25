@@ -384,6 +384,8 @@ def configure_rsyslog(container):
         \$template irods_format,\\"%msg%\\n\\"
         :programname,startswith,\\"irodsServer\\" /var/log/irods/irods.log;irods_format
         & stop
+        :programname,startswith,\\"irodsAgent\\" /var/log/irods/irods.log;irods_format
+        & stop
         :programname,startswith,\\"irodsDelayServer\\" /var/log/irods/irods.log;irods_format
         & stop''')
 
