@@ -105,6 +105,16 @@ def get_irods_version_info(container, version_file_key):
     raise RuntimeError(f'[{container.name}]: No iRODS version file found')
 
 
+def server_version_is_irods_5(container):
+    """Returns True if iRODS 5 is installed in the container.
+
+    Arguments:
+    container -- the container to check
+    """
+    irods5_binary_exists = "[ -f /usr/sbin/irodsAgent ]"
+    return execute.execute_command(container, irods5_binary_exists, user='irods') == 0
+
+
 def configure_users_for_auth_tests(docker_client, compose_project):
     """Create Linux users and set passwords for authentication testing.
 
@@ -436,10 +446,30 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
     # add specific query to the local zone
     bug_3466_query = 'select alias, sqlStr from R_SPECIFIC_QUERY'
     asq = 'iadmin asq \'{}\' {}'.format(bug_3466_query, 'bug_3466_query')
-    logging.info('creating specific query[{}] [{}]'.format(asq, container.name))
+    logging.info('creating specific query [{}] [{}]'.format(asq, container.name))
     if execute.execute_command(container, asq, user='irods') is not 0:
         raise RuntimeError('failed to create specific query [{}] [{}]'
                            .format(bug_3466_query, container.name))
+
+    # reload configuration for both zones if iRODS 5 is installed
+    if server_version_is_irods_5(container):
+        reload_config = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().reload_configuration()'"
+        logging.info('reloading configuration for [{}] [{}]'.format(reload_config, container.name))
+        if execute.execute_command(container, reload_config, user='irods', workdir=context.irods_home()) is not 0:
+            raise RuntimeError('failed to reload configuration [{}] [{}]'
+                               .format(reload_config, container.name))
+
+        container = ctx.docker_client.containers.get(
+            context.irods_catalog_provider_container(
+                ctx.compose_project.name,
+                service_instance=zone_where_tests_will_run.provider_service_instance
+            )
+        )
+
+        logging.info('reloading configuration for [{}] [{}]'.format(reload_config, container.name))
+        if execute.execute_command(container, reload_config, user='irods', workdir=context.irods_home()) is not 0:
+            raise RuntimeError('failed to reload configuration [{}] [{}]'
+                               .format(reload_config, container.name))
 
 
 def configure_pam_for_auth_plugin(docker_client, compose_project):
