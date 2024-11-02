@@ -18,6 +18,11 @@ services:
       - catalog
     volumes:
       - shared_volume:/irods_testing_environment_mount_dir
+    # The core test suite for iRODS uses SIGHUP to reload the server's configuration often.
+    # To keep the iRODS Rule Language from failing and producing RE_UNABLE_TO_READ_SESSION_VAR,
+    # we bump the maximum amount of shared memory from 64mb to 100mb. This is required because
+    # iRODS 5 can have two Agent Factories running simultaneously (due to the SIGHUP).
+    shm_size: 100mb
 
   irods-catalog-consumer:
     build:
@@ -27,6 +32,11 @@ services:
       - irods-catalog-provider
     volumes:
       - shared_volume:/irods_testing_environment_mount_dir
+    # The core test suite for iRODS uses SIGHUP to reload the server's configuration often.
+    # To keep the iRODS Rule Language from failing and producing RE_UNABLE_TO_READ_SESSION_VAR,
+    # we bump the maximum amount of shared memory from 64mb to 100mb. This is required because
+    # iRODS 5 can have two Agent Factories running simultaneously (due to the SIGHUP).
+    shm_size: 100mb
 
 # This volume is mounted on all test servers for detached mode testing which
 # requires a common vault.
