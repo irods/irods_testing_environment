@@ -415,13 +415,13 @@ def configure_rsyslog(container):
 
 
 def stop_irods(container):
-    irodsctl = os.path.join(context.irods_home(), 'irodsctl')
-    return execute.execute_command(container, f'{irodsctl} stop', user='irods')
+    cmd = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().stop()'"
+    return execute.execute_command(container, cmd, user='irods', workdir=context.irods_home())
 
 
 def restart_irods(container):
-    irodsctl = os.path.join(context.irods_home(), 'irodsctl')
-    return execute.execute_command(container, f'{irodsctl} restart', user='irods')
+    cmd = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().restart()'"
+    return execute.execute_command(container, cmd, user='irods', workdir=context.irods_home())
 
 
 def setup_irods_server(container, setup_input):

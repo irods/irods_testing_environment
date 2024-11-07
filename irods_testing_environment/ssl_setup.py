@@ -104,8 +104,8 @@ def configure_ssl_on_server(container,
     chain_file = os.path.join(context.irods_config(), 'chain.pem')
     cert_file = os.path.join(context.irods_config(), 'server.crt')
 
-    irodsctl = os.path.join(context.irods_home(), 'irodsctl')
-    if execute.execute_command(container, '{} stop'.format(irodsctl), user='irods') is not 0:
+    stop_cmd = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().stop()'"
+    if execute.execute_command(container, stop_cmd, user='irods', workdir=context.irods_home()) is not 0:
         raise RuntimeError(
             'failed to stop iRODS server before SSL configuration [{}]'
             .format(container.name))
@@ -142,7 +142,8 @@ def configure_ssl_on_server(container,
     negotiation_key.configure_ssl_in_server(container, 'CS_NEG_REQUIRE')
 
     # start the server again
-    if execute.execute_command(container, '{} start'.format(irodsctl), user='irods') is not 0:
+    start_cmd = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().start()'"
+    if execute.execute_command(container, start_cmd, user='irods', workdir=context.irods_home()) is not 0:
         raise RuntimeError(
             'failed to start iRODS server after SSL configuration [{}]'
             .format(container.name))
