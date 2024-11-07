@@ -264,8 +264,23 @@ class setup_input_builder(object):
             '' # confirmation of inputs
         ]
 
+        # Handle the difference between 4.3 servers and 5.x servers.
+        if self.irods_version >= (4, 90, 0):
+            # Always remove the element at the highest index first to reduce
+            # complexity around indices.
+            del input_args[14] # Control plane key
+            del input_args[8]  # Control plane port
+            del input_args[8]  # Schema validation base URI
+
+            # Insert entries for iRODS 5.x.
+            input_args.insert(0, '') # Hostname
+
+            # Insert entries for iRODS 4.3.
+            input_args.insert(4, str(self.provides_local_storage))
+            input_args.insert(5, str(self.resource_name))
+            input_args.insert(6, str(self.vault_directory))
         # Handle the difference between 4.2 servers and 4.3 servers.
-        if self.irods_version >= (4, 3, 0):
+        elif self.irods_version >= (4, 3, 0):
             input_args.insert(3, str(self.provides_local_storage))
             input_args.insert(4, str(self.resource_name))
             input_args.insert(5, str(self.vault_directory))
@@ -312,8 +327,24 @@ class setup_input_builder(object):
             '' # confirmation of inputs
         ]
 
+        # Handle the difference between 4.3 servers and 5.x servers.
+        if self.irods_version >= (4, 90, 0):
+            # Remove entries that do not apply to iRODS 5.
+            # Always remove the element at the highest index first to reduce
+            # complexity around indices.
+            del input_args[21] # Control plane key
+            del input_args[15] # Control plane port
+            del input_args[15] # Schema validation base URI
+
+            # Insert entries for iRODS 5.x.
+            input_args.insert(0, '') # Hostname
+
+            # Insert entries for iRODS 4.3.
+            input_args.insert(12, str(self.provides_local_storage))
+            input_args.insert(13, str(self.resource_name))
+            input_args.insert(14, str(self.vault_directory))
         # Handle the difference between 4.2 servers and 4.3 servers.
-        if self.irods_version >= (4, 3, 0):
+        elif self.irods_version >= (4, 3, 0):
             input_args.insert(11, str(self.provides_local_storage))
             input_args.insert(12, str(self.resource_name))
             input_args.insert(13, str(self.vault_directory))
