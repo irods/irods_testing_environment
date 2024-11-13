@@ -1,15 +1,12 @@
 # grown-up modules
 import logging
 import os
-import tempfile
 import errno
 
 # local modules
-from . import archive
 from . import container_info
 from . import context
 from . import execute
-from . import services
 from . import test_manager
 
 def job_name(project_name, prefix=None):
@@ -134,7 +131,8 @@ def run_python_test_suite(container, options=None):
                context.run_tests_script(),
                '--run_python_suite']
 
-    if options: command.extend(options)
+    if options:
+        command.extend(options)
 
     ec = execute.execute_command(container,
                                  ' '.join(command),
@@ -142,7 +140,7 @@ def run_python_test_suite(container, options=None):
                                  workdir=context.irods_home(),
                                  stream_output=True)
 
-    if ec is not 0:
+    if ec != 0:
         logging.warning('command exited with error code [{}] [{}] [{}]'
                         .format(ec, command, container.name))
 

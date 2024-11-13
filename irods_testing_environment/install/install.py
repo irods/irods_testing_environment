@@ -52,7 +52,7 @@ class installer(object):
 
             glob_list = glob.glob(glob_str)
 
-            if len(glob_list) is 0:
+            if len(glob_list) == 0:
                 raise RuntimeError('no packages found [{}]'.format(glob_str))
 
             # TODO: allow specifying a suffix or something instead of taking everything
@@ -78,7 +78,8 @@ class installer(object):
         container = ctx.docker_client.containers.get(container_name)
 
         # Only the iRODS containers need to have packages installed
-        if context.is_catalog_database_container(container): return 0
+        if context.is_catalog_database_container(container):
+            return 0
 
         archive.copy_archive_to_container(container, tarfile_path)
 
@@ -92,12 +93,12 @@ class installer(object):
         logging.warning('executing cmd [{0}] on container [{1}]'.format(cmd, container.name))
 
         ec = execute.execute_command(container, self.update_command())
-        if ec is not 0:
+        if ec != 0:
             logging.error('failed to update local repositories [{}]'.format(container.name))
             return ec
 
         ec = execute.execute_command(container, cmd)
-        if ec is not 0:
+        if ec != 0:
             logging.error(
                 'failed to install packages on container [ec=[{0}], container=[{1}]'.format(ec, container.name))
             return ec
@@ -128,7 +129,7 @@ class installer(object):
                 container = futures_to_containers[f]
                 try:
                     ec = f.result()
-                    if ec is not 0:
+                    if ec != 0:
                         logging.error('error while installing packages on container [{}]'
                                       .format(container.name))
                         rc = ec
@@ -156,12 +157,12 @@ class installer(object):
             logging.warning('executing cmd [{0}] on container [{1}]'.format(cmd, container.name))
 
             ec = execute.execute_command(container, self.update_command())
-            if ec is not 0:
+            if ec != 0:
                 logging.error('failed to update local repositories [{}]'.format(container.name))
                 return ec
 
             ec = execute.execute_command(container, cmd)
-            if ec is not 0:
+            if ec != 0:
                 logging.error(
                     'failed to install packages on container [ec=[{0}], container=[{1}]'.format(ec, container.name))
 
@@ -189,7 +190,7 @@ class installer(object):
                 container = futures_to_containers[f]
                 try:
                     ec = f.result()
-                    if ec is not 0:
+                    if ec != 0:
                         logging.error('error while installing packages on container [{}]'.format(container.name))
                         rc = ec
 
@@ -232,7 +233,7 @@ class installer(object):
                                        os.path.abspath(externals_directory),
                                        ctx.irods_containers(),
                                        context.irods_externals_package_names())
-            if ec is not 0:
+            if ec != 0:
                 raise RuntimeError('failed to install externals')
 
         if package_directory:
@@ -243,7 +244,7 @@ class installer(object):
                                        os.path.abspath(package_directory),
                                        ctx.irods_containers(),
                                        context.irods_package_names(ctx.database_name()))
-            if ec is not 0:
+            if ec != 0:
                 raise RuntimeError('failed to install iRODS packages')
 
         else:
@@ -252,17 +253,11 @@ class installer(object):
                             .format(package_version))
 
             ec = self.install_official_irods_packages(ctx, package_version, ctx.irods_containers())
-            if ec is not 0:
+            if ec != 0:
                 raise RuntimeError('failed to install iRODS packages')
 
 
 def make_installer(platform_name):
-    from . import almalinux_installer
-    from . import centos_installer
-    from . import debian_installer
-    from . import rockylinux_installer
-    from . import ubuntu_installer
-
     name = '_'.join([platform_name, 'installer'])
 
     return eval('.'.join([name, name]))()
@@ -288,6 +283,6 @@ def install_pip_package_from_repo(container,
     ec = execute.execute_command(container, ' '.join(
                                  [container_info.python(container),
                                   '-m', 'pip', 'install', repo_path]))
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('Failed to install pip package [{}] [{}]'
                            .format(repo_path, container.name))

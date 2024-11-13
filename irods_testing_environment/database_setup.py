@@ -1,5 +1,4 @@
 # grown-up modules
-import docker
 import logging
 import time
 
@@ -145,7 +144,8 @@ class postgres_database_setup_strategy(database_setup_strategy):
         name -- name of the database to create
         force_recreate -- if True, drops any database by the specified name before creating
         """
-        if force_recreate: self.drop_database(name)
+        if force_recreate:
+            self.drop_database(name)
 
         return 0 if self.database_exists(name) \
                  else self.execute_psql_command('create database \\\"{}\\\";'.format(name))
@@ -158,7 +158,8 @@ class postgres_database_setup_strategy(database_setup_strategy):
         password -- password for the new user
         force_recreate -- if True, drops any user by the specified username before creating
         """
-        if force_recreate: self.drop_user(username)
+        if force_recreate:
+            self.drop_user(username)
 
         return 0 if self.user_exists(username) \
                  else self.execute_psql_command('create user {0} with password \'{1}\';'
@@ -173,7 +174,7 @@ class postgres_database_setup_strategy(database_setup_strategy):
         """
         ec = self.execute_psql_command('grant all privileges on database \\\"{0}\\\" to {1};'
             .format(database, username))
-        if ec is not 0:
+        if ec != 0:
             return ec
         return self.execute_psql_command('alter database \\\"{0}\\\" owner to {1};'
             .format(database, username))
@@ -275,7 +276,8 @@ class mysql_database_setup_strategy(database_setup_strategy):
         name -- name of the database to create
         force_recreate -- if True, drops any database by the specified name before creating
         """
-        if force_recreate: self.drop_database(name)
+        if force_recreate:
+            self.drop_database(name)
 
         return 0 if self.database_exists(name) \
                  else self.execute_mysql_command('CREATE DATABASE {};'.format(name))
@@ -290,7 +292,8 @@ class mysql_database_setup_strategy(database_setup_strategy):
         """
         user = '\'{}\'@\'{}\''.format(username, self.host)
 
-        if force_recreate: self.drop_user(user)
+        if force_recreate:
+            self.drop_user(user)
 
         return 0 if self.user_exists(username, password) \
                  else self.execute_mysql_command(
@@ -351,7 +354,7 @@ class mariadb_database_setup_strategy(mysql_database_setup_strategy):
         Arguments:
         mariadb_cmd -- the command to be passed to mariadb via --execute
         """
-        return self.execute_mysql_command(mariadb_cmd, root, password)
+        return self.execute_mysql_command(mariadb_cmd, user, password)
 
 
 def make_strategy(database_image, container=None, database_port=None, root_password=None):
@@ -395,15 +398,15 @@ def setup_catalog(ctx,
     strat = make_strategy(ctx.database(), db_container, database_port, root_password)
 
     ec = strat.create_database(database_name, force_recreate)
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to create database [{}]'.format(database_name))
 
     ec = strat.create_user(database_user, database_password, force_recreate)
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to create user [{}]'.format(database_user))
 
     ec = strat.grant_privileges(database_name, database_user)
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to grant privileges to user [{0}] on database [{1}]'.format(database_user, database_name))
 
     strat.list_databases()

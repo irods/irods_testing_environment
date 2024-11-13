@@ -1,6 +1,4 @@
 # grown-up modules
-import compose
-import docker
 import logging
 import os
 
@@ -578,7 +576,7 @@ def setup_irods_catalog_consumers(ctx,
         service_names=[context.irods_catalog_consumer_service()])
 
     if consumer_service_instances:
-        if len(consumer_service_instances) is 0:
+        if len(consumer_service_instances) == 0:
             logging.warning('empty list of iRODS catalog service consumers to set up')
             return
 
@@ -618,7 +616,7 @@ def setup_irods_catalog_consumers(ctx,
                 logging.error(e)
                 rc = 1
 
-    if rc is not 0:
+    if rc != 0:
         raise RuntimeError('failed to set up one or more catalog service consumers, ec=[{}]'
                            .format(rc))
 
@@ -698,7 +696,7 @@ def setup_irods_zones(ctx,
                 logging.error(e)
                 rc = 1
 
-    if rc is not 0:
+    if rc != 0:
         raise RuntimeError('failed to set up one or more iRODS Zones, ec=[{}]'.format(rc))
 
 
@@ -712,13 +710,13 @@ def make_negotiation_key(prefix=''):
     Arguments:
     prefix -- optional prefix to use to make the key unique
     """
-    negotation_key_size_in_bytes = 32
+    negotiation_key_size_in_bytes = 32
 
-    if len(prefix) > negotation_key_size_in_bytes:
+    if len(prefix) > negotiation_key_size_in_bytes:
         return prefix[:negotiation_key_size_in_bytes]
 
-    filler = '_' * negotation_key_size_in_bytes
-    return prefix + filler[:negotation_key_size_in_bytes - len(prefix)]
+    filler = '_' * negotiation_key_size_in_bytes
+    return prefix + filler[:negotiation_key_size_in_bytes - len(prefix)]
 
 
 def make_zone_key(zone_name):

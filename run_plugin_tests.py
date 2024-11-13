@@ -4,7 +4,6 @@ import compose.cli.command
 import docker
 import logging
 import os
-import textwrap
 
 # local modules
 from irods_testing_environment import archive

@@ -1,11 +1,5 @@
 # grown-up modules
-import compose.cli.command
-import docker
 import logging
-import os
-
-# local modules
-from . import context
 
 def execute_command(container, command, user='', workdir=None, stream_output=None):
     """Execute `command` in `container` as `user` in `workdir`.

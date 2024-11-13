@@ -105,7 +105,7 @@ def configure_ssl_on_server(container,
     cert_file = os.path.join(context.irods_config(), 'server.crt')
 
     irodsctl = os.path.join(context.irods_home(), 'irodsctl')
-    if execute.execute_command(container, '{} stop'.format(irodsctl), user='irods') is not 0:
+    if execute.execute_command(container, '{} stop'.format(irodsctl), user='irods') != 0:
         raise RuntimeError(
             'failed to stop iRODS server before SSL configuration [{}]'
             .format(container.name))
@@ -142,7 +142,7 @@ def configure_ssl_on_server(container,
     negotiation_key.configure_ssl_in_server(container, 'CS_NEG_REQUIRE')
 
     # start the server again
-    if execute.execute_command(container, '{} start'.format(irodsctl), user='irods') is not 0:
+    if execute.execute_command(container, '{} start'.format(irodsctl), user='irods') != 0:
         raise RuntimeError(
             'failed to start iRODS server after SSL configuration [{}]'
             .format(container.name))
@@ -152,12 +152,10 @@ def configure_ssl_on_server(container,
 
 def configure_ssl_in_zone(docker_client, compose_project):
     import concurrent.futures
-    import tempfile
 
     # Each irods_environment.json file is describing the cert this client will use and why
     # they think it is good. The testing environment is using a self-signed certificate, so
     # the certificate, key, and dhparams should be generated ONCE and copied to each server.
-    #ssl_files_dir = tempfile.mkdtemp()
     key, key_file = generate_ssl_certificate_key()
     cert_file = generate_ssl_self_signed_certificate(key)
     dhparams_file = generate_ssl_dh_params()
@@ -192,7 +190,7 @@ def configure_ssl_in_zone(docker_client, compose_project):
                     logging.error(e)
                     rc = 1
 
-        if rc is not 0:
+        if rc != 0:
             raise RuntimeError('failed to configure SSL on some service')
 
         cscs = compose_project.containers(service_names=[
@@ -218,7 +216,7 @@ def configure_ssl_in_zone(docker_client, compose_project):
                     logging.error(e)
                     rc = 1
 
-        if rc is not 0:
+        if rc != 0:
             raise RuntimeError('failed to configure SSL on some service')
 
     finally:

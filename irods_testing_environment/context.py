@@ -320,7 +320,8 @@ def is_irods_server_in_local_zone(container, local_zone):
     container -- the container to inspect (if not running iRODS, returns False)
     local_zone -- zone information against which to compare for the container running iRODS
     """
-    if is_catalog_database_container(container): return False
+    if is_catalog_database_container(container):
+        return False
 
     if is_irods_catalog_provider_container(container):
         return service_instance(container.name) is local_zone.provider_service_instance

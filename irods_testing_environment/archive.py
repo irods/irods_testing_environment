@@ -177,14 +177,14 @@ def copy_files_in_container(container, sources_and_destinations):
     sources_and_destinations -- a list of tuples of source paths and destination paths
     """
     tarfile = create_archive([s for s, d in sources_and_destinations], 'ssl')
-    archive_dirname = copy_archive_to_container(container, tarfile)
+    _ = copy_archive_to_container(container, tarfile)
 
     for s, d in sources_and_destinations:
         logging.debug(
             'copying source [{}] in container to destination in container [{}] [{}]'.format(
             s, d, container.name))
 
-        if execute.execute_command(container, 'cp {} {}'.format(s, d)) is not 0:
+        if execute.execute_command(container, 'cp {} {}'.format(s, d)) != 0:
             raise RuntimeError('failed to copy file src [{}] dest [{}] [{}]'
                 .format(s, d, container.name))
 

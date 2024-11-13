@@ -7,10 +7,7 @@ import os
 # local modules
 from irods_testing_environment import archive
 from irods_testing_environment import context
-from irods_testing_environment import execute
-from irods_testing_environment import install
 from irods_testing_environment import irods_config
-from irods_testing_environment import irods_setup
 from irods_testing_environment import services
 from irods_testing_environment import ssl_setup
 from irods_testing_environment import test_utils

@@ -39,9 +39,11 @@ def federate_zones(ctx, zone_info_list, local_zone, include_consumers=True):
     """
     # Every iRODS server in the Zone must be federated
     for c in ctx.compose_project.containers():
-        if not context.is_irods_server_in_local_zone(c, local_zone): continue
+        if not context.is_irods_server_in_local_zone(c, local_zone):
+            continue
 
-        if not include_consumers and context.is_irods_catalog_consumer_container(c): continue
+        if not include_consumers and context.is_irods_catalog_consumer_container(c):
+            continue
 
         logging.debug('container [{}] zone [{}] provider instance [{}]'
                       .format(c.name,
@@ -53,7 +55,8 @@ def federate_zones(ctx, zone_info_list, local_zone, include_consumers=True):
         server_config = json_utils.get_json_from_file(container, context.server_config())
 
         for remote_zone in zone_info_list:
-            if remote_zone.zone_name == local_zone.zone_name: continue
+            if remote_zone.zone_name == local_zone.zone_name:
+                continue
 
             logging.warning('federating remote zone [{}] with local zone [{}] on [{}]'
                             .format(remote_zone.zone_name, local_zone.zone_name, container.name))
@@ -68,7 +71,7 @@ def federate_zones(ctx, zone_info_list, local_zone, include_consumers=True):
                                                                           remote_zone.provider_hostname(ctx),
                                                                           remote_zone.zone_port)
 
-                if execute.execute_command(container, make_remote_zone, user='irods') is not 0:
+                if execute.execute_command(container, make_remote_zone, user='irods') != 0:
                     raise RuntimeError('failed to create remote zone [{}]'
                                        .format(container.name))
 
@@ -105,5 +108,5 @@ def form_federation_clique(ctx, zone_info_list, include_consumers=True):
                 logging.error(e)
                 rc = 1
 
-    if rc is not 0:
+    if rc != 0:
         raise RuntimeError('failed to federate one or more iRODS Zones, ec=[{}]'.format(rc))

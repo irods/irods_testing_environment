@@ -1,17 +1,12 @@
 # grown-up modules
 import compose.cli.command
 import docker
-import json
 import logging
 import os
 
 # local modules
 from irods_testing_environment import context
-from irods_testing_environment import database_setup
-from irods_testing_environment import execute
 from irods_testing_environment import irods_setup
-from irods_testing_environment import irods_config
-from irods_testing_environment import json_utils
 from irods_testing_environment import federate
 from irods_testing_environment import ssl_setup
 from irods_testing_environment.install import install

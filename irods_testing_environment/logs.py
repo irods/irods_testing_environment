@@ -1,5 +1,4 @@
 # grown-up modules
-import docker
 import logging
 import os
 import sys

@@ -1,5 +1,4 @@
 # grown-up modules
-import logging
 import os
 
 # local modules

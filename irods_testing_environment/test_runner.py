@@ -143,7 +143,7 @@ class test_runner:
 
                 logging.info(f'[{self.name()}]: cmd [{ec}] [{cmd}]')
 
-                if ec is 0:
+                if ec == 0:
                     self.passed_tests().append((t, duration))
                     logging.error(f'[{self.name()}]: test passed [[{duration:>9.4f}]s] [{t or "all tests"}]')
 
@@ -162,7 +162,7 @@ class test_runner:
 
         self.duration = run_end - run_start
 
-        if self.rc is not 0:
+        if self.rc != 0:
             logging.error('[{}]: tests that failed [{}]'.format(self.name(), self.failed_tests()))
 
 
@@ -197,7 +197,8 @@ class test_runner_irods_python_suite(test_runner):
 
         cmd.extend(['--run_python_suite'] if test is None else ['--run_specific_test', test])
 
-        if options: cmd.extend(options)
+        if options:
+            cmd.extend(options)
 
         return cmd, execute.execute_command(self.executor,
                                             ' '.join(cmd),
@@ -318,6 +319,7 @@ class test_runner_irods_plugin_tests(test_runner):
                                                   url_base='https://github.com/irods',
                                                   branch='main')
 
-        if options: cmd.extend(options)
+        if options:
+            cmd.extend(options)
 
         return cmd, execute.execute_command(self.executor, ' '.join(cmd))

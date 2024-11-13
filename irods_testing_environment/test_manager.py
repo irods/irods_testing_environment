@@ -3,9 +3,6 @@ import logging
 import queue
 import time
 
-# local modules
-from . import test_runner
-
 class test_manager:
     """A class that manages a list of tests and `test_runners` for executing tests."""
 
@@ -62,7 +59,7 @@ class test_manager:
             r = r + tr.result_string()
             tests_were_skipped = tests_were_skipped if tests_were_skipped else len(tr.skipped_tests()) > 0
 
-        if self.return_code() is not 0:
+        if self.return_code() != 0:
             r = r + 'List of failed tests:\n\t{}\n'.format(' '.join([t or 'all tests' for t,_ in self.failed_tests()]))
             r = r + 'Return code:[{}]\n'.format(self.return_code())
 
@@ -96,7 +93,7 @@ class test_manager:
         if options is None:
             options = [str() for _ in range(len(self.test_runners))]
 
-        if type(options) != list or len(options) != len(self.test_runners):
+        if not isinstance(options, list) or len(options) != len(self.test_runners):
             raise ValueError('options must be a list having a size equal to the number of concurrent executors')
 
         logging.info(f'options:{options}')
@@ -128,7 +125,7 @@ class test_manager:
                 try:
                     f.result()
 
-                    if tr.rc is 0 and len(tr.failed_tests()) is 0:
+                    if tr.rc == 0 and len(tr.failed_tests()) == 0:
                         logging.error(f'[{tr.name()}]: tests completed successfully')
                     else:
                         logging.error(f'[{tr.name()}]: some tests failed')
@@ -139,7 +136,8 @@ class test_manager:
 
                     tr.rc = 1
 
-                    if fail_fast: raise
+                    if fail_fast:
+                        raise
 
         end_time = time.time()
 
