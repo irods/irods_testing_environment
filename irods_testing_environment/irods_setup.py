@@ -9,16 +9,20 @@ from . import odbc_setup
 from . import execute
 from . import irods_config
 
+
 class zone_info(object):
     """Class to hold information about an iRODS Zone and the containers running the servers."""
-    def __init__(self,
-                 zone_name='tempZone',
-                 zone_key='TEMPORARY_ZONE_KEY',
-                 negotiation_key='32_byte_server_negotiation_key__',
-                 zone_port=1247,
-                 database_service_instance=1,
-                 provider_service_instance=1,
-                 consumer_service_instances=None):
+
+    def __init__(
+        self,
+        zone_name="tempZone",
+        zone_key="TEMPORARY_ZONE_KEY",
+        negotiation_key="32_byte_server_negotiation_key__",
+        zone_port=1247,
+        database_service_instance=1,
+        provider_service_instance=1,
+        consumer_service_instances=None,
+    ):
         """Construct a zone_info object.
 
         Arguments:
@@ -43,45 +47,42 @@ class zone_info(object):
         self.provider_service_instance = provider_service_instance
         self.consumer_service_instances = consumer_service_instances
 
-
     def provider_container(self, ctx):
         """Return Docker Container running the iRODS CSP."""
         return ctx.docker_client.containers.get(
             context.irods_catalog_provider_container(
                 ctx.compose_project.name,
-                service_instance=self.provider_service_instance)
+                service_instance=self.provider_service_instance,
+            )
         )
-
 
     def consumer_container(self, ctx, instance):
         """Return Docker Container running an iRODS CSC with specified instance."""
         return ctx.docker_client.containers.get(
             context.irods_catalog_consumer_container(
-                ctx.compose_project.name,
-                service_instance=instance)
+                ctx.compose_project.name, service_instance=instance
+            )
         )
-
 
     def consumer_containers(self, ctx):
         """Return list of Docker Containers running the iRODS CSCs."""
-        return [self.consumer_container(ctx, i) for i in self.consumer_service_instances]
-
+        return [
+            self.consumer_container(ctx, i) for i in self.consumer_service_instances
+        ]
 
     def provider_hostname(self, ctx):
         """Return hostname for the container running the iRODS CSP."""
         return context.container_hostname(self.provider_container(ctx))
-
 
     def consumer_hostname(self, ctx, instance):
         """Return hostname for the container running an iRODS CSC with specified instance."""
         return context.container_hostname(
             ctx.docker_client.containers.get(
                 context.irods_catalog_provider_container(
-                    ctx.compose_project.name,
-                    service_instance=instance)
+                    ctx.compose_project.name, service_instance=instance
+                )
             )
         )
-
 
     def consumer_hostnames(self, ctx):
         """Return list of hostnames for the containers running the iRODS CSCs."""
@@ -95,6 +96,7 @@ class setup_input_builder(object):
     To that end, each section of the setup script is its own method which sets the values
     to generate the input string.
     """
+
     def __init__(self):
         """Construct a setup input builder.
 
@@ -102,64 +104,66 @@ class setup_input_builder(object):
         """
         self.irods_version = None
 
-        self.service_account_name = ''
-        self.service_account_group = ''
-        self.catalog_service_role = ''
+        self.service_account_name = ""
+        self.service_account_group = ""
+        self.catalog_service_role = ""
 
-        self.odbc_driver = ''
-        self.database_server_hostname = 'localhost'
+        self.odbc_driver = ""
+        self.database_server_hostname = "localhost"
         self.database_server_port = 5432
-        self.database_name = 'ICAT'
-        self.database_username = 'irods'
-        self.database_password = 'testpassword'
-        self.stored_passwords_salt = ''
+        self.database_name = "ICAT"
+        self.database_username = "irods"
+        self.database_password = "testpassword"
+        self.stored_passwords_salt = ""
 
-        self.zone_name = 'tempZone'
+        self.zone_name = "tempZone"
         self.zone_port = 1247
         self.parallel_port_range_begin = 20000
         self.parallel_port_range_end = 20199
         self.control_plane_port = 1248
-        self.schema_validation_base_uri = ''
-        self.admin_username = 'rods'
+        self.schema_validation_base_uri = ""
+        self.admin_username = "rods"
 
-        self.zone_key = 'TEMPORARY_ZONE_KEY'
-        self.negotiation_key = '32_byte_server_negotiation_key__'
-        self.control_plane_key = '32_byte_server_control_plane_key'
-        self.admin_password = 'rods'
+        self.zone_key = "TEMPORARY_ZONE_KEY"
+        self.negotiation_key = "32_byte_server_negotiation_key__"
+        self.control_plane_key = "32_byte_server_control_plane_key"
+        self.admin_password = "rods"
 
-        self.provides_local_storage = 'y'
-        self.resource_name = ''
-        self.vault_directory = ''
+        self.provides_local_storage = "y"
+        self.resource_name = ""
+        self.vault_directory = ""
 
-        self.catalog_service_provider_host = 'localhost'
+        self.catalog_service_provider_host = "localhost"
 
-    def setup(self,
-              irods_version,
-              service_account_name= None,
-              service_account_group= None,
-              catalog_service_role= None,
-              odbc_driver= None,
-              database_server_hostname= None,
-              database_server_port= None,
-              database_name= None,
-              database_username= None,
-              database_password= None,
-              stored_passwords_salt= None,
-              zone_name= None,
-              catalog_service_provider_host= None,
-              zone_port= None,
-              parallel_port_range_begin= None,
-              parallel_port_range_end= None,
-              control_plane_port= None,
-              schema_validation_base_uri= None,
-              admin_username= None,
-              zone_key = None,
-              negotiation_key = None,
-              control_plane_key = None,
-              admin_password = None,
-              provides_local_storage = None,
-              resource_name = None,
-              vault_directory = None):
+    def setup(
+        self,
+        irods_version,
+        service_account_name=None,
+        service_account_group=None,
+        catalog_service_role=None,
+        odbc_driver=None,
+        database_server_hostname=None,
+        database_server_port=None,
+        database_name=None,
+        database_username=None,
+        database_password=None,
+        stored_passwords_salt=None,
+        zone_name=None,
+        catalog_service_provider_host=None,
+        zone_port=None,
+        parallel_port_range_begin=None,
+        parallel_port_range_end=None,
+        control_plane_port=None,
+        schema_validation_base_uri=None,
+        admin_username=None,
+        zone_key=None,
+        negotiation_key=None,
+        control_plane_key=None,
+        admin_password=None,
+        provides_local_storage=None,
+        resource_name=None,
+        vault_directory=None,
+    ):
         """Set values for the service account section of the setup script.
 
         Returns this instance of the class.
@@ -204,7 +208,9 @@ class setup_input_builder(object):
         self.catalog_service_role = catalog_service_role or self.catalog_service_role
 
         self.odbc_driver = odbc_driver or self.odbc_driver
-        self.database_server_hostname = database_server_hostname or self.database_server_hostname
+        self.database_server_hostname = (
+            database_server_hostname or self.database_server_hostname
+        )
         self.database_server_port = database_server_port or self.database_server_port
         self.database_name = database_name or self.database_name
         self.database_username = database_username or self.database_username
@@ -212,12 +218,20 @@ class setup_input_builder(object):
         self.stored_passwords_salt = stored_passwords_salt or self.stored_passwords_salt
 
         self.zone_name = zone_name or self.zone_name
-        self.catalog_service_provider_host = catalog_service_provider_host or self.catalog_service_provider_host
+        self.catalog_service_provider_host = (
+            catalog_service_provider_host or self.catalog_service_provider_host
+        )
         self.zone_port = zone_port or self.zone_port
-        self.parallel_port_range_begin = parallel_port_range_begin or self.parallel_port_range_begin
-        self.parallel_port_range_end = parallel_port_range_end or self.parallel_port_range_end
+        self.parallel_port_range_begin = (
+            parallel_port_range_begin or self.parallel_port_range_begin
+        )
+        self.parallel_port_range_end = (
+            parallel_port_range_end or self.parallel_port_range_end
+        )
         self.control_plane_port = control_plane_port or self.control_plane_port
-        self.schema_validation_base_uri = schema_validation_base_uri or self.schema_validation_base_uri
+        self.schema_validation_base_uri = (
+            schema_validation_base_uri or self.schema_validation_base_uri
+        )
         self.admin_username = admin_username or self.admin_username
 
         self.zone_key = zone_key or self.zone_key
@@ -225,12 +239,13 @@ class setup_input_builder(object):
         self.control_plane_key = control_plane_key or self.control_plane_key
         self.admin_password = admin_password or self.admin_password
 
-        self.provides_local_storage = provides_local_storage or self.provides_local_storage
+        self.provides_local_storage = (
+            provides_local_storage or self.provides_local_storage
+        )
         self.resource_name = resource_name or self.resource_name
         self.vault_directory = vault_directory or self.vault_directory
 
         return self
-
 
     def build_input_for_catalog_consumer(self):
         """Generate string to use as input for the setup script.
@@ -244,7 +259,6 @@ class setup_input_builder(object):
             str(self.service_account_name),
             str(self.service_account_group),
             str(role),
-
             str(self.zone_name),
             str(self.catalog_service_provider_host),
             str(self.zone_port),
@@ -253,13 +267,12 @@ class setup_input_builder(object):
             str(self.control_plane_port),
             str(self.schema_validation_base_uri),
             str(self.admin_username),
-            'y', # confirmation of inputs
-
+            "y",  # confirmation of inputs
             str(self.zone_key),
             str(self.negotiation_key),
             str(self.control_plane_key),
             str(self.admin_password),
-            '' # confirmation of inputs
+            "",  # confirmation of inputs
         ]
 
         # Handle the difference between 4.2 servers and 4.3 servers.
@@ -269,9 +282,9 @@ class setup_input_builder(object):
             input_args.insert(5, str(self.vault_directory))
         else:
             input_args.append(str(self.vault_directory))
-            input_args.append(str('')) # final confirmation
+            input_args.append(str(""))  # final confirmation
 
-        return '\n'.join(input_args)
+        return "\n".join(input_args)
 
     def build_input_for_catalog_provider(self):
         """Generate string to use as input for the setup script.
@@ -279,21 +292,19 @@ class setup_input_builder(object):
         The script changes depending on the role, so the options used here are specific to
         setting up an iRODS catalog service provider.
         """
-        role = ''
+        role = ""
         input_args = [
             str(self.service_account_name),
             str(self.service_account_group),
             str(role),
-
             str(self.odbc_driver),
             str(self.database_server_hostname),
             str(self.database_server_port),
             str(self.database_name),
             str(self.database_username),
-            'y', # confirmation of inputs
+            "y",  # confirmation of inputs
             str(self.database_password),
             str(self.stored_passwords_salt),
-
             str(self.zone_name),
             str(self.zone_port),
             str(self.parallel_port_range_begin),
@@ -301,13 +312,12 @@ class setup_input_builder(object):
             str(self.control_plane_port),
             str(self.schema_validation_base_uri),
             str(self.admin_username),
-            'y', # confirmation of inputs
-
+            "y",  # confirmation of inputs
             str(self.zone_key),
             str(self.negotiation_key),
             str(self.control_plane_key),
             str(self.admin_password),
-            '' # confirmation of inputs
+            "",  # confirmation of inputs
         ]
 
         # Handle the difference between 4.2 servers and 4.3 servers.
@@ -317,9 +327,9 @@ class setup_input_builder(object):
             input_args.insert(13, str(self.vault_directory))
         else:
             input_args.append(str(self.vault_directory))
-            input_args.append(str('')) # final confirmation
+            input_args.append(str(""))  # final confirmation
 
-        return '\n'.join(input_args)
+        return "\n".join(input_args)
 
     def build(self):
         """Build the string for the setup script input.
@@ -329,24 +339,30 @@ class setup_input_builder(object):
         returned.
         """
         build_for_role = {
-            'provider': self.build_input_for_catalog_provider,
-            'consumer': self.build_input_for_catalog_consumer
+            "provider": self.build_input_for_catalog_provider,
+            "consumer": self.build_input_for_catalog_consumer,
         }
 
         try:
             return build_for_role[self.catalog_service_role]()
 
         except KeyError:
-            raise NotImplementedError('unsupported catalog service role [{}]'.format(self.catalog_service_role))
+            raise NotImplementedError(
+                "unsupported catalog service role [{}]".format(
+                    self.catalog_service_role
+                )
+            )
 
 
 def configure_rsyslog(container):
     def restart_rsyslog(container):
-        rsyslog_bin_path = os.path.join('/usr', 'sbin', 'rsyslogd')
+        rsyslog_bin_path = os.path.join("/usr", "sbin", "rsyslogd")
 
-        ec = execute.execute_command(container, f'pkill {os.path.basename(rsyslog_bin_path)}')
+        ec = execute.execute_command(
+            container, f"pkill {os.path.basename(rsyslog_bin_path)}"
+        )
         if ec != 0:
-            logging.info(f'[{container.name}] failed to kill rsyslogd')
+            logging.info(f"[{container.name}] failed to kill rsyslogd")
 
         # TODO: Remove multiple attempts when a more appropriate solution is found
         MAX_NUMBER_OF_ATTEMPTS = 3
@@ -355,13 +371,36 @@ def configure_rsyslog(container):
         logging.debug("[{}] Attempting startup of rsyslogd".format(container.name))
 
         while num_attempts <= MAX_NUMBER_OF_ATTEMPTS:
-            logging.debug("[{}] running startup attempt [#{}]".format(container.name, num_attempts))
+            logging.debug(
+                "[{}] running startup attempt [#{}]".format(
+                    container.name, num_attempts
+                )
+            )
             ec = execute.execute_command(container, rsyslog_bin_path)
-            logging.debug("[{}] startup attempt [#{}] {status}.".format(container.name, num_attempts, status="succeeded" if ec == 0 else "failed"))
+            logging.debug(
+                "[{}] startup attempt [#{}] {status}.".format(
+                    container.name,
+                    num_attempts,
+                    status="succeeded" if ec == 0 else "failed",
+                )
+            )
 
-            logging.debug("[{}] checking to see if rsyslogd started up in the background.".format(container.name))
-            is_alive = execute.execute_command(container, f'pgrep {os.path.basename(rsyslog_bin_path)}') == 0
-            logging.debug("[{}] result of checking if rsyslogd is running: [{}]".format(container.name, is_alive))
+            logging.debug(
+                "[{}] checking to see if rsyslogd started up in the background.".format(
+                    container.name
+                )
+            )
+            is_alive = (
+                execute.execute_command(
+                    container, f"pgrep {os.path.basename(rsyslog_bin_path)}"
+                )
+                == 0
+            )
+            logging.debug(
+                "[{}] result of checking if rsyslogd is running: [{}]".format(
+                    container.name, is_alive
+                )
+            )
 
             # If we started an instance successfully, or it's restarted by another mechanism, we're satisfied
             if ec == 0 or is_alive:
@@ -371,11 +410,13 @@ def configure_rsyslog(container):
 
         # Ensure we don't end up in a loop of failed start attempts, and that we log the failure
         if num_attempts > MAX_NUMBER_OF_ATTEMPTS:
-            raise RuntimeError(f'[{container.name}] failed to start rsyslogd')
+            raise RuntimeError(f"[{container.name}] failed to start rsyslogd")
 
     import textwrap
-    rsyslog_config_file = os.path.join('/etc', 'rsyslog.d', '00-irods.conf')
-    rsyslog_config_contents = textwrap.dedent('''\
+
+    rsyslog_config_file = os.path.join("/etc", "rsyslog.d", "00-irods.conf")
+    rsyslog_config_contents = textwrap.dedent(
+        """\
         \$FileCreateMode 0644
         \$DirCreateMode 0755
         \$Umask 0000
@@ -383,14 +424,19 @@ def configure_rsyslog(container):
         :programname,startswith,\\"irodsServer\\" /var/log/irods/irods.log;irods_format
         & stop
         :programname,startswith,\\"irodsDelayServer\\" /var/log/irods/irods.log;irods_format
-        & stop''')
+        & stop"""
+    )
 
-    ec = execute.execute_command(container, f'bash -c \'echo "{rsyslog_config_contents}" > {rsyslog_config_file}\'')
+    ec = execute.execute_command(
+        container,
+        f"bash -c 'echo \"{rsyslog_config_contents}\" > {rsyslog_config_file}'",
+    )
     if ec != 0:
-        raise RuntimeError(f'[{container.name}] failed to configure rsyslog')
+        raise RuntimeError(f"[{container.name}] failed to configure rsyslog")
 
-    logrotate_config_file = os.path.join('/etc', 'logrotate.d', 'irods')
-    logrotate_config_contents = textwrap.dedent('''\
+    logrotate_config_file = os.path.join("/etc", "logrotate.d", "irods")
+    logrotate_config_contents = textwrap.dedent(
+        """\
 	/var/log/irods/irods.log {
 	    weekly
 	    rotate 26
@@ -401,23 +447,27 @@ def configure_rsyslog(container):
 	    notifempty
 	    missingok
 	    su root root
-	}''')
+	}"""
+    )
 
-    ec = execute.execute_command(container, f'bash -c \'echo "{logrotate_config_contents}" > {logrotate_config_file}\'')
+    ec = execute.execute_command(
+        container,
+        f"bash -c 'echo \"{logrotate_config_contents}\" > {logrotate_config_file}'",
+    )
     if ec != 0:
-        raise RuntimeError(f'[{container.name}] failed to configure logrotate')
+        raise RuntimeError(f"[{container.name}] failed to configure logrotate")
 
     restart_rsyslog(container)
 
 
 def stop_irods(container):
-    irodsctl = os.path.join(context.irods_home(), 'irodsctl')
-    return execute.execute_command(container, f'{irodsctl} stop', user='irods')
+    irodsctl = os.path.join(context.irods_home(), "irodsctl")
+    return execute.execute_command(container, f"{irodsctl} stop", user="irods")
 
 
 def restart_irods(container):
-    irodsctl = os.path.join(context.irods_home(), 'irodsctl')
-    return execute.execute_command(container, f'{irodsctl} restart', user='irods')
+    irodsctl = os.path.join(context.irods_home(), "irodsctl")
+    return execute.execute_command(container, f"{irodsctl} restart", user="irods")
 
 
 def setup_irods_server(container, setup_input):
@@ -436,28 +486,39 @@ def setup_irods_server(container, setup_input):
 
     try:
         if stop_irods(container) != 0:
-            logging.debug(f'[{container.name}] failed to stop iRODS server before setup')
+            logging.debug(
+                f"[{container.name}] failed to stop iRODS server before setup"
+            )
     except Exception as e:
-        error_msg = f'[{container.name}] failed to stop iRODS server before setup: {str(e)}'
+        error_msg = (
+            f"[{container.name}] failed to stop iRODS server before setup: {str(e)}"
+        )
         if "unable to find user irods" in str(e):
             # If the user didn't exist at this point then the service probably wasn't started.
-           logging.debug(error_msg)
+            logging.debug(error_msg)
         else:
-           logging.error(error_msg)
-           raise e
+            logging.error(error_msg)
+            raise e
 
-    ec = execute.execute_command(container, 'bash -c \'echo "{}" > /input\''.format(setup_input))
+    ec = execute.execute_command(
+        container, "bash -c 'echo \"{}\" > /input'".format(setup_input)
+    )
     if ec != 0:
-        raise RuntimeError('failed to create setup script input file [{}]'.format(container.name))
+        raise RuntimeError(
+            "failed to create setup script input file [{}]".format(container.name)
+        )
 
-    execute.execute_command(container, 'cat /input')
+    execute.execute_command(container, "cat /input")
 
-    path_to_setup_script = os.path.join(context.irods_home(), 'scripts', 'setup_irods.py')
-    run_setup_script = 'bash -c \'{} {} < /input\''.format(container_info.python(container),
-                                                           path_to_setup_script)
+    path_to_setup_script = os.path.join(
+        context.irods_home(), "scripts", "setup_irods.py"
+    )
+    run_setup_script = "bash -c '{} {} < /input'".format(
+        container_info.python(container), path_to_setup_script
+    )
     ec = execute.execute_command(container, run_setup_script)
     if ec != 0:
-        raise RuntimeError('failed to set up iRODS server [{}]'.format(container.name))
+        raise RuntimeError("failed to set up iRODS server [{}]".format(container.name))
 
     # Only configure rsyslog for versions later than 4.3.0 as this was the first release
     # which uses syslog. In the future, maybe the syslog implementation used in the
@@ -467,14 +528,18 @@ def setup_irods_server(container, setup_input):
         configure_rsyslog(container)
 
     if restart_irods(container) != 0:
-        raise RuntimeError(f'[{container.name}] failed to start iRODS server after setup')
+        raise RuntimeError(
+            f"[{container.name}] failed to start iRODS server after setup"
+        )
 
 
-def setup_irods_catalog_provider(ctx,
-                                 database_service_instance=1,
-                                 provider_service_instance=1,
-                                 odbc_driver=None,
-                                 **kwargs):
+def setup_irods_catalog_provider(
+    ctx,
+    database_service_instance=1,
+    provider_service_instance=1,
+    odbc_driver=None,
+    **kwargs,
+):
     """Set up iRODS catalog service provider in a docker-compose project.
 
     Arguments:
@@ -490,7 +555,9 @@ def setup_irods_catalog_provider(ctx,
         )
     )
 
-    odbc_setup.configure_odbc_driver(ctx.platform(), ctx.database(), csp_container, odbc_driver)
+    odbc_setup.configure_odbc_driver(
+        ctx.platform(), ctx.database(), csp_container, odbc_driver
+    )
 
     db_container = ctx.docker_client.containers.get(
         context.irods_catalog_database_container(
@@ -498,27 +565,28 @@ def setup_irods_catalog_provider(ctx,
         )
     )
 
-    setup_input = (setup_input_builder()
-        .setup(irods_version=irods_config.get_irods_version(csp_container),
-               catalog_service_role='provider',
-               database_server_hostname=context.container_hostname(db_container),
-               database_server_port=database_setup.database_server_port(ctx.database()),
-               **kwargs
+    setup_input = (
+        setup_input_builder()
+        .setup(
+            irods_version=irods_config.get_irods_version(csp_container),
+            catalog_service_role="provider",
+            database_server_hostname=context.container_hostname(db_container),
+            database_server_port=database_setup.database_server_port(ctx.database()),
+            **kwargs,
         )
         .build()
     )
 
-    logging.debug('input to setup script [{}]'.format(setup_input))
+    logging.debug("input to setup script [{}]".format(setup_input))
 
-    logging.warning('setting up iRODS catalog provider [{}]'.format(csp_container.name))
+    logging.warning("setting up iRODS catalog provider [{}]".format(csp_container.name))
 
     setup_irods_server(csp_container, setup_input)
 
 
-def setup_irods_catalog_consumer(ctx,
-                                 provider_service_instance=1,
-                                 consumer_service_instance=1,
-                                 **kwargs):
+def setup_irods_catalog_consumer(
+    ctx, provider_service_instance=1, consumer_service_instance=1, **kwargs
+):
     """Set up iRODS catalog service consumer in a docker-compose project.
 
     Arguments:
@@ -539,26 +607,27 @@ def setup_irods_catalog_consumer(ctx,
         )
     )
 
-    setup_input = (setup_input_builder()
-        .setup(irods_version=irods_config.get_irods_version(csc_container),
-               catalog_service_role='consumer',
-               catalog_service_provider_host=context.container_hostname(csp_container),
-               **kwargs)
+    setup_input = (
+        setup_input_builder()
+        .setup(
+            irods_version=irods_config.get_irods_version(csc_container),
+            catalog_service_role="consumer",
+            catalog_service_provider_host=context.container_hostname(csp_container),
+            **kwargs,
+        )
         .build()
     )
 
-    logging.debug('input to setup script [{}]'.format(setup_input))
+    logging.debug("input to setup script [{}]".format(setup_input))
 
-    logging.warning('setting up iRODS catalog consumer [{}]'
-                    .format(csc_container.name))
+    logging.warning("setting up iRODS catalog consumer [{}]".format(csc_container.name))
 
     setup_irods_server(csc_container, setup_input)
 
 
-def setup_irods_catalog_consumers(ctx,
-                                  provider_service_instance=1,
-                                  consumer_service_instances=None,
-                                  **kwargs):
+def setup_irods_catalog_consumers(
+    ctx, provider_service_instance=1, consumer_service_instances=None, **kwargs
+):
     """Set up all iRODS catalog service consumers in a docker-compose project in parallel.
 
     Arguments:
@@ -573,11 +642,12 @@ def setup_irods_catalog_consumers(ctx,
     import concurrent.futures
 
     catalog_consumer_containers = ctx.compose_project.containers(
-        service_names=[context.irods_catalog_consumer_service()])
+        service_names=[context.irods_catalog_consumer_service()]
+    )
 
     if consumer_service_instances:
         if len(consumer_service_instances) == 0:
-            logging.warning('empty list of iRODS catalog service consumers to set up')
+            logging.warning("empty list of iRODS catalog service consumers to set up")
             return
 
         consumer_service_instances = [
@@ -596,37 +666,51 @@ def setup_irods_catalog_consumers(ctx,
         futures_to_catalog_consumer_instances = {
             executor.submit(
                 setup_irods_catalog_consumer,
-                ctx, provider_service_instance, instance, **kwargs
-            ): instance for instance in consumer_service_instances
+                ctx,
+                provider_service_instance,
+                instance,
+                **kwargs,
+            ): instance
+            for instance in consumer_service_instances
         }
 
         logging.debug(futures_to_catalog_consumer_instances)
 
         for f in concurrent.futures.as_completed(futures_to_catalog_consumer_instances):
             i = futures_to_catalog_consumer_instances[f]
-            container_name = context.irods_catalog_consumer_container(ctx.compose_project.name,
-                                                                      i + 1)
+            container_name = context.irods_catalog_consumer_container(
+                ctx.compose_project.name, i + 1
+            )
             try:
                 f.result()
-                logging.debug('setup completed successfully [{}]'.format(container_name))
+                logging.debug(
+                    "setup completed successfully [{}]".format(container_name)
+                )
 
             except Exception as e:
-                logging.error('exception raised while setting up iRODS [{}]'
-                              .format(container_name))
+                logging.error(
+                    "exception raised while setting up iRODS [{}]".format(
+                        container_name
+                    )
+                )
                 logging.error(e)
                 rc = 1
 
     if rc != 0:
-        raise RuntimeError('failed to set up one or more catalog service consumers, ec=[{}]'
-                           .format(rc))
+        raise RuntimeError(
+            "failed to set up one or more catalog service consumers, ec=[{}]".format(rc)
+        )
 
-def setup_irods_zone(ctx,
-                     force_recreate=False,
-                     provider_service_instance=1,
-                     database_service_instance=1,
-                     consumer_service_instances=None,
-                     odbc_driver=None,
-                     **kwargs):
+
+def setup_irods_zone(
+    ctx,
+    force_recreate=False,
+    provider_service_instance=1,
+    database_service_instance=1,
+    consumer_service_instances=None,
+    odbc_driver=None,
+    **kwargs,
+):
     """Set up an iRODS Zone with the specified settings on the specified service instances.
 
     Arguments:
@@ -642,65 +726,83 @@ def setup_irods_zone(ctx,
     odbc_driver -- path to the local archive file containing the ODBC driver
     """
     database_setup.wait_for_database_service(
-        ctx, database_service_instance=database_service_instance)
+        ctx, database_service_instance=database_service_instance
+    )
 
-    logging.info('setting up catalog database [{}]'.format(database_service_instance))
-    database_setup.setup_catalog(ctx,
-                                 force_recreate=force_recreate,
-                                 service_instance=database_service_instance)
+    logging.info("setting up catalog database [{}]".format(database_service_instance))
+    database_setup.setup_catalog(
+        ctx, force_recreate=force_recreate, service_instance=database_service_instance
+    )
 
-    logging.info('setting up catalog provider [{}] [{}]'.format(provider_service_instance,
-                                                                database_service_instance))
-    setup_irods_catalog_provider(ctx,
-                                 database_service_instance=database_service_instance,
-                                 provider_service_instance=provider_service_instance,
-                                 odbc_driver=odbc_driver,
-                                 **kwargs)
+    logging.info(
+        "setting up catalog provider [{}] [{}]".format(
+            provider_service_instance, database_service_instance
+        )
+    )
+    setup_irods_catalog_provider(
+        ctx,
+        database_service_instance=database_service_instance,
+        provider_service_instance=provider_service_instance,
+        odbc_driver=odbc_driver,
+        **kwargs,
+    )
 
-    logging.info('setting up catalog consumers [{}] [{}]'.format(provider_service_instance,
-                                                                 consumer_service_instances))
-    setup_irods_catalog_consumers(ctx,
-                                  provider_service_instance=provider_service_instance,
-                                  consumer_service_instances=consumer_service_instances,
-                                  **kwargs)
+    logging.info(
+        "setting up catalog consumers [{}] [{}]".format(
+            provider_service_instance, consumer_service_instances
+        )
+    )
+    setup_irods_catalog_consumers(
+        ctx,
+        provider_service_instance=provider_service_instance,
+        consumer_service_instances=consumer_service_instances,
+        **kwargs,
+    )
 
-def setup_irods_zones(ctx,
-                      zone_info_list,
-                      odbc_driver=None):
+
+def setup_irods_zones(ctx, zone_info_list, odbc_driver=None):
     import concurrent.futures
 
     rc = 0
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures_to_containers = {
-            executor.submit(setup_irods_zone,
-                            ctx,
-                            provider_service_instance=z.provider_service_instance,
-                            database_service_instance=z.database_service_instance,
-                            consumer_service_instances=z.consumer_service_instances,
-                            odbc_driver=odbc_driver,
-                            zone_name=z.zone_name,
-                            zone_key=z.zone_key,
-                            negotiation_key=z.negotiation_key,
-            ): z for i, z in enumerate(zone_info_list)
+            executor.submit(
+                setup_irods_zone,
+                ctx,
+                provider_service_instance=z.provider_service_instance,
+                database_service_instance=z.database_service_instance,
+                consumer_service_instances=z.consumer_service_instances,
+                odbc_driver=odbc_driver,
+                zone_name=z.zone_name,
+                zone_key=z.zone_key,
+                negotiation_key=z.negotiation_key,
+            ): z
+            for i, z in enumerate(zone_info_list)
         }
 
         for f in concurrent.futures.as_completed(futures_to_containers):
             zone = futures_to_containers[f]
             try:
                 f.result()
-                logging.debug('iRODS Zone setup completed successfully [{}]'.format(zone))
+                logging.debug(
+                    "iRODS Zone setup completed successfully [{}]".format(zone)
+                )
 
             except Exception as e:
-                logging.error('exception raised while setting up iRODS Zone [{}]'.format(zone))
+                logging.error(
+                    "exception raised while setting up iRODS Zone [{}]".format(zone)
+                )
                 logging.error(e)
                 rc = 1
 
     if rc != 0:
-        raise RuntimeError('failed to set up one or more iRODS Zones, ec=[{}]'.format(rc))
+        raise RuntimeError(
+            "failed to set up one or more iRODS Zones, ec=[{}]".format(rc)
+        )
 
 
-def make_negotiation_key(prefix=''):
+def make_negotiation_key(prefix=""):
     """Generate a 32-byte negotiation key with an optional prefix.
 
     The generated key will be 32 bytes in length. If a longer string is passed in, it will be
@@ -715,13 +817,13 @@ def make_negotiation_key(prefix=''):
     if len(prefix) > negotiation_key_size_in_bytes:
         return prefix[:negotiation_key_size_in_bytes]
 
-    filler = '_' * negotiation_key_size_in_bytes
-    return prefix + filler[:negotiation_key_size_in_bytes - len(prefix)]
+    filler = "_" * negotiation_key_size_in_bytes
+    return prefix + filler[: negotiation_key_size_in_bytes - len(prefix)]
 
 
 def make_zone_key(zone_name):
-    zone_key_prefix = 'ZONE_KEY_FOR'
-    return '_'.join([zone_key_prefix, zone_name])
+    zone_key_prefix = "ZONE_KEY_FOR"
+    return "_".join([zone_key_prefix, zone_name])
 
 
 def get_info_for_zones(ctx, zone_names, consumer_service_instances_per_zone=0):
@@ -733,23 +835,34 @@ def get_info_for_zones(ctx, zone_names, consumer_service_instances_per_zone=0):
             context.service_instance(c.name)
             for c in ctx.compose_project.containers()
             if context.is_irods_catalog_consumer_container(c)
-            and context.service_instance(c.name) > i * consumer_service_instances_per_zone
-            and context.service_instance(c.name) <= (i + 1) * consumer_service_instances_per_zone
+            and context.service_instance(c.name)
+            > i * consumer_service_instances_per_zone
+            and context.service_instance(c.name)
+            <= (i + 1) * consumer_service_instances_per_zone
         ]
 
-        logging.info('consumer service instances for [{}] [{}] (expected: [{}])'
-                     .format(zn, consumer_service_instances,
-                             list(range((i*consumer_service_instances_per_zone)+1,
-                                        ((i+1)*consumer_service_instances_per_zone)+1))
-                     ))
+        logging.info(
+            "consumer service instances for [{}] [{}] (expected: [{}])".format(
+                zn,
+                consumer_service_instances,
+                list(
+                    range(
+                        (i * consumer_service_instances_per_zone) + 1,
+                        ((i + 1) * consumer_service_instances_per_zone) + 1,
+                    )
+                ),
+            )
+        )
 
         zone_info_list.append(
-            zone_info(database_service_instance=i + 1,
-                      provider_service_instance=i + 1,
-                      consumer_service_instances=consumer_service_instances,
-                      zone_name=zn,
-                      zone_key=make_zone_key(zn),
-                      negotiation_key=make_negotiation_key(zn))
+            zone_info(
+                database_service_instance=i + 1,
+                provider_service_instance=i + 1,
+                consumer_service_instances=consumer_service_instances,
+                zone_name=zn,
+                zone_key=make_zone_key(zn),
+                negotiation_key=make_negotiation_key(zn),
+            )
         )
 
     return zone_info_list

@@ -12,6 +12,7 @@ from . import execute
 # Flip this bool to switch which ODBC driver is used for MariaDB projects.
 mariadb_use_mysql_odbc_driver = True
 
+
 def configure_postgres_odbc_driver(csp_container, odbc_driver):
     """Configure ODBC driver for postgres.
 
@@ -19,7 +20,10 @@ def configure_postgres_odbc_driver(csp_container, odbc_driver):
     csp_container -- docker container on which the iRODS catalog service provider is running
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
-    logging.debug('no ODBC driver setup required for postgres [{}]'.format(csp_container))
+    logging.debug(
+        "no ODBC driver setup required for postgres [{}]".format(csp_container)
+    )
+
 
 def configure_odbc_driver_ubuntu_2004_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on ubuntu 20.04.
@@ -30,6 +34,7 @@ def configure_odbc_driver_ubuntu_2004_postgres_14(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_ubuntu_2004_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on ubuntu 20.04.
 
@@ -38,6 +43,7 @@ def configure_odbc_driver_ubuntu_2004_postgres_16(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_ubuntu_2204_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on ubuntu 22.04.
@@ -48,6 +54,7 @@ def configure_odbc_driver_ubuntu_2204_postgres_14(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_ubuntu_2204_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on ubuntu 22.04.
 
@@ -56,6 +63,7 @@ def configure_odbc_driver_ubuntu_2204_postgres_16(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_ubuntu_2404_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on ubuntu 24.04.
@@ -66,6 +74,7 @@ def configure_odbc_driver_ubuntu_2404_postgres_14(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_ubuntu_2404_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on ubuntu 24.04.
 
@@ -74,6 +83,7 @@ def configure_odbc_driver_ubuntu_2404_postgres_16(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_debian_11_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on debian 11.
@@ -84,6 +94,7 @@ def configure_odbc_driver_debian_11_postgres_14(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_debian_11_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on debian 11.
 
@@ -92,6 +103,7 @@ def configure_odbc_driver_debian_11_postgres_16(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_debian_12_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on debian 12.
@@ -102,6 +114,7 @@ def configure_odbc_driver_debian_12_postgres_14(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_debian_12_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on debian 12.
 
@@ -110,6 +123,7 @@ def configure_odbc_driver_debian_12_postgres_16(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_centos_7_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on centos 7.
@@ -120,6 +134,7 @@ def configure_odbc_driver_centos_7_postgres_14(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_centos_7_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on centos 7.
 
@@ -128,6 +143,7 @@ def configure_odbc_driver_centos_7_postgres_16(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_almalinux_8_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on almalinux 8.
@@ -138,6 +154,7 @@ def configure_odbc_driver_almalinux_8_postgres_14(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_almalinux_8_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on almalinux 8.
 
@@ -146,6 +163,7 @@ def configure_odbc_driver_almalinux_8_postgres_16(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_rockylinux_8_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on rockylinux 8.
@@ -156,6 +174,7 @@ def configure_odbc_driver_rockylinux_8_postgres_14(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_rockylinux_8_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on rockylinux 8.
 
@@ -164,6 +183,7 @@ def configure_odbc_driver_rockylinux_8_postgres_16(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_rockylinux_9_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on rockylinux 9.
@@ -174,6 +194,7 @@ def configure_odbc_driver_rockylinux_9_postgres_14(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_rockylinux_9_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on rockylinux 9.
 
@@ -183,6 +204,7 @@ def configure_odbc_driver_rockylinux_9_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+
 def make_mysql_odbcinst_ini(csp_container, container_odbc_driver_dir):
     """Generate content for the /etc/odbcinst.ini configuration file used by mysql.
 
@@ -190,28 +212,38 @@ def make_mysql_odbcinst_ini(csp_container, container_odbc_driver_dir):
     csp_container -- container running iRODS catalog service provider using the ODBC driver
     container_odbc_driver_dir -- path in `csp_container` containing the ODBC driver directory
     """
-    odbcinst_ini_path = os.path.join('/etc', 'odbcinst.ini')
+    odbcinst_ini_path = os.path.join("/etc", "odbcinst.ini")
 
     # This is the same for both 8.0 and 8.4.
-    logging.debug('configuring odbcinst.ini with MySQL 8.x drivers')
-    odbcinst_ini_contents = textwrap.dedent("""\
+    logging.debug("configuring odbcinst.ini with MySQL 8.x drivers")
+    odbcinst_ini_contents = textwrap.dedent(
+        """\
         [MySQL ANSI]
         Description = MySQL ODBC 8.0 ANSI Driver
         Driver = {0}/lib/libmyodbc8a.so
 
         [MySQL Unicode]
         Description = MySQL ODBC 8.0 Unicode Driver
-        Driver = {0}/lib/libmyodbc8w.so""".format(container_odbc_driver_dir))
+        Driver = {0}/lib/libmyodbc8w.so""".format(
+            container_odbc_driver_dir
+        )
+    )
 
-    cmd = 'bash -c \'echo "{0}" > {1}\''.format(odbcinst_ini_contents, odbcinst_ini_path)
+    cmd = "bash -c 'echo \"{0}\" > {1}'".format(
+        odbcinst_ini_contents, odbcinst_ini_path
+    )
     ec = execute.execute_command(csp_container, cmd)
     if ec != 0:
-        raise RuntimeError('failed to populate odbcinst.ini [ec=[{0}], container=[{1}]]'
-            .format(ec, csp_container))
+        raise RuntimeError(
+            "failed to populate odbcinst.ini [ec=[{0}], container=[{1}]]".format(
+                ec, csp_container
+            )
+        )
 
-    execute.execute_command(csp_container, 'cat {}'.format(odbcinst_ini_path))
+    execute.execute_command(csp_container, "cat {}".format(odbcinst_ini_path))
 
-def configure_mysql_odbc_driver(csp_container, odbc_driver, extension='tar.gz'):
+
+def configure_mysql_odbc_driver(csp_container, odbc_driver, extension="tar.gz"):
     """Configure ODBC driver for mysql and return the ODBC driver path.
 
     Argument:
@@ -220,19 +252,22 @@ def configure_mysql_odbc_driver(csp_container, odbc_driver, extension='tar.gz'):
     extension -- file extension for the archive file
     """
     if not os.path.exists(odbc_driver):
-        raise RuntimeError('indicated ODBC driver does not exist [{}]'.format(odbc_driver))
+        raise RuntimeError(
+            "indicated ODBC driver does not exist [{}]".format(odbc_driver)
+        )
 
-    logging.info('looking for odbc driver [{}]'.format(odbc_driver))
+    logging.info("looking for odbc driver [{}]".format(odbc_driver))
 
-    container_odbc_driver_dir = archive.copy_archive_to_container(csp_container,
-                                                                  odbc_driver,
-                                                                  extension=extension)
+    container_odbc_driver_dir = archive.copy_archive_to_container(
+        csp_container, odbc_driver, extension=extension
+    )
 
-    execute.execute_command(csp_container, 'ls -l {}'.format(container_odbc_driver_dir))
+    execute.execute_command(csp_container, "ls -l {}".format(container_odbc_driver_dir))
 
     make_mysql_odbcinst_ini(csp_container, container_odbc_driver_dir)
 
     return container_odbc_driver_dir
+
 
 def download_mysql_odbc_driver(url, destination=None, always_download=False):
     """Downloads the file indicated by `url` and returns the path to the file.
@@ -246,22 +281,27 @@ def download_mysql_odbc_driver(url, destination=None, always_download=False):
 
     if not destination:
         from urllib.parse import urlparse
-        destination = os.path.join('/tmp', os.path.basename(urlparse(url).path))
+
+        destination = os.path.join("/tmp", os.path.basename(urlparse(url).path))
 
     destination = os.path.abspath(destination)
 
     if not always_download and os.path.exists(destination):
-        logging.info('destination mysql odbc already exists, not downloading [{}]'
-                     .format(destination))
+        logging.info(
+            "destination mysql odbc already exists, not downloading [{}]".format(
+                destination
+            )
+        )
         return destination
 
-    logging.info('downloading [{}] to [{}]'.format(url, destination))
+    logging.info("downloading [{}] to [{}]".format(url, destination))
 
     with urllib.request.urlopen(url) as r:
-        with open(destination, 'w+b') as f:
+        with open(destination, "w+b") as f:
             shutil.copyfileobj(r, f)
 
     return destination
+
 
 def configure_odbc_driver_mysql_80(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0.
@@ -272,9 +312,11 @@ def configure_odbc_driver_mysql_80(csp_container, odbc_driver):
     """
     if not odbc_driver:
         odbc_driver = download_mysql_odbc_driver(
-            'https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.33-linux-glibc2.28-x86-64bit.tar.gz')
+            "https://dev.mysql.com/get/Downloads/Connector-ODBC/8.0/mysql-connector-odbc-8.0.33-linux-glibc2.28-x86-64bit.tar.gz"
+        )
 
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
+
 
 def configure_odbc_driver_mysql_84(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.4.
@@ -285,9 +327,11 @@ def configure_odbc_driver_mysql_84(csp_container, odbc_driver):
     """
     if not odbc_driver:
         odbc_driver = download_mysql_odbc_driver(
-            'https://dev.mysql.com/get/Downloads/Connector-ODBC/8.4/mysql-connector-odbc-8.4.0-linux-glibc2.28-x86-64bit.tar.gz')
+            "https://dev.mysql.com/get/Downloads/Connector-ODBC/8.4/mysql-connector-odbc-8.4.0-linux-glibc2.28-x86-64bit.tar.gz"
+        )
 
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
+
 
 def configure_odbc_driver_centos_7_mysql_80(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0 on centos 7.
@@ -299,9 +343,11 @@ def configure_odbc_driver_centos_7_mysql_80(csp_container, odbc_driver):
     # special case since EL7 uses an older version of glibc
     if not odbc_driver:
         odbc_driver = download_mysql_odbc_driver(
-            'https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz')
+            "https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz"
+        )
 
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
+
 
 def configure_odbc_driver_ubuntu_2004_mysql_80(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0 on ubuntu 20.04.
@@ -312,6 +358,7 @@ def configure_odbc_driver_ubuntu_2004_mysql_80(csp_container, odbc_driver):
     """
     configure_odbc_driver_mysql_80(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_ubuntu_2204_mysql_80(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0 on ubuntu 22.04.
 
@@ -320,6 +367,7 @@ def configure_odbc_driver_ubuntu_2204_mysql_80(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_mysql_80(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_ubuntu_2204_mysql_84(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.4 on ubuntu 22.04.
@@ -330,6 +378,7 @@ def configure_odbc_driver_ubuntu_2204_mysql_84(csp_container, odbc_driver):
     """
     configure_odbc_driver_mysql_84(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_ubuntu_2404_mysql_80(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0 on ubuntu 24.04.
 
@@ -338,6 +387,7 @@ def configure_odbc_driver_ubuntu_2404_mysql_80(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_mysql_80(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_ubuntu_2404_mysql_84(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.4 on ubuntu 24.04.
@@ -348,6 +398,7 @@ def configure_odbc_driver_ubuntu_2404_mysql_84(csp_container, odbc_driver):
     """
     configure_odbc_driver_mysql_84(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_debian_11_mysql_80(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0 on debian 11.
 
@@ -356,6 +407,7 @@ def configure_odbc_driver_debian_11_mysql_80(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_mysql_80(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_debian_12_mysql_80(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0 on debian 12.
@@ -366,6 +418,7 @@ def configure_odbc_driver_debian_12_mysql_80(csp_container, odbc_driver):
     """
     configure_odbc_driver_mysql_80(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_debian_12_mysql_84(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.4 on debian 12.
 
@@ -374,6 +427,7 @@ def configure_odbc_driver_debian_12_mysql_84(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_mysql_84(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_almalinux_8_mysql_80(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0 on almalinux 8.
@@ -384,6 +438,7 @@ def configure_odbc_driver_almalinux_8_mysql_80(csp_container, odbc_driver):
     """
     configure_odbc_driver_mysql_80(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_almalinux_8_mysql_84(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.4 on almalinux 8.
 
@@ -392,6 +447,7 @@ def configure_odbc_driver_almalinux_8_mysql_84(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_mysql_84(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_rockylinux_8_mysql_80(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0 on rockylinux 8.
@@ -402,6 +458,7 @@ def configure_odbc_driver_rockylinux_8_mysql_80(csp_container, odbc_driver):
     """
     configure_odbc_driver_mysql_80(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_rockylinux_8_mysql_84(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.4 on rockylinux 8.
 
@@ -410,6 +467,7 @@ def configure_odbc_driver_rockylinux_8_mysql_84(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_mysql_84(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_rockylinux_9_mysql_80(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.0 on rockylinux 9.
@@ -420,6 +478,7 @@ def configure_odbc_driver_rockylinux_9_mysql_80(csp_container, odbc_driver):
     """
     configure_odbc_driver_mysql_80(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_rockylinux_9_mysql_84(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.4 on rockylinux 9.
 
@@ -429,6 +488,7 @@ def configure_odbc_driver_rockylinux_9_mysql_84(csp_container, odbc_driver):
     """
     configure_odbc_driver_mysql_84(csp_container, odbc_driver)
 
+
 def make_mariadb_odbcinst_ini(csp_container, container_odbc_lib_dir):
     """Generate content for the /etc/odbcinst.ini configuration file used by mariadb.
 
@@ -436,22 +496,32 @@ def make_mariadb_odbcinst_ini(csp_container, container_odbc_lib_dir):
     csp_container -- container running iRODS catalog service provider using the ODBC driver
     container_odbc_lib_dir -- path in `csp_container` containing the ODBC driver library
     """
-    odbcinst_ini_path = os.path.join('/etc', 'odbcinst.ini')
+    odbcinst_ini_path = os.path.join("/etc", "odbcinst.ini")
 
-    odbcinst_ini_contents = textwrap.dedent("""\
+    odbcinst_ini_contents = textwrap.dedent(
+        """\
         [MariaDB]
         Description = MariaDB ODBC Connector
         Driver      = {0}/libmaodbc.so
         Threading   = 0
-        """.format(container_odbc_lib_dir))
+        """.format(
+            container_odbc_lib_dir
+        )
+    )
 
-    cmd = 'bash -c \'echo "{0}" > {1}\''.format(odbcinst_ini_contents, odbcinst_ini_path)
+    cmd = "bash -c 'echo \"{0}\" > {1}'".format(
+        odbcinst_ini_contents, odbcinst_ini_path
+    )
     ec = execute.execute_command(csp_container, cmd)
     if ec != 0:
-        raise RuntimeError('failed to populate odbcinst.ini [ec=[{0}], container=[{1}]]'
-            .format(ec, csp_container))
+        raise RuntimeError(
+            "failed to populate odbcinst.ini [ec=[{0}], container=[{1}]]".format(
+                ec, csp_container
+            )
+        )
 
-    execute.execute_command(csp_container, 'cat {}'.format(odbcinst_ini_path))
+    execute.execute_command(csp_container, "cat {}".format(odbcinst_ini_path))
+
 
 def configure_mariadb_odbc_driver_apt(csp_container, odbc_driver, package_url):
     """Configure ODBC driver package for mariadb (via apt)
@@ -472,10 +542,11 @@ def configure_mariadb_odbc_driver_apt(csp_container, odbc_driver, package_url):
     odbc_driver_archive = archive.create_archive([odbc_driver])
     archive.copy_archive_to_container(csp_container, odbc_driver_archive)
 
-    execute.execute_command(csp_container, 'apt-get update')
-    execute.execute_command(csp_container, 'apt-get install {}'.format(odbc_driver))
+    execute.execute_command(csp_container, "apt-get update")
+    execute.execute_command(csp_container, "apt-get install {}".format(odbc_driver))
 
-    make_mariadb_odbcinst_ini(csp_container, '/usr/lib/x86_64-linux-gnu')
+    make_mariadb_odbcinst_ini(csp_container, "/usr/lib/x86_64-linux-gnu")
+
 
 def configure_mariadb_odbc_driver_dnf(csp_container, odbc_driver, package_url):
     """Configure ODBC driver package for mariadb (via yum)
@@ -496,9 +567,10 @@ def configure_mariadb_odbc_driver_dnf(csp_container, odbc_driver, package_url):
     odbc_driver_archive = archive.create_archive([odbc_driver])
     archive.copy_archive_to_container(csp_container, odbc_driver_archive)
 
-    execute.execute_command(csp_container, 'dnf install -y {}'.format(odbc_driver))
+    execute.execute_command(csp_container, "dnf install -y {}".format(odbc_driver))
 
-    make_mariadb_odbcinst_ini(csp_container, '/usr/lib64')
+    make_mariadb_odbcinst_ini(csp_container, "/usr/lib64")
+
 
 def configure_odbc_driver_ubuntu_2004_mariadb(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb on ubuntu 20.04.
@@ -510,7 +582,9 @@ def configure_odbc_driver_ubuntu_2004_mariadb(csp_container, odbc_driver):
     configure_mariadb_odbc_driver_apt(
         csp_container,
         odbc_driver,
-        'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-ubu2004-amd64.deb')
+        "https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-ubu2004-amd64.deb",
+    )
+
 
 def configure_odbc_driver_ubuntu_2004_mariadb_106(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.6 on ubuntu 20.04.
@@ -521,6 +595,7 @@ def configure_odbc_driver_ubuntu_2004_mariadb_106(csp_container, odbc_driver):
     """
     configure_odbc_driver_ubuntu_2004_mariadb(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_ubuntu_2004_mariadb_1011(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.11 on ubuntu 20.04.
 
@@ -529,6 +604,7 @@ def configure_odbc_driver_ubuntu_2004_mariadb_1011(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_ubuntu_2004_mariadb(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_ubuntu_2204_mariadb(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb on ubuntu 22.04.
@@ -540,7 +616,9 @@ def configure_odbc_driver_ubuntu_2204_mariadb(csp_container, odbc_driver):
     configure_mariadb_odbc_driver_apt(
         csp_container,
         odbc_driver,
-        'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-ubu2204-amd64.deb')
+        "https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-ubu2204-amd64.deb",
+    )
+
 
 def configure_odbc_driver_ubuntu_2204_mariadb_106(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.6 on ubuntu 22.04.
@@ -551,6 +629,7 @@ def configure_odbc_driver_ubuntu_2204_mariadb_106(csp_container, odbc_driver):
     """
     configure_odbc_driver_ubuntu_2204_mariadb(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_ubuntu_2204_mariadb_1011(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.11 on ubuntu 22.04.
 
@@ -560,6 +639,7 @@ def configure_odbc_driver_ubuntu_2204_mariadb_1011(csp_container, odbc_driver):
     """
     configure_odbc_driver_ubuntu_2204_mariadb(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_ubuntu_2204_mariadb_114(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 11.4 on ubuntu 22.04.
 
@@ -568,6 +648,7 @@ def configure_odbc_driver_ubuntu_2204_mariadb_114(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_ubuntu_2204_mariadb(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_ubuntu_2404_mariadb(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb on ubuntu 24.04.
@@ -580,7 +661,9 @@ def configure_odbc_driver_ubuntu_2404_mariadb(csp_container, odbc_driver):
         csp_container,
         odbc_driver,
         # package is for 22.04, but works on 24.04
-        'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-ubu2204-amd64.deb')
+        "https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-ubu2204-amd64.deb",
+    )
+
 
 def configure_odbc_driver_ubuntu_2404_mariadb_1011(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.11 on ubuntu 24.04.
@@ -591,6 +674,7 @@ def configure_odbc_driver_ubuntu_2404_mariadb_1011(csp_container, odbc_driver):
     """
     configure_odbc_driver_ubuntu_2404_mariadb(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_ubuntu_2404_mariadb_114(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 11.4 on ubuntu 24.04.
 
@@ -599,6 +683,7 @@ def configure_odbc_driver_ubuntu_2404_mariadb_114(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_ubuntu_2404_mariadb(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb on debian 11.
@@ -610,7 +695,9 @@ def configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver):
     configure_mariadb_odbc_driver_apt(
         csp_container,
         odbc_driver,
-        'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-deb11-amd64.deb')
+        "https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-deb11-amd64.deb",
+    )
+
 
 def configure_odbc_driver_debian_11_mariadb_106(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.6 debian 11.
@@ -621,6 +708,7 @@ def configure_odbc_driver_debian_11_mariadb_106(csp_container, odbc_driver):
     """
     configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_debian_11_mariadb_1011(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.11 debian 11.
 
@@ -629,6 +717,7 @@ def configure_odbc_driver_debian_11_mariadb_1011(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_debian_12_mariadb(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb on debian 12.
@@ -640,7 +729,9 @@ def configure_odbc_driver_debian_12_mariadb(csp_container, odbc_driver):
     configure_mariadb_odbc_driver_apt(
         csp_container,
         odbc_driver,
-        'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-deb12-amd64.deb')
+        "https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-deb12-amd64.deb",
+    )
+
 
 def configure_odbc_driver_debian_12_mariadb_1011(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.11 debian 12.
@@ -651,6 +742,7 @@ def configure_odbc_driver_debian_12_mariadb_1011(csp_container, odbc_driver):
     """
     configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_debian_12_mariadb_114(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 11.4 debian 12.
 
@@ -659,6 +751,7 @@ def configure_odbc_driver_debian_12_mariadb_114(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb on EL 8.
@@ -670,7 +763,9 @@ def configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver):
     configure_mariadb_odbc_driver_dnf(
         csp_container,
         odbc_driver,
-        'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-rhel8-amd64.rpm')
+        "https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-rhel8-amd64.rpm",
+    )
+
 
 def configure_odbc_driver_almalinux_8_mariadb_106(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.6 almalinux 8.
@@ -681,6 +776,7 @@ def configure_odbc_driver_almalinux_8_mariadb_106(csp_container, odbc_driver):
     """
     configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_almalinux_8_mariadb_1011(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.11 almalinux 8.
 
@@ -689,6 +785,7 @@ def configure_odbc_driver_almalinux_8_mariadb_1011(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_almalinux_8_mariadb_114(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 11.4 almalinux 8.
@@ -699,6 +796,7 @@ def configure_odbc_driver_almalinux_8_mariadb_114(csp_container, odbc_driver):
     """
     configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_rockylinux_8_mariadb_106(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.6 rockylinux 8.
 
@@ -707,6 +805,7 @@ def configure_odbc_driver_rockylinux_8_mariadb_106(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_rockylinux_8_mariadb_1011(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.11 rockylinux 8.
@@ -717,6 +816,7 @@ def configure_odbc_driver_rockylinux_8_mariadb_1011(csp_container, odbc_driver):
     """
     configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_rockylinux_8_mariadb_114(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 11.4 rockylinux 8.
 
@@ -725,6 +825,7 @@ def configure_odbc_driver_rockylinux_8_mariadb_114(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb on EL 9.
@@ -736,7 +837,9 @@ def configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver):
     configure_mariadb_odbc_driver_dnf(
         csp_container,
         odbc_driver,
-        'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-rhel9-amd64.rpm')
+        "https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-rhel9-amd64.rpm",
+    )
+
 
 def configure_odbc_driver_rockylinux_9_mariadb_1011(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.11 rockylinux 9.
@@ -747,6 +850,7 @@ def configure_odbc_driver_rockylinux_9_mariadb_1011(csp_container, odbc_driver):
     """
     configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver)
 
+
 def configure_odbc_driver_rockylinux_9_mariadb_114(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 11.4 rockylinux 9.
 
@@ -755,6 +859,7 @@ def configure_odbc_driver_rockylinux_9_mariadb_114(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver)
+
 
 def configure_odbc_driver_centos_7_mariadb_106(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.6 centos 7.
@@ -768,7 +873,10 @@ def configure_odbc_driver_centos_7_mariadb_106(csp_container, odbc_driver):
     # removed on resolution of #217.
     configure_odbc_driver_centos_7_mysql_80(csp_container, odbc_driver)
 
-def configure_odbc_driver(platform_image, database_image, csp_container, odbc_driver=None):
+
+def configure_odbc_driver(
+    platform_image, database_image, csp_container, odbc_driver=None
+):
     """Make an ODBC setup strategy for the given database type.
 
     Arguments:
@@ -778,13 +886,17 @@ def configure_odbc_driver(platform_image, database_image, csp_container, odbc_dr
     odbc_driver -- if specified, the ODBC driver will be sought here
     """
     import inspect
+
     # generate the function name of the form:
     #   configure_odbc_driver_platform-repo_platform-tag_database-repo_database-tag
-    func_name = '_'.join([inspect.currentframe().f_code.co_name,
-                          context.sanitize(context.image_repo(platform_image)),
-                          context.sanitize(context.image_tag(platform_image)),
-                          context.sanitize(context.image_repo(database_image)),
-                          context.sanitize(context.image_tag(database_image))])
+    func_name = "_".join(
+        [
+            inspect.currentframe().f_code.co_name,
+            context.sanitize(context.image_repo(platform_image)),
+            context.sanitize(context.image_tag(platform_image)),
+            context.sanitize(context.image_repo(database_image)),
+            context.sanitize(context.image_tag(database_image)),
+        ]
+    )
 
     eval(func_name)(csp_container, odbc_driver)
-

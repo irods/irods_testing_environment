@@ -13,7 +13,9 @@ if __name__ == "__main__":
 
     import cli
 
-    parser = argparse.ArgumentParser(description='Configure SSL in a running iRODS Zone.')
+    parser = argparse.ArgumentParser(
+        description="Configure SSL in a running iRODS Zone."
+    )
 
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
@@ -22,8 +24,9 @@ if __name__ == "__main__":
 
     docker_client = docker.from_env()
 
-    compose_project = compose.cli.command.get_project(os.path.abspath(args.project_directory),
-                                                      project_name=args.project_name)
+    compose_project = compose.cli.command.get_project(
+        os.path.abspath(args.project_directory), project_name=args.project_name
+    )
 
     logs.configure(args.verbosity)
 

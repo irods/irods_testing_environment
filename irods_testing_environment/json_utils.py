@@ -5,6 +5,7 @@ import os
 # local modules
 from . import archive
 
+
 def get_json_from_file(container, target_file):
     """Return a JSON structure read out from a JSON file on the specified container.
 
@@ -14,8 +15,11 @@ def get_json_from_file(container, target_file):
     """
     import shutil
     from . import archive
-    json_file = os.path.join(archive.copy_from_container(container, target_file),
-                             os.path.basename(target_file))
+
+    json_file = os.path.join(
+        archive.copy_from_container(container, target_file),
+        os.path.basename(target_file),
+    )
 
     try:
         with open(json_file) as f:

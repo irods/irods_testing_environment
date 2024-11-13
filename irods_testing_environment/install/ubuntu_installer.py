@@ -1,22 +1,18 @@
 from . import install
 
+
 class ubuntu_installer(install.installer):
     def update_command(self):
-        return 'apt update'
-
+        return "apt update"
 
     def install_local_packages_command(self):
-        return 'apt install -fy'
-
+        return "apt install -fy"
 
     def install_official_packages_command(self):
-        return 'apt install -y'
-
+        return "apt install -y"
 
     def filename_extension(self):
-        return 'deb'
-
+        return "deb"
 
     def version_joinery(self):
-        return '='
-
+        return "="
