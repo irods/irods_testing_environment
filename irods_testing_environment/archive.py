@@ -7,7 +7,8 @@ import tempfile
 # local modules
 from . import execute
 
-def create_archive(members, filename='foo', extension='tar'):
+
+def create_archive(members, filename="foo", extension="tar"):
     """Create a local archive file with the files in `members` and return a path to the file.
 
     Arguments:
@@ -16,14 +17,14 @@ def create_archive(members, filename='foo', extension='tar'):
     # TODO: allow for path to be specified
     # TODO: allow for type of archive to be specified
     # Create a tarfile with the packages
-    tarfile_name = '.'.join([filename, extension])
+    tarfile_name = ".".join([filename, extension])
     tarfile_path = os.path.join(tempfile.mkdtemp(), tarfile_name)
 
-    logging.debug('creating tarfile [{}]'.format(tarfile_path))
+    logging.debug("creating tarfile [{}]".format(tarfile_path))
 
-    with tarfile.open(tarfile_path, 'w') as f:
+    with tarfile.open(tarfile_path, "w") as f:
         for m in members:
-            logging.debug('adding member [{0}] to tarfile'.format(m))
+            logging.debug("adding member [{0}] to tarfile".format(m))
             f.add(m)
 
     return tarfile_path
@@ -44,39 +45,44 @@ def extract_archive(path_to_archive, path_to_extraction=None):
 
     p = os.path.abspath(path_to_archive)
 
-    logging.debug('extracting archive [{}] [{}]'.format(p, dest))
+    logging.debug("extracting archive [{}] [{}]".format(p, dest))
 
-    with tarfile.open(p, 'r') as f:
+    with tarfile.open(p, "r") as f:
+
         def is_within_directory(directory, target):
-            
+
             abs_directory = os.path.abspath(directory)
             abs_target = os.path.abspath(target)
-        
+
             prefix = os.path.commonprefix([abs_directory, abs_target])
-            
+
             return prefix == abs_directory
-        
+
         def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
-        
+
             for member in tar.getmembers():
                 member_path = os.path.join(path, member.name)
                 if not is_within_directory(path, member_path):
                     raise Exception("Attempted Path Traversal in Tar File")
-        
-            tar.extractall(path, members, numeric_owner=numeric_owner) 
-            
-        
+
+            tar.extractall(path, members, numeric_owner=numeric_owner)
+
         safe_extract(f, path=dest)
 
     return dest
 
 
-def path_to_archive_in_container(archive_file_path_on_host, extension='tar'):
+def path_to_archive_in_container(archive_file_path_on_host, extension="tar"):
     """Return path to directory containing extracted archive when copied to container."""
-    return '/' + os.path.basename(os.path.abspath(archive_file_path_on_host))[:(len(extension) + 1) * -1]
+    return (
+        "/"
+        + os.path.basename(os.path.abspath(archive_file_path_on_host))[
+            : (len(extension) + 1) * -1
+        ]
+    )
 
 
-def copy_archive_to_container(container, archive_file_path_on_host, extension='tar'):
+def copy_archive_to_container(container, archive_file_path_on_host, extension="tar"):
     """Copy local archive file into the specified container in extracted form.
 
     Returns the absolute path inside the container where the archive file was extracted.
@@ -87,21 +93,28 @@ def copy_archive_to_container(container, archive_file_path_on_host, extension='t
     """
     dir_path = path_to_archive_in_container(archive_file_path_on_host, extension)
 
-    logging.debug('putting archive [{0}] in container [{1}] at [{2}]'.format(
-        archive_file_path_on_host, container.name, dir_path))
+    logging.debug(
+        "putting archive [{0}] in container [{1}] at [{2}]".format(
+            archive_file_path_on_host, container.name, dir_path
+        )
+    )
 
-    with open(archive_file_path_on_host, 'rb') as tf:
-        if not container.put_archive('/', tf):
-            raise RuntimeError('failed to put archive in container [{}]'.format(container.name))
+    with open(archive_file_path_on_host, "rb") as tf:
+        if not container.put_archive("/", tf):
+            raise RuntimeError(
+                "failed to put archive in container [{}]".format(container.name)
+            )
 
     return dir_path
 
 
-def copy_from_container(container,
-                        path_to_source_on_container,
-                        path_to_destination_directory_on_host=None,
-                        cleanup=True,
-                        extract=True):
+def copy_from_container(
+    container,
+    path_to_source_on_container,
+    path_to_destination_directory_on_host=None,
+    cleanup=True,
+    extract=True,
+):
     """Copies a file or directory from a path inside the specified container to the local host.
 
     This functions just like `docker cp` on the CLI if the default options are used except
@@ -135,7 +148,7 @@ def copy_from_container(container,
     """
     if cleanup and not extract:
         raise ValueError(
-            'cleanup without extraction is a no-op so these are considered incompatible options'
+            "cleanup without extraction is a no-op so these are considered incompatible options"
         )
 
     if path_to_destination_directory_on_host:
@@ -143,15 +156,18 @@ def copy_from_container(container,
     else:
         dest = os.path.join(tempfile.mkdtemp())
 
-    logging.debug('copying file [{}] in container [{}] to [{}]'
-                  .format(path_to_source_on_container, container.name, dest))
+    logging.debug(
+        "copying file [{}] in container [{}] to [{}]".format(
+            path_to_source_on_container, container.name, dest
+        )
+    )
 
-    archive_path = os.path.join(dest, container.name + '.tar')
+    archive_path = os.path.join(dest, container.name + ".tar")
 
     try:
         bits, _ = container.get_archive(path_to_source_on_container)
 
-        with open(archive_path, 'wb') as f:
+        with open(archive_path, "wb") as f:
             for chunk in bits:
                 f.write(chunk)
 
@@ -176,23 +192,27 @@ def copy_files_in_container(container, sources_and_destinations):
     container -- the docker.Container in which files will be copied
     sources_and_destinations -- a list of tuples of source paths and destination paths
     """
-    tarfile = create_archive([s for s, d in sources_and_destinations], 'ssl')
-    archive_dirname = copy_archive_to_container(container, tarfile)
+    tarfile = create_archive([s for s, d in sources_and_destinations], "ssl")
+    _ = copy_archive_to_container(container, tarfile)
 
     for s, d in sources_and_destinations:
         logging.debug(
-            'copying source [{}] in container to destination in container [{}] [{}]'.format(
-            s, d, container.name))
+            "copying source [{}] in container to destination in container [{}] [{}]".format(
+                s, d, container.name
+            )
+        )
 
-        if execute.execute_command(container, 'cp {} {}'.format(s, d)) is not 0:
-            raise RuntimeError('failed to copy file src [{}] dest [{}] [{}]'
-                .format(s, d, container.name))
+        if execute.execute_command(container, "cp {} {}".format(s, d)) != 0:
+            raise RuntimeError(
+                "failed to copy file src [{}] dest [{}] [{}]".format(
+                    s, d, container.name
+                )
+            )
 
 
-def collect_files_from_containers(docker_client,
-                                  containers,
-                                  paths_to_copy_from_containers,
-                                  output_directory_on_host):
+def collect_files_from_containers(
+    docker_client, containers, paths_to_copy_from_containers, output_directory_on_host
+):
     """Collect files from containers into a single output directory on the host.
 
     Arguments:
@@ -202,11 +222,13 @@ def collect_files_from_containers(docker_client,
     output_directory_on_host -- the output directory on the host where files will be copied
     """
     for c in containers:
-        od = os.path.join(output_directory_on_host, 'logs', c.name)
+        od = os.path.join(output_directory_on_host, "logs", c.name)
         if not os.path.exists(od):
             os.makedirs(od)
 
-        logging.info(f'saving files in [{paths_to_copy_from_containers}] to [{od}] [{c.name}]')
+        logging.info(
+            f"saving files in [{paths_to_copy_from_containers}] to [{od}] [{c.name}]"
+        )
 
         source_container = docker_client.containers.get(c.name)
 
@@ -222,5 +244,12 @@ def put_string_to_file(container, target_file, string):
     target_file -- the path inside the container with the contents to overwrite
     string -- contents to echo into the target file
     """
-    if execute.execute_command(container, f'bash -c \'echo "{string}" > {target_file}\'') != 0:
-        raise RuntimeError(f'[{container.name}] failed to put string to file [{target_file}]')
+    if (
+        execute.execute_command(
+            container, f"bash -c 'echo \"{string}\" > {target_file}'"
+        )
+        != 0
+    ):
+        raise RuntimeError(
+            f"[{container.name}] failed to put string to file [{target_file}]"
+        )

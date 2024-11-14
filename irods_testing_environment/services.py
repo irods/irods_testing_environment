@@ -1,5 +1,4 @@
 # grown-up modules
-import logging
 import os
 
 # local modules
@@ -7,15 +6,18 @@ from . import context
 from . import irods_setup
 from .install import install
 
-def create_topologies(ctx,
-                      zone_count,
-                      externals_directory=None,
-                      package_directory=None,
-                      package_version=None,
-                      odbc_driver=None,
-                      zone_name='tempZone',
-                      consumer_count=0,
-                      install_packages=True):
+
+def create_topologies(
+    ctx,
+    zone_count,
+    externals_directory=None,
+    package_directory=None,
+    package_version=None,
+    odbc_driver=None,
+    zone_name="tempZone",
+    consumer_count=0,
+    install_packages=True,
+):
     """Create several generic topologies of iRODS servers with the given inputs.
 
     This is a convenience function for standing up multiple, identical iRODS Zones with the
@@ -32,18 +34,21 @@ def create_topologies(ctx,
                       Zone
     """
     ctx.compose_project.build()
-    ctx.compose_project.up(scale_override={
-        context.irods_catalog_database_service(): zone_count,
-        context.irods_catalog_provider_service(): zone_count,
-        context.irods_catalog_consumer_service(): consumer_count * zone_count
-    })
+    ctx.compose_project.up(
+        scale_override={
+            context.irods_catalog_database_service(): zone_count,
+            context.irods_catalog_provider_service(): zone_count,
+            context.irods_catalog_consumer_service(): consumer_count * zone_count,
+        }
+    )
 
     if install_packages:
         install.make_installer(ctx.platform_name()).install_irods_packages(
-                ctx,
-                externals_directory=externals_directory,
-                package_directory=package_directory,
-                package_version=package_version)
+            ctx,
+            externals_directory=externals_directory,
+            package_directory=package_directory,
+            package_version=package_version,
+        )
 
     zone_names = [zone_name for i in range(zone_count)]
 
@@ -53,13 +58,15 @@ def create_topologies(ctx,
     irods_setup.setup_irods_zones(ctx, zone_info_list, odbc_driver=odbc_driver)
 
 
-def create_topology(ctx,
-                    externals_directory=None,
-                    package_directory=None,
-                    package_version=None,
-                    odbc_driver=None,
-                    consumer_count=0,
-                    install_packages=True):
+def create_topology(
+    ctx,
+    externals_directory=None,
+    package_directory=None,
+    package_version=None,
+    odbc_driver=None,
+    consumer_count=0,
+    install_packages=True,
+):
     """Create a generic topology of iRODS servers with the given inputs.
 
     This is a convenience function for standing up an iRODS Zone with the default
@@ -74,21 +81,25 @@ def create_topology(ctx,
     consumer_count -- number of iRODS Catalog Service Consumers to create and set up for the
                       Zone
     """
-    return create_topologies(ctx,
-                             zone_count=1,
-                             externals_directory=externals_directory,
-                             package_directory=package_directory,
-                             package_version=package_version,
-                             odbc_driver=odbc_driver,
-                             consumer_count=consumer_count,
-                             install_packages=install_packages)
+    return create_topologies(
+        ctx,
+        zone_count=1,
+        externals_directory=externals_directory,
+        package_directory=package_directory,
+        package_version=package_version,
+        odbc_driver=odbc_driver,
+        consumer_count=consumer_count,
+        install_packages=install_packages,
+    )
 
 
-def clone_repository_to_container(container,
-                                  repo_name,
-                                  url_base='https://github.com/irods',
-                                  branch=None,
-                                  destination_directory=None):
+def clone_repository_to_container(
+    container,
+    repo_name,
+    url_base="https://github.com/irods",
+    branch=None,
+    destination_directory=None,
+):
     """Clone the specified git repository to the specified container.
 
     Arguments:
@@ -103,16 +114,16 @@ def clone_repository_to_container(container,
 
     from . import archive
 
-    url = os.path.join(url_base, '.'.join([repo_name, 'git']))
+    url = os.path.join(url_base, ".".join([repo_name, "git"]))
 
-    repo_path = os.path.abspath(os.path.join(
-                    destination_directory or tempfile.mkdtemp(),
-                    repo_name))
+    repo_path = os.path.abspath(
+        os.path.join(destination_directory or tempfile.mkdtemp(), repo_name)
+    )
 
     Repo.clone_from(url=url, to_path=repo_path, branch=branch)
 
-    archive.copy_archive_to_container(container,
-                                      archive.create_archive(
-                                            [os.path.abspath(repo_path)], repo_name))
+    archive.copy_archive_to_container(
+        container, archive.create_archive([os.path.abspath(repo_path)], repo_name)
+    )
 
     return repo_path

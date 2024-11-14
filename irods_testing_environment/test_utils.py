@@ -1,16 +1,14 @@
 # grown-up modules
 import logging
 import os
-import tempfile
 import errno
 
 # local modules
-from . import archive
 from . import container_info
 from . import context
 from . import execute
-from . import services
 from . import test_manager
+
 
 def job_name(project_name, prefix=None):
     """Construct unique job name based on the docker-compose project name.
@@ -24,11 +22,12 @@ def job_name(project_name, prefix=None):
     prefix -- optional prefix for the job name
     """
     import uuid
+
     # TODO: use timestamps, also
     if prefix:
-        return '_'.join([prefix, project_name, str(uuid.uuid4())])
+        return "_".join([prefix, project_name, str(uuid.uuid4())])
 
-    return '_'.join([project_name, str(uuid.uuid4())])
+    return "_".join([project_name, str(uuid.uuid4())])
 
 
 def make_output_directory(dirname, basename):
@@ -48,6 +47,7 @@ def make_output_directory(dirname, basename):
 
     return directory
 
+
 def run_unit_tests(containers, test_list=None, fail_fast=True):
     """Run a set of tests from the python test suite for iRODS.
 
@@ -59,7 +59,7 @@ def run_unit_tests(containers, test_list=None, fail_fast=True):
     """
     tests = test_list or get_unit_test_list(containers[0])
 
-    tm = test_manager.test_manager(containers, tests, test_type='irods_unit_tests')
+    tm = test_manager.test_manager(containers, tests, test_type="irods_unit_tests")
 
     try:
         tm.run(fail_fast)
@@ -70,12 +70,14 @@ def run_unit_tests(containers, test_list=None, fail_fast=True):
     return tm.return_code()
 
 
-def run_plugin_tests(containers,
-                     plugin_name,
-                     path_to_test_hook_on_host=None,
-                     test_list=None,
-                     options=None,
-                     fail_fast=True):
+def run_plugin_tests(
+    containers,
+    plugin_name,
+    path_to_test_hook_on_host=None,
+    test_list=None,
+    options=None,
+    fail_fast=True,
+):
     """Run a set of tests from the test hook for the specified iRODS plugin.
 
     Arguments:
@@ -86,14 +88,18 @@ def run_plugin_tests(containers,
     options -- list of strings representing script options to pass to the run_tests.py script
     fail_fast -- if True, stop running after first failure; else, runs all tests
     """
-    tm = test_manager.test_manager(containers, test_list, test_type='irods_plugin_tests')
+    tm = test_manager.test_manager(
+        containers, test_list, test_type="irods_plugin_tests"
+    )
 
     try:
-        tm.run(fail_fast,
-               plugin_repo_name=plugin_name,
-               plugin_branch=None,
-               path_to_test_hook_on_host=path_to_test_hook_on_host,
-               options=options)
+        tm.run(
+            fail_fast,
+            plugin_repo_name=plugin_name,
+            plugin_branch=None,
+            path_to_test_hook_on_host=path_to_test_hook_on_host,
+            options=options,
+        )
 
     finally:
         logging.error(tm.result_string())
@@ -130,21 +136,29 @@ def run_python_test_suite(container, options=None):
     container -- target container on which the test script will run
     options -- list of strings representing script options to pass to the run_tests.py script
     """
-    command = [container_info.python(container),
-               context.run_tests_script(),
-               '--run_python_suite']
+    command = [
+        container_info.python(container),
+        context.run_tests_script(),
+        "--run_python_suite",
+    ]
 
-    if options: command.extend(options)
+    if options:
+        command.extend(options)
 
-    ec = execute.execute_command(container,
-                                 ' '.join(command),
-                                 user='irods',
-                                 workdir=context.irods_home(),
-                                 stream_output=True)
+    ec = execute.execute_command(
+        container,
+        " ".join(command),
+        user="irods",
+        workdir=context.irods_home(),
+        stream_output=True,
+    )
 
-    if ec is not 0:
-        logging.warning('command exited with error code [{}] [{}] [{}]'
-                        .format(ec, command, container.name))
+    if ec != 0:
+        logging.warning(
+            "command exited with error code [{}] [{}] [{}]".format(
+                ec, command, container.name
+            )
+        )
 
     return ec
 
@@ -156,11 +170,10 @@ def get_unit_test_list(container):
     container -- target container from which test list will be extracted
     """
     from . import json_utils
-    return json_utils.get_json_from_file(container,
-                                         os.path.join(
-                                             context.unit_tests(),
-                                             'unit_tests_list.json')
-                                         )
+
+    return json_utils.get_json_from_file(
+        container, os.path.join(context.unit_tests(), "unit_tests_list.json")
+    )
 
 
 def get_test_list(container):
@@ -170,9 +183,7 @@ def get_test_list(container):
     container -- target container from which test list will be extracted
     """
     from . import json_utils
-    return json_utils.get_json_from_file(container,
-                                         os.path.join(
-                                             context.irods_home(),
-                                             'scripts',
-                                             'core_tests_list.json')
-                                         )
+
+    return json_utils.get_json_from_file(
+        container, os.path.join(context.irods_home(), "scripts", "core_tests_list.json")
+    )

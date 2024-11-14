@@ -1,5 +1,4 @@
 # grown-up modules
-import docker
 import logging
 import os
 import sys
@@ -7,6 +6,7 @@ import sys
 # local modules
 from . import archive
 from . import context
+
 
 # TODO: Maybe this should be some kind of builder
 def configure(verbosity=1, log_filename=None):
@@ -19,31 +19,31 @@ def configure(verbosity=1, log_filename=None):
         handlers.append(logging.FileHandler(os.path.abspath(log_filename)))
 
     logging.basicConfig(
-        level = level if level > logging.NOTSET else logging.DEBUG,
-        format = '%(asctime)-15s - %(message)s',
-        handlers = handlers
+        level=level if level > logging.NOTSET else logging.DEBUG,
+        format="%(asctime)-15s - %(message)s",
+        handlers=handlers,
     )
 
 
 def log_directory_for_version(version):
     """Return default iRODS log directory for the given `version`."""
-    major,minor,patch = version
+    major, minor, patch = version
 
     if int(major) < 4:
-        raise NotImplementedError('nothing prior to iRODS 4.0.0 is supported right now')
+        raise NotImplementedError("nothing prior to iRODS 4.0.0 is supported right now")
 
     if int(major) > 4:
-        raise NotImplementedError('the detected iRODS version does not exist yet')
+        raise NotImplementedError("the detected iRODS version does not exist yet")
 
     if int(minor) < 2:
-        return os.path.join(context.irods_home(), 'iRODS', 'log')
+        return os.path.join(context.irods_home(), "iRODS", "log")
     elif int(minor) < 3:
-        return os.path.join(context.irods_home(), 'log')
+        return os.path.join(context.irods_home(), "log")
     else:
         # Until we change how logging works in iRODS, anything in 4.3 or beyond should have logs here.
-        return os.path.join('/var', 'log', 'irods')
+        return os.path.join("/var", "log", "irods")
 
-    raise NotImplementedError('the detected iRODS version does not exist yet')
+    raise NotImplementedError("the detected iRODS version does not exist yet")
 
 
 def collect_logs(docker_client, containers, output_directory):
@@ -56,14 +56,20 @@ def collect_logs(docker_client, containers, output_directory):
     """
     from . import irods_config
 
-    archive.collect_files_from_containers(docker_client,
-                                          containers,
-                                          [os.path.join(context.irods_home(), 'log')],
-                                          output_directory)
+    archive.collect_files_from_containers(
+        docker_client,
+        containers,
+        [os.path.join(context.irods_home(), "log")],
+        output_directory,
+    )
 
-    major, minor, patch = irods_config.get_irods_version(docker_client.containers.get(containers[0].name))
+    major, minor, patch = irods_config.get_irods_version(
+        docker_client.containers.get(containers[0].name)
+    )
     if minor > 2:
-        archive.collect_files_from_containers(docker_client,
-                                              containers,
-                                              [log_directory_for_version((major,minor,patch))],
-                                              output_directory)
+        archive.collect_files_from_containers(
+            docker_client,
+            containers,
+            [log_directory_for_version((major, minor, patch))],
+            output_directory,
+        )
