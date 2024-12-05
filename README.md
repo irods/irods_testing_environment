@@ -6,7 +6,6 @@ For each combination of supported OS platform/version and database type/version,
  - almalinux:8
  - rockylinux:8
  - rockylinux:9
- - centos:7
  - debian:11
  - debian:12
  - ubuntu:20.04
@@ -128,14 +127,15 @@ The test hooks generally have the following requirements:
      - The `os_specific_directory` must be named like this (image tag -> directory name):
        - ubuntu:20.04  ->  `Ubuntu_20`
        - ubuntu:22.04  ->  `Ubuntu_22`
-       - centos:7      ->  `Centos linux_7`
+       - rockylinux:9  ->  `Rocky linux_9`
+       - debian:11     ->  `Debian gnu_linux_11`
  - iRODS server is already installed and setup
 
 Your provided built packages should be in an identical directory or symlink following the naming convention above. The directory for your plugin packages might look something like this, where each platform has a directory which contains built packages for the target plugin:
 ```bash
 $ ls -l /path/to/plugin/packages
 total 8
-drwxr-xr-x 2 user user 4096 Apr 11 17:17 centos-7
+drwxr-xr-x 2 user user 4096 Apr 11 17:17 rocky-9
 drwxr-xr-x 3 user user 4096 Apr 11 17:15 ubuntu-22.04
 ```
 
@@ -143,8 +143,8 @@ The path for plugin packages used should be `/path/to/plugin/packages`. The test
 ```bash
 $ ls -l /path/to/plugin/packages
 total 8
-drwxr-xr-x 2 user user 4096 Apr 11 17:17  centos-7
-lrwxrwxrwx 1 user user    8 May 27 14:54 'Centos linux_7' -> centos-7
+drwxr-xr-x 2 user user 4096 Apr 11 17:17  rocky-9
+lrwxrwxrwx 1 user user    8 May 27 14:54 'Rocky linux_7' -> rocky-9
 lrwxrwxrwx 1 user user   12 May 27 14:54  Ubuntu_22 -> ubuntu-22.04
 drwxr-xr-x 3 user user 4096 Apr 11 17:15  ubuntu-22.04
 ```
