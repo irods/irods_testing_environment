@@ -111,24 +111,6 @@ def configure_odbc_driver_debian_12_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
-def configure_odbc_driver_centos_7_postgres_14(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 14 on centos 7.
-
-    Argument:
-    csp_container -- docker container on which the iRODS catalog service provider is running
-    odbc_driver -- path to local archive file containing the ODBC driver package
-    """
-    configure_postgres_odbc_driver(csp_container, odbc_driver)
-
-def configure_odbc_driver_centos_7_postgres_16(csp_container, odbc_driver):
-    """Configure ODBC driver for postgres 16 on centos 7.
-
-    Argument:
-    csp_container -- docker container on which the iRODS catalog service provider is running
-    odbc_driver -- path to local archive file containing the ODBC driver package
-    """
-    configure_postgres_odbc_driver(csp_container, odbc_driver)
-
 def configure_odbc_driver_almalinux_8_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on almalinux 8.
 
@@ -287,20 +269,6 @@ def configure_odbc_driver_mysql_84(csp_container, odbc_driver):
     if not odbc_driver:
         odbc_driver = download_mysql_odbc_driver(
             'https://dev.mysql.com/get/Downloads/Connector-ODBC/8.4/mysql-connector-odbc-8.4.0-linux-glibc2.28-x86-64bit.tar.gz')
-
-    configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
-
-def configure_odbc_driver_centos_7_mysql_80(csp_container, odbc_driver):
-    """Configure ODBC driver for mysql 8.0 on centos 7.
-
-    Argument:
-    csp_container -- docker container on which the iRODS catalog service provider is running
-    odbc_driver -- path to local archive file containing the ODBC driver package
-    """
-    # special case since EL7 uses an older version of glibc
-    if not odbc_driver:
-        odbc_driver = download_mysql_odbc_driver(
-            'https://downloads.mysql.com/archives/get/p/10/file/mysql-connector-odbc-8.0.29-linux-glibc2.12-x86-64bit.tar.gz')
 
     configure_mysql_odbc_driver(csp_container, os.path.abspath(odbc_driver))
 
@@ -756,18 +724,6 @@ def configure_odbc_driver_rockylinux_9_mariadb_114(csp_container, odbc_driver):
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
     configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver)
-
-def configure_odbc_driver_centos_7_mariadb_106(csp_container, odbc_driver):
-    """Configure ODBC driver for mariadb 10.6 centos 7.
-
-    Argument:
-    csp_container -- docker container on which the iRODS catalog service provider is running
-    odbc_driver -- path to local archive file containing the ODBC driver package
-    """
-    # This function assumes that irods/irods#7323 will not be resolved before the removal of all centos 7 projects.
-    # Therefore, we will hard-code usage of the mysql 8.0 ODBC driver for the mariadb 10.6 project until this is
-    # removed on resolution of #217.
-    configure_odbc_driver_centos_7_mysql_80(csp_container, odbc_driver)
 
 def configure_odbc_driver(platform_image, database_image, csp_container, odbc_driver=None):
     """Make an ODBC setup strategy for the given database type.
