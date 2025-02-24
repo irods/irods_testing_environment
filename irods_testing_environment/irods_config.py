@@ -182,14 +182,14 @@ def configure_users_for_auth_tests(docker_client, compose_project):
         raise RuntimeError('failed to create test user accounts on some service')
 
 
-def configure_hosts_config(docker_client, compose_project):
-    """Set hostname aliases for all iRODS servers in the compose project via hosts_config.json.
+def configure_host_resolution(docker_client, compose_project):
+    """Set hostname aliases for all iRODS servers in the compose project via server_config.json.
 
     Arguments:
     docker_client -- docker client for interacting with the docker-compose project
     compose_project -- compose.Project in which the iRODS servers are running
     """
-    def set_hostnames(docker_client, docker_compose_container, hosts_file):
+    def set_hostnames(docker_client, docker_compose_container):
         container = docker_client.containers.get(docker_compose_container.name)
 
         if context.is_irods_catalog_provider_container(container):
@@ -198,18 +198,16 @@ def configure_hosts_config(docker_client, compose_project):
             alias = 'resource{}.example.org'.format(
                 context.service_instance(docker_compose_container.name))
 
-        hosts = {
-            'host_entries': [
-                {
-                    'address_type': 'local',
-                    'addresses': [
-                        {'address': context.container_hostname(container)},
-                        {'address': context.container_ip(container)},
-                        {'address': alias}
-                    ]
-                }
-            ]
-        }
+        host_entries = [
+            {
+                'address_type': 'local',
+                'addresses': [
+                    context.container_hostname(container),
+                    context.container_ip(container),
+                    alias
+                ]
+            }
+        ]
 
         for o in containers:
             if o.name == container.name: continue
@@ -222,24 +220,26 @@ def configure_hosts_config(docker_client, compose_project):
                 remote_address = 'resource{}.example.org'.format(
                     context.service_instance(other.name))
 
-            hosts['host_entries'].append(
+            host_entries.append(
                 {
                     'address_type': 'remote',
                     'addresses': [
-                        {'address': context.container_ip(other)},
-                        {'address': context.container_hostname(other)},
-                        {'address': remote_address}
+                        context.container_ip(other),
+                        context.container_hostname(other),
+                        remote_address
                     ]
                 }
             )
 
-        logging.info('json for hosts_config [{}] [{}]'.format(json.dumps(hosts), container.name))
+        logging.info('json for host_resolution.host_entries [{}] [{}]'.format(json.dumps(host_entries), container.name))
 
-        create_hosts_config = 'bash -c \'echo "{}" > {}\''.format(
-            json.dumps(hosts).replace('"', '\\"'), hosts_file)
+        update_host_resolution_config = '''bash -c "sed -i 's/\\"host_entries\\": \\[\\]/\\"host_entries\\": {}/g' /etc/irods/server_config.json"'''.format(
+            json.dumps(host_entries).replace('"', '\\"'))
 
-        if execute.execute_command(container, create_hosts_config) is not 0:
-            raise RuntimeError('failed to create hosts_config file [{}]'.format(container.name))
+        if execute.execute_command(container, update_host_resolution_config ) is not 0:
+            raise RuntimeError('failed to update host_resolution configuration for [{}]'.format(container.name))
+
+        execute.execute_command(container, 'bash -c "cat /etc/irods/server_config.json"')
 
         return 0
 
@@ -251,9 +251,8 @@ def configure_hosts_config(docker_client, compose_project):
 
     rc = 0
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        hosts_file = os.path.join('/etc', 'irods', 'hosts_config.json')
         futures_to_containers = {
-            executor.submit(set_hostnames, docker_client, c, hosts_file): c for c in containers
+            executor.submit(set_hostnames, docker_client, c): c for c in containers
         }
         logging.debug(futures_to_containers)
 
@@ -262,11 +261,11 @@ def configure_hosts_config(docker_client, compose_project):
             try:
                 ec = f.result()
                 if ec is not 0:
-                    logging.error('error while configuring hosts_configs.json on container [{}]'
+                    logging.error('error while configuring host resolution on container [{}]'
                                   .format(container.name))
                     rc = ec
                 else:
-                    logging.info('hosts_config.json configured successfully [{}]'
+                    logging.info('host resolution configured successfully [{}]'
                                  .format(container.name))
 
             except Exception as e:
@@ -276,7 +275,7 @@ def configure_hosts_config(docker_client, compose_project):
                 rc = 1
 
     if rc is not 0:
-        raise RuntimeError('failed to configure hosts_config.json on some service')
+        raise RuntimeError('failed to configure host resolution on some service')
 
 
 def configure_univmss_script(docker_client, compose_project):
@@ -366,7 +365,7 @@ def configure_irods_testing(docker_client, compose_project):
     docker_client -- docker client for interacting with the docker-compose project
     compose_project -- compose.Project in which the iRODS servers are running
     """
-    configure_hosts_config(docker_client, compose_project)
+    configure_host_resolution(docker_client, compose_project)
 
     configure_univmss_script(docker_client, compose_project)
 
