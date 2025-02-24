@@ -138,7 +138,7 @@ def configure_users_for_auth_tests(docker_client, compose_project):
             set_password = f'bash -c "echo \'{username}:{password}\' | chpasswd"'
 
             if execute.execute_command(container, set_password) is not 0:
-                raise RuntimeError(f'[{container.name}] failed to create hosts_config file')
+                raise RuntimeError(f'[{container.name}] failed to set password [{password}] for user [{username}]')
 
         return 0
 
