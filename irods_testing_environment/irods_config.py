@@ -224,8 +224,8 @@ def configure_host_resolution(docker_client, compose_project):
                 {
                     'address_type': 'remote',
                     'addresses': [
-                        context.container_ip(other),
                         context.container_hostname(other),
+                        context.container_ip(other),
                         remote_address
                     ]
                 }
