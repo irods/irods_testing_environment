@@ -278,6 +278,86 @@ def configure_host_resolution(docker_client, compose_project):
         raise RuntimeError('failed to configure host resolution on some service')
 
 
+def configure_hello_script(docker_client, compose_project):
+    """Configure hello script for iRODS tests.
+
+    Arguments:
+    docker_client -- docker client for interacting with the docker-compose project
+    compose_project -- compose.Project in which the iRODS servers are running
+    """
+    def modify_script(docker_client, docker_compose_container, script):
+        chown_msiexec = 'chown irods:irods {}'.format(os.path.dirname(script))
+        copy_from_template = 'cp {0}.template {0}'.format(script)
+        make_script_executable = 'chmod 544 {}'.format(script)
+
+        on_container = docker_client.containers.get(docker_compose_container.name)
+        if execute.execute_command(on_container, chown_msiexec) is not 0:
+            raise RuntimeError('failed to change ownership to msiExecCmd_bin [{}]'
+                               .format(on_container.name))
+
+        if execute.execute_command(on_container,
+                                   copy_from_template,
+                                   user='irods',
+                                   workdir=context.irods_home()) is not 0:
+            raise RuntimeError('failed to copy hello.template template file [{}]'
+                               .format(on_container.name))
+
+        if execute.execute_command(on_container,
+                                   make_script_executable,
+                                   user='irods',
+                                   workdir=context.irods_home()) is not 0:
+            raise RuntimeError('failed to change permissions on hello script [{}]'
+                               .format(on_container.name))
+
+        return 0
+
+    import concurrent.futures
+
+    containers = compose_project.containers(service_names=[
+        context.irods_catalog_provider_service(),
+        context.irods_catalog_consumer_service()])
+
+    hello_script = os.path.join(context.irods_home(), 'msiExecCmd_bin', 'hello')
+
+    # Check the catalog service provider for the hello.template file.
+    # The file only exists in iRODS 4.3.4 and later.
+    csp_container = docker_client.containers.get(containers[0].name)
+    hello_template_exists = f"[ -f {hello_script}.template ]"
+    if execute.execute_command(csp_container, hello_template_exists, user='irods') != 0:
+        logging.info('hello.template does not exist in container [{}]. skipping handling of template file'
+                     .format(containers[0].name))
+        return
+
+    rc = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures_to_containers = {
+            executor.submit(
+                modify_script, docker_client, c, hello_script
+            ): c for c in containers
+        }
+
+        logging.debug(futures_to_containers)
+
+        for f in concurrent.futures.as_completed(futures_to_containers):
+            container = futures_to_containers[f]
+            try:
+                ec = f.result()
+                if ec is not 0:
+                    logging.error('error while configuring hello script on container [{}]'
+                                  .format(container.name))
+                    rc = ec
+                else:
+                    logging.info('hello script configured successfully [{}]'.format(container.name))
+
+            except Exception as e:
+                logging.error('exception raised while configuring hello script [{}]'.format(container.name))
+                logging.error(e)
+                rc = 1
+
+    if rc is not 0:
+        raise RuntimeError('failed to configure hello script on some service')
+
+
 def configure_univmss_script(docker_client, compose_project):
     """Configure UnivMSS script for iRODS tests.
 
@@ -367,6 +447,7 @@ def configure_irods_testing(docker_client, compose_project):
     """
     configure_host_resolution(docker_client, compose_project)
 
+    configure_hello_script(docker_client, compose_project)
     configure_univmss_script(docker_client, compose_project)
 
     configure_pam_for_auth_plugin(docker_client, compose_project)
