@@ -248,7 +248,7 @@ def ask_run_test(os=None, db=None, test_type=None, test_args=None):
             #res = stream_subprocess_output(running_arg_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             res = subprocess.run(running_arg_list, capture_output=True, text=True)
         except KeyboardInterrupt:
-            logger.warning('Interupt recieved. Kill test...')
+            logger.warning('Interrupt received. Kill test...')
             arg_list = []
             d_c = shutil.which('docker')
             arg_list.append(d_c)
