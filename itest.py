@@ -241,11 +241,6 @@ def ask_run_test(os=None, db=None, test_type=None, test_args=None):
         logger.debug(f"Executing running_arg_list=[{running_arg_list!r}]")
 
         try:
-            #with subprocess.Popen(running_arg_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) as res:
-            #    for line in res.stdout:
-            #        print(line, end='')
-
-            #res = stream_subprocess_output(running_arg_list, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             res = subprocess.run(running_arg_list, capture_output=True, text=True)
         except KeyboardInterrupt:
             logger.warning('Interrupt received. Kill test...')
@@ -308,11 +303,6 @@ def ask_run_compile(os=None, build_args=None):
     dirs_to_format = [IRODS_SERV_BUILD_DIR, IRODS_ICOMMANDS_BUILD_DIR, IRODS_PACKAGES_DIR, IRODS_CCACHE_DIR]
     dirs_to_mount = [d for d in format_pure_path(dirs_to_format, os_name=os_choice)]
 
-    # Cleanup build dirs
-    # shutil.rmtree(dirs_to_mount[0])
-    # shutil.rmtree(dirs_to_moint[1])
-
-    # make_dirs_if_needed()
     for d in (d for d in dirs_to_mount if not d.exists()):
         logger.info(f'The path=[{d!r}] does not exist, creating.')
         d.mkdir(parents=True)
@@ -764,12 +754,6 @@ if __name__ == '__main__':
 
             for item in build_items:
                 rc = ask_run_compile(os=item["os"], build_args=item["args"])
-
-                # Since we currently cannot see if bulid is successful or not
-                # manually prompt to 'force' verification of build
-                # cont = input('Continue? (Y/n) ')
-                # if cont.lower() != 'y' and len(cont) != 0:
-                #    sys.exit(1)
 
                 if rc != 0:
                     logger.error(f'Failed to build for os=[{item["os"]!r}] with build_args=[{item["args"]!r}].')
