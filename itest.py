@@ -254,7 +254,7 @@ def ask_run_test(os=None, db=None, test_type=None, test_args=None):
             arg_list.append(d_c)
             arg_list.append('down')
             subprocess.run(arg_list, cwd=str(project_directory))
-            c = input('Continue? (y/N)')
+            c = input('Continue current test? (y/N)')
             if c.lower() == 'n' or len(c) == 0:
                 break
             else:
