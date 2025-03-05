@@ -151,7 +151,6 @@ def ask_run_test(os=None, db=None, test_type=None, test_args=None):
                   ('--output-directory', IRODS_LOGS_DIR),]
     bonus_args = []
 
-    # python run_plugin_tests.py --project-directory projects/ubuntu-22.04/ubuntu-22.04-postgres-14.8/ --irods-package-directory ../build-artifacts/ubuntu-22/packages/ --plugin-package-directory ../build-artifacts/ubuntu-22/plugins --discard-logs irods_microservice_plugins_curl
     # match/case candidate?
     if test_args is None:
         if desired_test.stem == 'run_plugin_tests':
