@@ -25,18 +25,10 @@ logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
 
-# Syslog logging
-sh = SysLogHandler('/dev/log')
-sh.setLevel(logging.DEBUG)
-
 formatter = logging.Formatter('[%(asctime)s %(name)s %(levelname)s] %(message)s')
 ch.setFormatter(formatter)
 
-sys_formatter = logging.Formatter('[thread=%(thread)d name=%(name)s] %(message)s')
-sh.setFormatter(sys_formatter)
-
 logger.addHandler(ch)
-logger.addHandler(sh)
 
 # -------------
 # NICE GLOBALS
