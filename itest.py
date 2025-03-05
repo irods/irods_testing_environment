@@ -250,8 +250,9 @@ def ask_run_test(os=None, db=None, test_type=None, test_args=None):
         except KeyboardInterrupt:
             logger.warning('Interupt recieved. Kill test...')
             arg_list = []
-            d_c = shutil.which('docker-compose')
+            d_c = shutil.which('docker')
             arg_list.append(d_c)
+            arg_list.append('compose')
             arg_list.append('down')
             subprocess.run(arg_list, cwd=str(project_directory))
             c = input('Continue current test? (y/N)')
