@@ -30,11 +30,71 @@ ch.setFormatter(formatter)
 
 logger.addHandler(ch)
 
+# ------------------
+# JSON CONFIGURATION
+# ------------------
+SCRIPT_CONFIGURATION_SCHEMA = {
+    '$schema': 'http://json-schema.org/draft-07/schema#',
+    'type': 'object',
+    'properties': {
+        'source_directory': {
+            'type': 'string',
+            '$comment': 'The parent directory to all of the source files relating to iRODS',
+        },
+        'artifact_directory': {
+            'type': 'string',
+            '$comment': 'The directory to put all of artifacts for building.',
+        }
+    },
+    'required': ['source_directory', 'artifact_directory']
+}
+
+def get_config() -> dict:
+    """Load the configuration from the file in the local directory. Creates configuration if not found."""
+    config_file_path = Path(os.getenv('XDG_CONFIG_HOME', default=str(Path.home() / '.config'))) / 'irods-bats.json'
+
+    if config_file_path.exists():
+        # Read config and populate args
+        user_config = json.loads(config_file_path.read_text())
+
+        try:
+            jsonschema.validate(instance=user_config, schema=SCRIPT_CONFIGURATION_SCHEMA)
+        except jsonschema.exceptions.ValidationError as schema_error:
+            logger.error(f'JSON Schema validation error: {schema_error.message}.')
+            sys.exit(1)
+
+        return user_config
+    else:
+        logger.debug(f'No configuration file found at config_file_path=[{config_file_path}].')
+
+        # Build up the default schema
+        default_config = {
+            'source_directory': str(Path.home() / 'Documents' / 'iRODS'),
+            'artifact_directory': str(Path.home() / 'Documents' / 'iRODS' / 'build-artifacts'),
+        }
+        
+        # Make sure we don't output an out-of-date schema
+        try:
+            jsonschema.validate(instance=default_config, schema=SCRIPT_CONFIGURATION_SCHEMA)
+        except jsonschema.exceptions.ValidationError as schema_error:
+            logger.error(f'JSON Schema validation error: {schema_error.message}.')
+            logger.critical(f'The default configuration is not valid. Update the default configuration.')
+            sys.exit(1)
+
+        logger.info('Creating default configuration and then exiting.')
+
+        default_config = json.dumps(default_config, indent=4)
+
+        config_file_path.write_text(default_config)
+        sys.exit(0)
+
+USER_CONFIG_OPTIONS = get_config()
+
 # -------------
 # NICE GLOBALS
 # -------------
 
-IRODS_BASE_DIR = Path.home() / 'Documents' / 'iRODS'
+IRODS_BASE_DIR = USER_CONFIG_OPTIONS['source_directory']
 
 IRODS_DEV_DIR = IRODS_BASE_DIR / 'irods_development_environment'
 
@@ -43,7 +103,7 @@ IRODS_TEST_DIR = IRODS_BASE_DIR / 'irods_testing_environment'
 IRODS_TEST_PROJECTS_DIR = IRODS_TEST_DIR / 'projects'
 
 # Build directories
-IRODS_BUILD_ARTIFACTS_DIR = IRODS_BASE_DIR / 'build-artifacts'
+IRODS_BUILD_ARTIFACTS_DIR = USER_CONFIG_OPTIONS['artifact_directory']
 IRODS_BUILD_BASE = PurePath(IRODS_BUILD_ARTIFACTS_DIR) / '{os_name}' # os_name MUST be same as test names
 IRODS_SERV_BUILD_DIR = IRODS_BUILD_BASE / 'irods_build'
 IRODS_ICOMMANDS_BUILD_DIR = IRODS_BUILD_BASE / 'irods_icommands_build'
