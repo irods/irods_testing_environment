@@ -403,7 +403,6 @@ def ask_run_compile(os=None, build_args=None):
     return res['StatusCode']
 
 def ask_build_plugin():
-    # docker run --rm -v /home/marflo/Documents/iRODS/irods_microservice_plugins_curl:/irods_plugin_source:ro -v /home/marflo/Documents/iRODS/build-artifacts/ubuntu-22:/irods_packages:ro -v /home/marflo/Documents/iRODS/build-artifacts/ubuntu-22/curl_build:/irods_plugin_build -v /home/marflo/Documents/iRODS/build-artifacts/ubuntu-22/curl:/irods_plugin_packages plugin-builder:ubuntu-22 --build_directory /irods_plugin_build
     client = docker.from_env()
 
     # Get valid images
