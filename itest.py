@@ -448,9 +448,14 @@ def ask_build_plugin():
     # Create symlinks for build & testing
     sym_link_needed = [dirs_to_mount[1], dirs_to_mount[3]]
     for d in sym_link_needed:
-        supported_oses = {'ubuntu-22.04': 'Ubuntu_22',
+        supported_oses = {'ubuntu-20.04': 'Ubuntu_20',
+                          'ubuntu-22.04': 'Ubuntu_22',
                           'ubuntu-24.04': 'Ubuntu_24',
-                          'debian-11': 'Debian gnu_linux_11',}
+                          'almalinux-8': 'Almalinux_8',
+                          'rockylinux-8': 'Rocky linux_8',
+                          'rockylinux-9': 'Rocky linux_9',
+                          'debian-11': 'Debian gnu_linux_11',
+                          'debian-12': 'Debian gnu_linux_12',}
         if os_choice in supported_oses:
             link_dir = d / supported_oses[os_choice]
             
