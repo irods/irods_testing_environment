@@ -634,10 +634,6 @@ if __name__ == '__main__':
     # Parse args, branch based on input or lack of
     args = vars(parser.parse_args())
 
-    # refresh_core_builders()
-    # refresh_plugin_builders()
-    # refresh_externals_builders()
-
     # Run 'interactive mode'
     if args['test_matrix'] is None:
         choices = {'build': ask_run_compile, 'test': ask_run_test, 'plugin': ask_build_plugin}
