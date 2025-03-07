@@ -256,7 +256,7 @@ def ask_run_test(os=None, db=None, test_type=None, test_args=None):
         try:
             test_idx = test_args.index('--tests')
         except ValueError:
-            ...
+            pass
         bonus_args = test_args[:test_idx]
 
     arg_list = [sys.executable, str(desired_test),]
