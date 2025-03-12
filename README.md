@@ -269,14 +269,19 @@ You may choose to make the script executable to more closely follow the provided
 
 #### Global Variable Configuration
 
-You must ensure that `IRODS_BASE_DIR`, `IRODS_DEV_DIR`, `IRODS_TEST_DIR`, `IRODS_SERV_DIR`, `IRODS_ICOMMANDS_DIR`, and `IRODS_PLUGINS_SRC_DIR` are all set to the correct locations.
-To briefly summarize what these variables do:
-- `IRODS_BASE_DIR`: Sets the base directory that all further source and build directories derive from.
-- `IRODS_DEV_DIR`: The directory to the `irods_development_environment`.
-- `IRODS_TEST_DIR`: The directory to the `irods_testing_environment`.
-- `IRODS_SERV_DIR`: The directory to the irods/irods source code.
-- `IRODS_ICOMMANDS_DIR`: The directory to the irods/irods_client_icommands source code.
-- `IRODS_PLUGINS_SRC_DIR`: The directory containing all of the plugin directories.
+Currently, when running the script for the first time, the script will create a default configuration at `XDG_CONFIG_HOME` under the file
+`irods-bats.json`. The configuration will provide you two options for configuring the script:
+
+- `source_directory`: The directory where all iRODS related source files are assumed to be. The structure is assumed to be flat and use the default repository names.
+- `artifact_directory`: The directory where all build artifacts will be produced. This includes items such as the ccache dir, the build directories, and generated packages.
+
+An example of the default configuration file is as follows:
+```json
+{
+    "source_directory": "/home/irods-dev/Documents/iRODS",
+    "artifact_directory": "/home/irods-dev/Documents/iRODS/build-artifacts"
+}
+```
 
 #### Docker Build Image Conventions
 
@@ -284,9 +289,9 @@ The script assumes the builder images to be following a specific convention as f
 
 `<IMAGE-TYPE>:<IMAGE-OS>`
 
-The `IMAGE-TYPE` name can be changed through `IRODS_BUILD_IMAGE_NAME`, `IRODS_PLUGIN_BUILDER_NAME`, and `IRODS_EXTERNALS_BUILDER_NAME`.
-The tag of the image, being `IMAGE-OS`, cannot be changed, as it follows the OS naming convention in the `projects` directory of the
-testing environment.
+The `IMAGE-TYPE` name is expected to be `irods-core-builder` for the irods and icommand builder, `irods-plugin-builder` for the plugin builder,
+and `irods-externals-builder` for the externals builder images.
+The tag of the image, being `IMAGE-OS`, follows the OS naming convention in the `projects` directory of the testing environment.
 
 An example of the image names and tags are as follows:
 
