@@ -43,7 +43,7 @@ If this happens to you, use the submodule included with this repository.
 Make sure the submodules are up to date and install the repo as a pip package:
 ```bash
 git submodule init
-# If you've already done this, make sure it's updated:
+# If you've already run 'git submodule init', make sure the submodule is up-to-date:
 git submodule update
 pip install ./compose
 ```
