@@ -21,16 +21,16 @@ def restore_file(container, file_path):
         raise RuntimeError('failed to restore [{}] [{}]'.format(file_path, container.name))
 
 
-def configure_ssl_in_client(container, client_ssl_negotiation, irods_env=None):
+def configure_tls_in_client(container, client_tls_negotiation, irods_env=None):
     env = irods_env or json_utils.get_json_from_file(container,
                                                      context.service_account_irods_env())
 
-    env['irods_client_server_policy'] = client_ssl_negotiation
+    env['irods_client_server_policy'] = client_tls_negotiation
     json_utils.put_json_to_file(container, context.service_account_irods_env(), env)
 
 
-def configure_ssl_in_server(container, server_ssl_negotiation):
-    acPreConnect = 'acPreConnect(*OUT) {{ *OUT=\\"{}\\"; }}'.format(server_ssl_negotiation)
+def configure_tls_in_server(container, server_tls_negotiation):
+    acPreConnect = 'acPreConnect(*OUT) {{ *OUT=\\"{}\\"; }}'.format(server_tls_negotiation)
 
     add_acPreConnect = 'bash -c \'echo "{}" > {}; cat {} {} > {}\''.format(
         acPreConnect,

@@ -9,7 +9,7 @@ from cryptography.hazmat.primitives.asymmetric import dh, rsa
 from cryptography.x509.oid import NameOID
 
 # local modules
-from irods_testing_environment.ssl_setup import configure_ssl_in_zone
+from irods_testing_environment.tls_setup import configure_tls_in_zone
 from irods_testing_environment import logs
 from irods_testing_environment import context
 from irods_testing_environment import execute
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     import cli
 
-    parser = argparse.ArgumentParser(description='Configure SSL in a running iRODS Zone.')
+    parser = argparse.ArgumentParser(description='Configure TLS in a running iRODS Zone.')
 
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     logs.configure(args.verbosity)
 
     try:
-        configure_ssl_in_zone(docker_client, compose_project)
+        configure_tls_in_zone(docker_client, compose_project)
 
     except Exception as e:
         logging.critical(e)

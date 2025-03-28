@@ -14,7 +14,7 @@ from . import execute
 from . import irods_config
 from . import json_utils
 
-def generate_ssl_certificate_key(directory=None):
+def generate_tls_certificate_key(directory=None):
     logging.info('generating private key for signing certificate')
 
     key = rsa.generate_private_key(
@@ -36,7 +36,7 @@ def generate_ssl_certificate_key(directory=None):
     return key, keyfile
 
 
-def generate_ssl_self_signed_certificate(key, directory=None):
+def generate_tls_self_signed_certificate(key, directory=None):
     import datetime
 
     logging.info('generating self-signed certificate')
@@ -69,7 +69,7 @@ def generate_ssl_self_signed_certificate(key, directory=None):
     return certfile
 
 
-def generate_ssl_dh_params(generator=2, key_size=1024, directory=None):
+def generate_tls_dh_params(generator=2, key_size=1024, directory=None):
     logging.info('generating dh params')
 
     parameters = dh.generate_parameters(generator=2, key_size=key_size)
@@ -89,10 +89,10 @@ def configure_tls_for_service_account(container, cert_file):
     """Configure TLS for the iRODS service account client environment.
 
     Arguments:
-    container -- the docker.Container on which SSL will be configured
+    container -- the docker.Container on which TLS will be configured
     cert_file -- path to the file in the container containing the self-signed cert
     """
-    logging.warning(f'[{container.name}]: configuring SSL')
+    logging.warning(f'[{container.name}]: configuring TLS')
 
     # add certificate chain file, certificate key file, and dh parameters file to iRODS
     # service account environment file
@@ -110,11 +110,11 @@ def configure_tls_for_service_account(container, cert_file):
     json_utils.put_json_to_file(container, service_account_irods_env, irods_env)
 
 
-def configure_tls_in_server_config(container, key_file, cert_file, dhparams_file):
+def configure_tls_in_server_config(container, key_file, chain_file, dhparams_file):
     """Configure TLS in server_config on the iRODS server.
 
     Arguments:
-    container -- the docker.Container on which SSL will be configured
+    container -- the docker.Container on which TLS will be configured
     key_file -- path to the file in the container containing the private key for the cert
     chain_file -- path to the file in the container containing the self-signed cert
     dhparams_file -- path to the file in the container containing the dhparams PEM file
@@ -136,17 +136,17 @@ def configure_tls_in_server_config(container, key_file, cert_file, dhparams_file
     logging.debug(f'[{container.name}: config after [{json.dumps(config)}]')
 
     negotiation_key.backup_file(container, context.core_re())
-    negotiation_key.configure_ssl_in_server(container, 'CS_NEG_REQUIRE')
+    negotiation_key.configure_tls_in_server(container, 'CS_NEG_REQUIRE')
 
 
-def configure_ssl_on_irods4_server(container,
+def configure_tls_on_irods4_server(container,
                                    path_to_key_file_on_host,
                                    path_to_cert_file_on_host,
                                    path_to_dhparams_file_on_host):
-    """Copy SSL files to the container and configure SSL on the iRODS 4 server.
+    """Copy TLS files to the container and configure TLS on the iRODS 4 server.
 
     Arguments:
-    container -- the docker.Container on which SSL will be configured
+    container -- the docker.Container on which TLS will be configured
     path_to_key_file_on_host -- path to file on host containing the private key for the cert
     path_to_cert_file_on_host -- path to file on host containing the self-signed cert
     path_to_dhparams_file_on_host -- path to file on host containing the dhparams PEM file
@@ -160,12 +160,10 @@ def configure_ssl_on_irods4_server(container,
     cert_file = os.path.join(context.irods_config(), 'server.crt')
 
     stop_cmd = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().stop()'"
-    if execute.execute_command(container, stop_cmd, user='irods', workdir=context.irods_home()) is not 0:
-        raise RuntimeError(
-            'failed to stop iRODS server before SSL configuration [{}]'
-            .format(container.name))
+    if execute.execute_command(container, stop_cmd, user='irods', workdir=context.irods_home()) != 0:
+        raise RuntimeError(f"[{container.name}] failed to stop iRODS server before TLS configuration")
 
-    logging.warning('configuring SSL [{}]'.format(container.name))
+    logging.warning(f"[{container.name}] configuring TLS")
 
     archive.copy_files_in_container(container,
                                     [(path_to_key_file_on_host, key_file),
@@ -194,34 +192,32 @@ def configure_ssl_on_irods4_server(container,
 
     # TODO: consider using a generator to restore the file here...
     negotiation_key.backup_file(container, context.core_re())
-    negotiation_key.configure_ssl_in_server(container, 'CS_NEG_REQUIRE')
+    negotiation_key.configure_tls_in_server(container, 'CS_NEG_REQUIRE')
 
     # start the server again
     start_cmd = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().start()'"
-    if execute.execute_command(container, start_cmd, user='irods', workdir=context.irods_home()) is not 0:
-        raise RuntimeError(
-            'failed to start iRODS server after SSL configuration [{}]'
-            .format(container.name))
+    if execute.execute_command(container, start_cmd, user='irods', workdir=context.irods_home()) != 0:
+        raise RuntimeError(f"[{container.name}] failed to start iRODS server after TLS configuration")
 
-    logging.warning('SSL configured successfully [{}]'.format(container.name))
+    logging.warning(f"[{container.name}] TLS configured successfully")
 
 
-def configure_ssl_on_server(container,
+def configure_tls_on_server(container,
                             path_to_key_file_on_host,
                             path_to_cert_file_on_host,
                             path_to_dhparams_file_on_host):
-    """Copy SSL files to the container and configure SSL on the iRODS server.
+    """Copy TLS files to the container and configure TLS on the iRODS server.
 
     Arguments:
-    container -- the docker.Container on which SSL will be configured
+    container -- the docker.Container on which TLS will be configured
     path_to_key_file_on_host -- path to file on host containing the private key for the cert
     path_to_cert_file_on_host -- path to file on host containing the self-signed cert
     path_to_dhparams_file_on_host -- path to file on host containing the dhparams PEM file
     """
-    # If this is not an iRODS 5 server, use the old way of configuring SSL.
+    # If this is not an iRODS 5 server, use the old way of configuring TLS.
     version = irods_config.get_irods_version(container)
     if int(version[0]) < 5 and int(version[1]) < 90:
-        return configure_ssl_on_irods4_server(
+        return configure_tls_on_irods4_server(
             container, path_to_key_file_on_host, path_to_cert_file_on_host, path_to_dhparams_file_on_host)
 
     from . import archive
@@ -233,12 +229,10 @@ def configure_ssl_on_server(container,
     cert_file = os.path.join(context.irods_config(), 'server.crt')
 
     stop_cmd = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().stop()'"
-    if execute.execute_command(container, stop_cmd, user='irods', workdir=context.irods_home()) is not 0:
-        raise RuntimeError(
-            'failed to stop iRODS server before SSL configuration [{}]'
-            .format(container.name))
+    if execute.execute_command(container, stop_cmd, user='irods', workdir=context.irods_home()) != 0:
+        raise RuntimeError(f"[{container.name}] failed to stop iRODS server before TLS configuration")
 
-    logging.warning('configuring SSL [{}]'.format(container.name))
+    logging.warning(f"[{container.name}] configuring TLS")
 
     archive.copy_files_in_container(container,
                                     [(path_to_key_file_on_host, key_file),
@@ -252,39 +246,37 @@ def configure_ssl_on_server(container,
 
     # start the server again
     start_cmd = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().start()'"
-    if execute.execute_command(container, start_cmd, user='irods', workdir=context.irods_home()) is not 0:
-        raise RuntimeError(
-            'failed to start iRODS server after SSL configuration [{}]'
-            .format(container.name))
+    if execute.execute_command(container, start_cmd, user='irods', workdir=context.irods_home()) != 0:
+        raise RuntimeError(f"[{container.name}] failed to start iRODS server after TLS configuration")
 
-    logging.warning('SSL configured successfully [{}]'.format(container.name))
+    logging.warning(f"[{container.name}] TLS configured successfully")
 
 
-def configure_ssl_in_zone(docker_client, compose_project):
+def configure_tls_in_zone(docker_client, compose_project):
     import concurrent.futures
     import tempfile
 
     # Each irods_environment.json file is describing the cert this client will use and why
     # they think it is good. The testing environment is using a self-signed certificate, so
     # the certificate, key, and dhparams should be generated ONCE and copied to each server.
-    #ssl_files_dir = tempfile.mkdtemp()
-    key, key_file = generate_ssl_certificate_key()
-    cert_file = generate_ssl_self_signed_certificate(key)
-    dhparams_file = generate_ssl_dh_params()
+    #tls_files_dir = tempfile.mkdtemp()
+    key, key_file = generate_tls_certificate_key()
+    cert_file = generate_tls_self_signed_certificate(key)
+    dhparams_file = generate_tls_dh_params()
 
     try:
         rc = 0
 
-        # Configure SSL on the catalog service providers first because communication with the
+        # Configure TLS on the catalog service providers first because communication with the
         # catalog service consumers depends on being able to communicate with the catalog
-        # service provider. If SSL is not configured first on the catalog service provider
+        # service provider. If TLS is not configured first on the catalog service provider
         # the catalog service consumers will not be able to communicate with it.
         csps = compose_project.containers(service_names=[
             context.irods_catalog_provider_service()])
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures_to_containers = {
-                executor.submit(configure_ssl_on_server,
+                executor.submit(configure_tls_on_server,
                                 docker_client.containers.get(c.name),
                                 key_file,
                                 cert_file,
@@ -297,20 +289,19 @@ def configure_ssl_in_zone(docker_client, compose_project):
                     f.result()
 
                 except Exception as e:
-                    logging.error('exception raised while configuring SSL [{}]'
-                                  .format(container.name))
+                    logging.error(f"[{container.name}] exception raised while configuring TLS")
                     logging.error(e)
                     rc = 1
 
-        if rc is not 0:
-            raise RuntimeError('failed to configure SSL on some service')
+        if rc != 0:
+            raise RuntimeError('failed to configure TLS on some service')
 
         cscs = compose_project.containers(service_names=[
             context.irods_catalog_consumer_service()])
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures_to_containers = {
-                executor.submit(configure_ssl_on_server,
+                executor.submit(configure_tls_on_server,
                                 docker_client.containers.get(c.name),
                                 key_file,
                                 cert_file,
@@ -323,13 +314,12 @@ def configure_ssl_in_zone(docker_client, compose_project):
                     f.result()
 
                 except Exception as e:
-                    logging.error('exception raised while configuring SSL [{}]'
-                                  .format(container.name))
+                    logging.error(f"[{container.name}] exception raised while configuring TLS")
                     logging.error(e)
                     rc = 1
 
-        if rc is not 0:
-            raise RuntimeError('failed to configure SSL on some service')
+        if rc != 0:
+            raise RuntimeError('failed to configure TLS on some service')
 
     finally:
         os.unlink(key_file)

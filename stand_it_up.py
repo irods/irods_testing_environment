@@ -7,7 +7,7 @@ import os
 # local modules
 from irods_testing_environment import context
 from irods_testing_environment import services
-from irods_testing_environment import ssl_setup
+from irods_testing_environment import tls_setup
 
 if __name__ == "__main__":
     import argparse
@@ -29,10 +29,10 @@ if __name__ == "__main__":
                         help=textwrap.dedent('''\
                             Number of iRODS Catalog Service Consumer service instances.'''))
 
-    parser.add_argument('--use-ssl',
-                        dest='use_ssl', action='store_true',
+    parser.add_argument('--use-tls',
+                        dest='use_tls', action='store_true',
                         help=textwrap.dedent('''\
-                            Indicates that SSL should be configured and enabled in the Zone.\
+                            Indicates that TLS should be configured and enabled in the Zone.\
                             '''))
 
     args = parser.parse_args()
@@ -71,5 +71,5 @@ if __name__ == "__main__":
                              consumer_count=args.consumer_count,
                              install_packages=args.install_packages)
 
-    if args.use_ssl:
-        ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
+    if args.use_tls:
+        tls_setup.configure_tls_in_zone(ctx.docker_client, ctx.compose_project)
