@@ -12,7 +12,7 @@ from irods_testing_environment import federate
 from irods_testing_environment.install import install
 from irods_testing_environment import irods_config
 from irods_testing_environment import irods_setup
-from irods_testing_environment import ssl_setup
+from irods_testing_environment import tls_setup
 from irods_testing_environment import test_utils
 
 if __name__ == "__main__":
@@ -30,10 +30,10 @@ if __name__ == "__main__":
     cli.add_irods_package_args(parser)
     cli.add_irods_test_args(parser)
 
-    parser.add_argument('--use-ssl',
-                        dest='use_ssl', action='store_true',
+    parser.add_argument('--use-tls',
+                        dest='use_tls', action='store_true',
                         help=textwrap.dedent('''\
-                            Indicates that SSL should be configured and enabled in each Zone.\
+                            Indicates that TLS should be configured and enabled in each Zone.\
                             '''))
 
     args = parser.parse_args()
@@ -130,10 +130,10 @@ if __name__ == "__main__":
 
         options = ['--xml_output', '--federation', '.'.join(str(v) for v in version), zone, host]
 
-        if args.use_ssl:
-            options.append('--use_ssl')
+        if args.use_tls:
+            options.append('--use_tls')
             if args.do_setup:
-                ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
+                tls_setup.configure_tls_in_zone(ctx.docker_client, ctx.compose_project)
 
         # configure federation for testing
         if args.do_setup:

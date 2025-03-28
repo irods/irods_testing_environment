@@ -13,7 +13,7 @@ from irods_testing_environment import irods_setup
 from irods_testing_environment import irods_config
 from irods_testing_environment import json_utils
 from irods_testing_environment import federate
-from irods_testing_environment import ssl_setup
+from irods_testing_environment import tls_setup
 from irods_testing_environment.install import install
 
 if __name__ == "__main__":
@@ -54,10 +54,10 @@ if __name__ == "__main__":
                         action='store_false', dest='do_setup',
                         help='If indicated, the Zones will not be set up, only federated.')
 
-    parser.add_argument('--use-ssl',
-                        dest='use_ssl', action='store_true',
+    parser.add_argument('--use-tls',
+                        dest='use_tls', action='store_true',
                         help=textwrap.dedent('''\
-                            Indicates that SSL should be configured and enabled in each Zone.\
+                            Indicates that TLS should be configured and enabled in each Zone.\
                             '''))
 
     args = parser.parse_args()
@@ -111,8 +111,8 @@ if __name__ == "__main__":
 
         irods_setup.setup_irods_zones(ctx, zone_info_list, odbc_driver=args.odbc_driver)
 
-        if args.use_ssl:
-            ssl_setup.configure_ssl_in_zone(ctx.docker_client, ctx.compose_project)
+        if args.use_tls:
+            tls_setup.configure_tls_in_zone(ctx.docker_client, ctx.compose_project)
 
     else:
         zone_info_list = irods_setup.get_info_for_zones(ctx, zone_names, args.consumers_per_zone)

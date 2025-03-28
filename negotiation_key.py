@@ -32,19 +32,19 @@ def do_negotiation_key_tests(target_container,
 
     rc = 0
 
-    configure_ssl_in_server(remote_container, remote_server_policy)
+    configure_tls_in_server(remote_container, remote_server_policy)
     #show_configurations(remote_container, True)
 
-    for client_ssl_negotiation in client_policies:
-        configure_ssl_in_client(target_container, client_ssl_negotiation, irods_env)
+    for client_tls_negotiation in client_policies:
+        configure_tls_in_client(target_container, client_tls_negotiation, irods_env)
 
-        for server_ssl_negotiation in server_policies:
-            configure_ssl_in_server(target_container, server_ssl_negotiation)
+        for server_tls_negotiation in server_policies:
+            configure_tls_in_server(target_container, server_tls_negotiation)
 
             for nk in negotiation_keys:
                 logging.warning(
                     'irods_client_server_policy [{}] acPreConnect [{}] negotiation_key [{}]'
-                    .format(client_ssl_negotiation, server_ssl_negotiation, nk))
+                    .format(client_tls_negotiation, server_tls_negotiation, nk))
 
                 configure_negotiation_key(target_container, nk, server_config)
 
@@ -53,7 +53,7 @@ def do_negotiation_key_tests(target_container,
                 ec = execute.execute_command(target_container, 'ils', user='irods', stream_output=True)
                 if ec is not 0:
                     logging.error('running "ils" resulted in an error [{}] [{}] [{}] [{}]'
-                                  .format(ec, client_ssl_negotiation, server_ssl_negotiation, nk))
+                                  .format(ec, client_tls_negotiation, server_tls_negotiation, nk))
                     rc = ec
                 else:
                     logging.warning('success!')
