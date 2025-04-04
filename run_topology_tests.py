@@ -131,7 +131,7 @@ if __name__ == "__main__":
         hostname_map = context.project_hostnames(ctx.docker_client, ctx.compose_project)
 
         if args.use_tls:
-            options_base.append('--use_tls')
+            options_base.append('--use_ssl')
             if args.do_setup:
                 tls_setup.configure_tls_in_zone(ctx.docker_client, ctx.compose_project)
 
