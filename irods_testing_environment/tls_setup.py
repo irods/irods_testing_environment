@@ -110,7 +110,7 @@ def configure_tls_for_service_account(container, cert_file):
     json_utils.put_json_to_file(container, service_account_irods_env, irods_env)
 
 
-def configure_tls_in_server_config(container, key_file, chain_file, dhparams_file):
+def configure_tls_in_server_config(container, key_file, chain_file, dhparams_file, cert_file):
     """Configure TLS in server_config on the iRODS server.
 
     Arguments:
@@ -125,10 +125,15 @@ def configure_tls_in_server_config(container, key_file, chain_file, dhparams_fil
 
     logging.debug(f'[{container.name}: config before [{json.dumps(config)}]')
 
-    config["tls"] = {
+    config["client_server_policy"] = "CS_NEG_REQUIRE"
+    config["tls_server"] = {
         "certificate_chain_file": chain_file,
         "certificate_key_file": key_file,
-        "dh_params_file": dhparams_file
+        "dh_params_file": dhparams_file,
+    }
+    config["tls_client"] = {
+        "ca_certificate_file": cert_file,
+        "verify_server": "cert"
     }
 
     json_utils.put_json_to_file(container, context.server_config(), config)
@@ -242,7 +247,7 @@ def configure_tls_on_server(container,
 
     configure_tls_for_service_account(container, cert_file)
 
-    configure_tls_in_server_config(container, key_file, chain_file, dhparams_file)
+    configure_tls_in_server_config(container, key_file, chain_file, dhparams_file, cert_file)
 
     # start the server again
     start_cmd = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().start()'"

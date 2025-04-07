@@ -131,7 +131,7 @@ if __name__ == "__main__":
         options = ['--xml_output', '--federation', '.'.join(str(v) for v in version), zone, host]
 
         if args.use_tls:
-            options.append('--use_tls')
+            options.append('--use_ssl')
             if args.do_setup:
                 tls_setup.configure_tls_in_zone(ctx.docker_client, ctx.compose_project)
 
