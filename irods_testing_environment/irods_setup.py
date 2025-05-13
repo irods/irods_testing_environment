@@ -494,12 +494,7 @@ def setup_irods_server(container, setup_input):
     if ec != 0:
         raise RuntimeError('failed to set up iRODS server [{}]'.format(container.name))
 
-    # Only configure rsyslog for versions later than 4.3.0 as this was the first release
-    # which uses syslog. In the future, maybe the syslog implementation used in the
-    # testing environment can be swapped out.
-    version_triple = irods_config.get_irods_version(container)
-    if version_triple[0] >= 4 and version_triple[1] >= 3:
-        configure_rsyslog(container)
+    configure_rsyslog(container)
 
     if restart_irods(container) != 0:
         raise RuntimeError(f'[{container.name}] failed to start iRODS server after setup')
