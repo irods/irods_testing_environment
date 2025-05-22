@@ -1,4 +1,4 @@
-FROM rockylinux:8
+FROM rockylinux/rockylinux:8
 
 RUN yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && \
     yum install -y \

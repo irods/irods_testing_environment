@@ -4,8 +4,8 @@ This repository provides a series of [Docker Compose](https://docs.docker.com/co
 
 For each combination of supported OS platform/version and database type/version, there is a Compose project on which to run an iRODS deployment (*for testing*). The following OS platform Docker image tags are currently supported:
  - almalinux:8
- - rockylinux:8
- - rockylinux:9
+ - rockylinux/rockylinux:8
+ - rockylinux/rockylinux:9
  - debian:11
  - debian:12
  - ubuntu:20.04
@@ -127,7 +127,7 @@ The test hooks generally have the following requirements:
      - The `os_specific_directory` must be named like this (image tag -> directory name):
        - ubuntu:20.04  ->  `Ubuntu_20`
        - ubuntu:22.04  ->  `Ubuntu_22`
-       - rockylinux:9  ->  `Rocky linux_9`
+       - rockylinux/rockylinux:9  ->  `Rocky linux_9`
        - debian:11     ->  `Debian gnu_linux_11`
  - iRODS server is already installed and setup
 
