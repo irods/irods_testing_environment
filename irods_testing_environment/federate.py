@@ -4,6 +4,7 @@ import logging
 # local modules
 from . import context
 from . import execute
+from . import irods_config
 from . import irods_setup
 from . import json_utils
 
@@ -74,6 +75,10 @@ def federate_zones(ctx, zone_info_list, local_zone, include_consumers=True):
 
         # Write out the server_config.json to the iRODS server container to complete the federation
         json_utils.put_json_to_file(container, context.server_config(), server_config)
+
+        # Restart iRODS server in order for federation configuration to take effect.
+        if irods_config.server_version_is_irods_5(container) and irods_setup.restart_irods(container) != 0:
+            raise RuntimeError(f"[{container.name}] failed to reload configuration after configuring federation")
 
 
 def form_federation_clique(ctx, zone_info_list, include_consumers=True):
