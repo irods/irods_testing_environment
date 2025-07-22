@@ -16,6 +16,7 @@ For each combination of supported OS platform/version and database type/version,
 The following database Docker image tags are currently supported (although not for all platforms):
  - postgres:14
  - postgres:16
+ - postgres:17
  - mariadb:10.6
  - mariadb:10.11
  - mariadb:11.4
