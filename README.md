@@ -4,6 +4,7 @@ This repository provides a series of [Docker Compose](https://docs.docker.com/co
 
 For each combination of supported OS platform/version and database type/version, there is a Compose project on which to run an iRODS deployment (*for testing*). The following OS platform Docker image tags are currently supported:
  - almalinux:8
+ - almalinux:9
  - rockylinux/rockylinux:8
  - rockylinux/rockylinux:9
  - debian:11

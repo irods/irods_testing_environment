@@ -147,6 +147,24 @@ def configure_odbc_driver_rockylinux_8_postgres_16(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+def configure_odbc_driver_almalinux_9_postgres_14(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 14 on almalinux 9.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_postgres_odbc_driver(csp_container, odbc_driver)
+
+def configure_odbc_driver_almalinux_9_postgres_16(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres 16 on almalinux 9.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_postgres_odbc_driver(csp_container, odbc_driver)
+
 def configure_odbc_driver_rockylinux_9_postgres_14(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 14 on rockylinux 9.
 
@@ -373,6 +391,24 @@ def configure_odbc_driver_rockylinux_8_mysql_80(csp_container, odbc_driver):
 
 def configure_odbc_driver_rockylinux_8_mysql_84(csp_container, odbc_driver):
     """Configure ODBC driver for mysql 8.4 on rockylinux 8.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_mysql_84(csp_container, odbc_driver)
+
+def configure_odbc_driver_almalinux_9_mysql_80(csp_container, odbc_driver):
+    """Configure ODBC driver for mysql 8.0 on almalinux 9.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_mysql_80(csp_container, odbc_driver)
+
+def configure_odbc_driver_almalinux_9_mysql_84(csp_container, odbc_driver):
+    """Configure ODBC driver for mysql 8.4 on almalinux 9.
 
     Argument:
     csp_container -- docker container on which the iRODS catalog service provider is running
@@ -706,6 +742,24 @@ def configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver):
         csp_container,
         odbc_driver,
         'https://downloads.mariadb.com/Connectors/odbc/connector-odbc-3.2.2/mariadb-connector-odbc-3.2.2-rhel9-amd64.rpm')
+
+def configure_odbc_driver_almalinux_9_mariadb_1011(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 10.11 almalinux 9.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver)
+
+def configure_odbc_driver_almalinux_9_mariadb_114(csp_container, odbc_driver):
+    """Configure ODBC driver for mariadb 11.4 almalinux 9.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    odbc_driver -- path to local archive file containing the ODBC driver package
+    """
+    configure_odbc_driver_el_9_mariadb(csp_container, odbc_driver)
 
 def configure_odbc_driver_rockylinux_9_mariadb_1011(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 10.11 rockylinux 9.
