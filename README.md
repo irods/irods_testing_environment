@@ -11,6 +11,7 @@ For each combination of supported OS platform/version and database type/version,
  - rockylinux/rockylinux:10
  - debian:11
  - debian:12
+ - debian:13
  - ubuntu:20.04
  - ubuntu:22.04
  - ubuntu:24.04
