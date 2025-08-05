@@ -770,7 +770,7 @@ def configure_odbc_driver_debian_12_mariadb_1011(csp_container, odbc_driver):
     csp_container -- docker container on which the iRODS catalog service provider is running
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
-    configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
+    configure_odbc_driver_debian_12_mariadb(csp_container, odbc_driver)
 
 def configure_odbc_driver_debian_12_mariadb_114(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 11.4 debian 12.
@@ -779,7 +779,7 @@ def configure_odbc_driver_debian_12_mariadb_114(csp_container, odbc_driver):
     csp_container -- docker container on which the iRODS catalog service provider is running
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
-    configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
+    configure_odbc_driver_debian_12_mariadb(csp_container, odbc_driver)
 
 def configure_odbc_driver_debian_12_mariadb_118(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb 11.8 debian 12.
@@ -788,7 +788,7 @@ def configure_odbc_driver_debian_12_mariadb_118(csp_container, odbc_driver):
     csp_container -- docker container on which the iRODS catalog service provider is running
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
-    configure_odbc_driver_debian_11_mariadb(csp_container, odbc_driver)
+    configure_odbc_driver_debian_12_mariadb(csp_container, odbc_driver)
 
 def configure_odbc_driver_el_8_mariadb(csp_container, odbc_driver):
     """Configure ODBC driver for mariadb on EL 8.
