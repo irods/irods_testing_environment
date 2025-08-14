@@ -1050,14 +1050,9 @@ def configure_odbc_driver(platform_image, database_image, csp_container, odbc_dr
     import inspect
     # generate the function name of the form:
     #   configure_odbc_driver_platform-repo_platform-tag_database-repo_database-tag
-
-    # debian 13 is currently only tagged as trixie
-    ctx_image_tag = context.sanitize(context.image_tag(platform_image))
-    if ctx_image_tag == 'trixie':
-        ctx_image_tag = '13'
     func_name = '_'.join([inspect.currentframe().f_code.co_name,
                           context.sanitize(context.image_repo(platform_image)),
-                          ctx_image_tag,
+                          context.sanitize(context.image_tag(platform_image)),
                           context.sanitize(context.image_repo(database_image)),
                           context.sanitize(context.image_tag(database_image))])
 
