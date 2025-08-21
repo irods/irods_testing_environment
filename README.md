@@ -263,3 +263,147 @@ This does the following:
  2. Provides `/results` as a volume mount in the container. `/path/to/test-results` is the location of the test results as specified by the `--output-directory`/`-o` option for the test-running scripts.
  3. Exposes port 3000 in the container as 3000 on the host. This is the default port for the `xunit-viewer` server.
 
+## Interactive and Automated Building and Testing using `itest.py`
+
+sample text
+
+### Prerequisites
+
+You need to have already setup a `virtualenv` as stated in Requirements.
+
+You may choose to make the script executable to more closely follow the provided examples. Otherwise, prepend `python3` to the examples.
+
+#### Global Variable Configuration
+
+Currently, when running the script for the first time, the script will create a default configuration at `XDG_CONFIG_HOME` under the file
+`irods-bats.json`. The configuration will provide you two options for configuring the script:
+
+- `source_directory`: The directory where all iRODS related source files are assumed to be. The structure is assumed to be flat and use the default repository names.
+- `artifact_directory`: The directory where all build artifacts will be produced. This includes items such as the ccache dir, the build directories, and generated packages.
+
+An example of the default configuration file is as follows:
+```json
+{
+    "source_directory": "/home/irods-dev/Documents/iRODS",
+    "artifact_directory": "/home/irods-dev/Documents/iRODS/build-artifacts"
+}
+```
+
+#### Docker Build Image Conventions
+
+The script assumes the builder images to be following a specific convention as follows:
+
+`<IMAGE-TYPE>:<IMAGE-OS>`
+
+The `IMAGE-TYPE` name is expected to be `irods-core-builder` for the irods and icommand builder, `irods-plugin-builder` for the plugin builder,
+and `irods-externals-builder` for the externals builder images.
+The tag of the image, being `IMAGE-OS`, follows the OS naming convention in the `projects` directory of the testing environment.
+
+An example of the image names and tags are as follows:
+
+- `irods-plugin-builder:debian-11`
+- `irods-core-builder:rockylinux-9`
+- `irods-externals-builder:ubuntu-22.04`
+
+If the images cannot be found, execution will fail.
+
+### Interactive execution
+
+The script was originally developed as a simple shim to allow for easy changing of parameters passed to the test scripts and as a way to minimize typos passed into the test scripts.
+This is why the interactive mode exists. Additionally, the interface was kept simple to allow for executing interactive mode in more restrictive environments.
+
+To run the script in interactive mode, simply run the script with no arguments as follows:
+```console
+itest.py
+```
+
+### Automated arguments
+
+If you wish to run the script in an automated fashion, you simply need to pass in a JSON file using the `--test-matrix` argument, as the following example shows:
+
+```console
+itest.py --test-matrix matrix-file.json
+```
+
+The content of the file may contain any combination of the following sections.
+
+#### Building iRODS core and icommands
+
+Building is a simple process to automate. All arguments valid to the development environment build image are valid here.
+
+The following example demonstrates this:
+```json
+{
+    "build": [
+            {
+                    "args": ["--ccache", "--enable-address-sanitizer"],
+                    "os": "ubuntu-20.04"
+            },
+            {
+                    "args": ["--ninja"],
+                    "os": "debian-12"
+            }
+    ]
+}
+```
+
+It's worth noting, `args` is not validated, and is instead directly passed into docker build image specified by `os`.
+
+#### Building Plugins
+
+While the schema supports the format for automated plugin building, it has not been implemented.
+
+See the schema `TEST_MATRIX_SCHEMA` for the contents of `plugin`.
+
+#### Testing
+
+An example is as follows:
+
+```json
+{
+    "test": [
+            {
+                    "args": ["--concurrent-test-executor-count", "4", "--discard-logs"],
+                    "os": "ubuntu-20.04",
+                    "db": "mariadb-10.6",
+                    "type": "run_core_tests"
+            },
+            {
+                    "args": ["--concurrent-test-executor-count", "2", "--discard-logs", "--tests", "some.Test.Here"],
+                    "os": "ubuntu-20.04",
+                    "db": "mariadb-10.6",
+                    "type": "run_unit_tests"
+            },
+            {
+                    "args": ["--discard-logs"],
+                    "os": "debian-12",
+                    "db": "mariadb-10.11",
+                    "type": "run_federation_tests"
+            }
+    ]
+}
+```
+
+Note, `db` is only partially validated currently, to make sure that the database type actually exists. It does
+not guarantee that the particular os-db combination is valid.
+
+Additionally, `args` is not validated, and is instead directly passed into the test script specified by `type`.
+
+#### Externals
+
+An example as follows:
+
+```json
+{
+    "externals": [
+            {
+                    "target": "jwt-cpp",
+                    "os": "ubuntu-20.04"
+            },
+            {
+                    "target": "jwt-cpp",
+                    "os": "debian-12"
+            }
+    ]
+}
+```
