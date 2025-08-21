@@ -44,24 +44,13 @@ Compare the output to `requirements.txt`.
 
 `docker-compose` is being phased out by Docker and you may experience problems installing it via `pip`.
 
-If this happens to you, try doing the following:
+If this happens to you, use the submodule included with this repository.
 
-Clone the Docker Compose Git repository:
+Make sure the submodules are up to date and install the repo as a pip package:
 ```bash
-git clone https://github.com/docker/compose
-```
-
-Check out the latest tag which was still using the Python implementation:
-```bash
-cd compose
-git checkout 1.29.2
-```
-
-At this point, you can make the modifications needed to fix any problems you may encounter.
-
-Once done, back out and pip install the local directory:
-```bash
-cd -
+git submodule init
+# If you've already run 'git submodule init', make sure the submodule is up-to-date:
+git submodule update
 pip install ./compose
 ```
 
