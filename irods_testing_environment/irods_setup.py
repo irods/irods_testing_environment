@@ -1,6 +1,7 @@
 # grown-up modules
 import compose
 import docker
+import json
 import logging
 import os
 
@@ -108,6 +109,9 @@ class setup_input_builder(object):
         self.service_account_group = ''
         self.catalog_service_role = ''
 
+        self.host = None
+
+        self.database_technology = None
         self.odbc_driver = ''
         self.database_server_hostname = 'localhost'
         self.database_server_port = 5432
@@ -140,6 +144,8 @@ class setup_input_builder(object):
               service_account_name= None,
               service_account_group= None,
               catalog_service_role= None,
+              host = None,
+              database_technology = None,
               odbc_driver= None,
               database_server_hostname= None,
               database_server_port= None,
@@ -161,7 +167,8 @@ class setup_input_builder(object):
               admin_password = None,
               provides_local_storage = None,
               resource_name = None,
-              vault_directory = None):
+              vault_directory = None,
+              **kwargs):
         """Set values for the service account section of the setup script.
 
         Returns this instance of the class.
@@ -171,6 +178,9 @@ class setup_input_builder(object):
         service_account_name -- linux account that will run the iRODS server
         service_account_group -- group of the linux account that will run the iRODS server
         catalog_service_role -- determines whether this server holds a connection to the catalog
+        host -- IP, FQDN, or hostname which identifies the iRODS server
+        database_technology -- name of database technology used to store catalog information.
+                               e.g. postgres, mysql, oracle
         odbc_driver -- driver on the server used to talk to the ODBC database layer
         database_server_hostname -- hostname for the database server
         database_server_port -- port on which database server listens for notifications from
@@ -205,6 +215,9 @@ class setup_input_builder(object):
         self.service_account_group = service_account_group or self.service_account_group
         self.catalog_service_role = catalog_service_role or self.catalog_service_role
 
+        self.host = host or self.host
+
+        self.database_technology = database_technology or self.database_technology
         self.odbc_driver = odbc_driver or self.odbc_driver
         self.database_server_hostname = database_server_hostname or self.database_server_hostname
         self.database_server_port = database_server_port or self.database_server_port
@@ -230,6 +243,8 @@ class setup_input_builder(object):
         self.provides_local_storage = provides_local_storage or self.provides_local_storage
         self.resource_name = resource_name or self.resource_name
         self.vault_directory = vault_directory or self.vault_directory
+
+        self.do_unattended_install = kwargs.get('do_unattended_install', False)
 
         return self
 
@@ -302,7 +317,17 @@ class setup_input_builder(object):
             str(self.service_account_group),
             str(role),
 
-            str(self.odbc_driver),
+            # TLDR: Always accept the default input argument. Expects an integer
+            # instead of a filesystem path.
+            #
+            # The following used to be str(self.odbc_driver) as it would always
+            # result in an empty string. Since adding support for unattended installs,
+            # the input is now hard-coded to an empty string to avoid issues with this
+            # style of setup.
+            #
+            # This function assumes that ODBC drivers are configured before the
+            # creation of the input file.
+            '',
             str(self.database_server_hostname),
             str(self.database_server_port),
             str(self.database_name),
@@ -354,6 +379,422 @@ class setup_input_builder(object):
 
         return '\n'.join(input_args)
 
+    def build_unattended_install_input_for_catalog_consumer(self):
+        """Generate JSON string to use as input for the setup script (unattended install).
+
+        The script changes depending on the role, so the options used here are specific to
+        setting up an iRODS catalog service consumer.
+        """
+        # Start with an iRODS 5 configuration.
+        # While using the member variables of the builder is a nice to have, we've chosen
+        # to hard-code most things to avoid unnecessary complexity. There aren't any known
+        # test cases which require us to deviate from the standard configuration. It is
+        # common for tests to modify server_config.json to meet their needs.
+        json_input = {
+            "admin_password": self.admin_password,
+            "default_resource_directory": '/var/lib/irods/Vault',
+            "default_resource_name": self.resource_name,
+            "host_system_information": {
+                "service_account_user_name": 'irods',
+                "service_account_group_name": 'irods'
+            },
+            "service_account_environment": {
+                "irods_client_server_policy": "CS_NEG_REFUSE",
+                "irods_connection_pool_refresh_time_in_seconds": 300,
+                "irods_cwd": f"/{self.zone_name}/home/{self.admin_username}",
+                "irods_default_hash_scheme": "SHA256",
+                "irods_default_number_of_transfer_threads": 4,
+                "irods_default_resource": self.resource_name,
+                "irods_encryption_algorithm": "AES-256-CBC",
+                "irods_encryption_key_size": 32,
+                "irods_encryption_num_hash_rounds": 16,
+                "irods_encryption_salt_size": 8,
+                "irods_home": f"/{self.zone_name}/home/{self.admin_username}",
+                "irods_host": self.host,
+                "irods_match_hash_policy": "compatible",
+                "irods_maximum_size_for_single_buffer_in_megabytes": 32,
+                "irods_port": self.zone_port,
+                "irods_transfer_buffer_size_for_parallel_transfer_in_megabytes": 4,
+                "irods_user_name": self.admin_username,
+                "irods_zone_name": self.zone_name,
+                "schema_name": "service_account_environment",
+                "schema_version": "v5"
+            },
+            "server_config": {
+                "advanced_settings": {
+                    "checksum_read_buffer_size_in_bytes": 1048576,
+                    "default_number_of_transfer_threads": 4,
+                    "default_temporary_password_lifetime_in_seconds": 120,
+                    "delay_rule_executors": [],
+                    "delay_server_sleep_time_in_seconds": 30,
+                    "dns_cache": {
+                        "eviction_age_in_seconds": 3600,
+                        "cache_clearer_sleep_time_in_seconds": 600,
+                        "shared_memory_size_in_bytes": 5000000
+                    },
+                    "hostname_cache": {
+                        "eviction_age_in_seconds": 3600,
+                        "cache_clearer_sleep_time_in_seconds": 600,
+                        "shared_memory_size_in_bytes": 2500000
+                    },
+                    "maximum_size_for_single_buffer_in_megabytes": 32,
+                    "maximum_size_of_delay_queue_in_bytes": 0,
+                    "maximum_temporary_password_lifetime_in_seconds": 1000,
+                    "migrate_delay_server_sleep_time_in_seconds": 5,
+                    "number_of_concurrent_delay_rule_executors": 4,
+                    "stacktrace_file_processor_sleep_time_in_seconds": 10,
+                    "transfer_buffer_size_for_parallel_transfer_in_megabytes": 4,
+                    "transfer_chunk_size_for_parallel_transfer_in_megabytes": 40
+                },
+                "catalog_provider_hosts": [
+                    self.catalog_service_provider_host
+                ],
+                "catalog_service_role": "consumer",
+                "client_server_policy": "CS_NEG_REFUSE",
+                "connection_pool_refresh_time_in_seconds": 300,
+                "controlled_user_connection_list": {
+                    "control_type": "denylist",
+                    "users": []
+                },
+                "default_dir_mode": "0750",
+                "default_file_mode": "0600",
+                "default_hash_scheme": "SHA256",
+                "default_resource_name": self.resource_name,
+                "encryption": {
+                    "algorithm": "AES-256-CBC",
+                    "key_size": 32,
+                    "num_hash_rounds": 16,
+                    "salt_size": 8
+                },
+                "environment_variables": {},
+                "federation": [],
+                "graceful_shutdown_timeout_in_seconds": 30,
+                "host": self.host,
+                "host_access_control": {
+                    "access_entries": []
+                },
+                "host_resolution": {
+                    "host_entries": []
+                },
+                "log_level": {
+                    "agent": "info",
+                    "agent_factory": "info",
+                    "api": "info",
+                    "authentication": "info",
+                    "database": "info",
+                    "delay_server": "info",
+                    "genquery1": "info",
+                    "genquery2": "info",
+                    "legacy": "info",
+                    "microservice": "info",
+                    "network": "info",
+                    "resource": "info",
+                    "rule_engine": "info",
+                    "server": "info",
+                    "sql": "info"
+                },
+                "match_hash_policy": "compatible",
+                "negotiation_key": self.negotiation_key,
+                "plugin_configuration": {
+                    "authentication": {},
+                    # TODO(irods/irods#8670): Is it okay to include an empty "database" stanza?
+                    "network": {},
+                    "resource": {},
+                    "rule_engines": [
+                        {
+                            "instance_name": "irods_rule_engine_plugin-irods_rule_language-instance",
+                            "plugin_name": "irods_rule_engine_plugin-irods_rule_language",
+                            "plugin_specific_configuration": {
+                                "re_data_variable_mapping_set": [
+                                    "core"
+                                ],
+                                "re_function_name_mapping_set": [
+                                    "core"
+                                ],
+                                "re_rulebase_set": [
+                                    "core"
+                                ],
+                                "regexes_for_supported_peps": [
+                                    "ac[^ ]*",
+                                    "msi[^ ]*",
+                                    "[^ ]*pep_[^ ]*_(pre|post|except|finally)"
+                                ]
+                            },
+                            "shared_memory_instance": "irods_rule_language_rule_engine"
+                        },
+                        {
+                            "instance_name": "irods_rule_engine_plugin-cpp_default_policy-instance",
+                            "plugin_name": "irods_rule_engine_plugin-cpp_default_policy",
+                            "plugin_specific_configuration": {}
+                        }
+                    ]
+                },
+                "rule_engine_namespaces": [
+                    ""
+                ],
+                "schema_name": "server_config",
+                "schema_version": "v5",
+                "server_port_range_end": self.parallel_port_range_end,
+                "server_port_range_start": self.parallel_port_range_begin,
+                "zone_auth_scheme": "native",
+                "zone_key": self.zone_key,
+                "zone_name": self.zone_name,
+                "zone_port": self.zone_port,
+                "zone_user": self.admin_username
+            }
+        }
+
+        if self.irods_version < (4, 90, 0):
+            # Remove iRODS 5 configuration.
+            json_input["server_config"].pop("client_server_policy", None)
+            json_input["server_config"].pop("connection_pool_refresh_time_in_seconds", None)
+            json_input["server_config"].pop("encryption", None)
+            json_input["server_config"].pop("graceful_shutdown_timeout_in_seconds", None)
+            json_input["server_config"].pop("host", None)
+            json_input["server_config"]["log_level"].pop("genquery1", None)
+
+            # Add iRODS 4.3 configuration.
+            json_input["service_account_environment"].update({
+                "irods_client_server_negotiation": "request_server_negotiation",
+                "irods_server_control_plane_encryption_algorithm": "AES-256-CBC",
+                "irods_server_control_plane_encryption_num_hash_rounds": 16,
+                "irods_server_control_plane_key": "32_byte_server_control_plane_key",
+                "irods_server_control_plane_port": 1248,
+                "irods_server_control_plane_timeout_milliseconds": 10000,
+                "schema_version": "v4"
+            })
+            json_input["server_config"]["advanced_settings"]["agent_factory_watcher_sleep_time_in_seconds"] = 5
+            json_input["server_config"]["client_api_allowlist_policy"] = "enforce"
+            json_input["server_config"].update({
+                "schema_validation_base_uri": "file:///var/lib/irods/configuration_schemas",
+                "schema_version": "v4",
+                "server_control_plane_encryption_algorithm": "AES-256-CBC",
+                "server_control_plane_encryption_num_hash_rounds": 16,
+                "server_control_plane_key": "32_byte_server_control_plane_key",
+                "server_control_plane_port": 1248,
+                "server_control_plane_timeout_milliseconds": 10000
+            })
+
+        return json.dumps(json_input, sort_keys=True, indent=4)
+
+
+    def build_unattended_install_input_for_catalog_provider(self):
+        """Generate JSON string to use as input for the setup script (unattended install).
+
+        The script changes depending on the role, so the options used here are specific to
+        setting up an iRODS catalog service provider.
+        """
+        # Start with an iRODS 5 configuration.
+        # While using the member variables of the builder is a nice to have, we've chosen
+        # to hard-code most things to avoid unnecessary complexity. There aren't any known
+        # test cases which require us to deviate from the standard configuration. It is
+        # common for tests to modify server_config.json to meet their needs.
+        json_input = {
+            "admin_password": self.admin_password,
+            "default_resource_directory": '/var/lib/irods/Vault',
+            "default_resource_name": 'demoResc',
+            "host_system_information": {
+                "service_account_user_name": 'irods',
+                "service_account_group_name": 'irods'
+            },
+            "service_account_environment": {
+                "irods_client_server_policy": "CS_NEG_REFUSE",
+                "irods_connection_pool_refresh_time_in_seconds": 300,
+                "irods_cwd": f"/{self.zone_name}/home/{self.admin_username}",
+                "irods_default_hash_scheme": "SHA256",
+                "irods_default_number_of_transfer_threads": 4,
+                "irods_default_resource": "demoResc",
+                "irods_encryption_algorithm": "AES-256-CBC",
+                "irods_encryption_key_size": 32,
+                "irods_encryption_num_hash_rounds": 16,
+                "irods_encryption_salt_size": 8,
+                "irods_home": f"/{self.zone_name}/home/{self.admin_username}",
+                "irods_host": self.host,
+                "irods_match_hash_policy": "compatible",
+                "irods_maximum_size_for_single_buffer_in_megabytes": 32,
+                "irods_port": self.zone_port,
+                "irods_transfer_buffer_size_for_parallel_transfer_in_megabytes": 4,
+                "irods_user_name": self.admin_username,
+                "irods_zone_name": self.zone_name,
+                "schema_name": "service_account_environment",
+                "schema_version": "v5"
+            },
+            "server_config": {
+                "advanced_settings": {
+                    "checksum_read_buffer_size_in_bytes": 1048576,
+                    "default_number_of_transfer_threads": 4,
+                    "default_temporary_password_lifetime_in_seconds": 120,
+                    "delay_rule_executors": [],
+                    "delay_server_sleep_time_in_seconds": 30,
+                    "dns_cache": {
+                        "eviction_age_in_seconds": 3600,
+                        "cache_clearer_sleep_time_in_seconds": 600,
+                        "shared_memory_size_in_bytes": 5000000
+                    },
+                    "hostname_cache": {
+                        "eviction_age_in_seconds": 3600,
+                        "cache_clearer_sleep_time_in_seconds": 600,
+                        "shared_memory_size_in_bytes": 2500000
+                    },
+                    "maximum_size_for_single_buffer_in_megabytes": 32,
+                    "maximum_size_of_delay_queue_in_bytes": 0,
+                    "maximum_temporary_password_lifetime_in_seconds": 1000,
+                    "migrate_delay_server_sleep_time_in_seconds": 5,
+                    "number_of_concurrent_delay_rule_executors": 4,
+                    "stacktrace_file_processor_sleep_time_in_seconds": 10,
+                    "transfer_buffer_size_for_parallel_transfer_in_megabytes": 4,
+                    "transfer_chunk_size_for_parallel_transfer_in_megabytes": 40
+                },
+                "catalog_provider_hosts": [
+                    self.host
+                ],
+                "catalog_service_role": "provider",
+                "client_server_policy": "CS_NEG_REFUSE",
+                "connection_pool_refresh_time_in_seconds": 300,
+                "controlled_user_connection_list": {
+                    "control_type": "denylist",
+                    "users": []
+                },
+                "default_dir_mode": "0750",
+                "default_file_mode": "0600",
+                "default_hash_scheme": "SHA256",
+                "default_resource_name": "demoResc",
+                "encryption": {
+                    "algorithm": "AES-256-CBC",
+                    "key_size": 32,
+                    "num_hash_rounds": 16,
+                    "salt_size": 8
+                },
+                "environment_variables": {},
+                "federation": [],
+                "graceful_shutdown_timeout_in_seconds": 30,
+                "host": self.host,
+                "host_access_control": {
+                    "access_entries": []
+                },
+                "host_resolution": {
+                    "host_entries": []
+                },
+                "log_level": {
+                    "agent": "info",
+                    "agent_factory": "info",
+                    "api": "info",
+                    "authentication": "info",
+                    "database": "info",
+                    "delay_server": "info",
+                    "genquery1": "info",
+                    "genquery2": "info",
+                    "legacy": "info",
+                    "microservice": "info",
+                    "network": "info",
+                    "resource": "info",
+                    "rule_engine": "info",
+                    "server": "info",
+                    "sql": "info"
+                },
+                "match_hash_policy": "compatible",
+                "negotiation_key": self.negotiation_key,
+                "plugin_configuration": {
+                    "authentication": {},
+                    "database": {
+                        "technology": self.database_technology,
+                        "host": self.database_server_hostname,
+                        "name": self.database_name,
+                        "odbc_driver": self.odbc_driver,
+                        "password": self.database_password,
+                        "port": self.database_server_port,
+                        "username": self.database_username
+                    },
+                    "network": {},
+                    "resource": {},
+                    "rule_engines": [
+                        {
+                            "instance_name": "irods_rule_engine_plugin-irods_rule_language-instance",
+                            "plugin_name": "irods_rule_engine_plugin-irods_rule_language",
+                            "plugin_specific_configuration": {
+                                "re_data_variable_mapping_set": [
+                                    "core"
+                                ],
+                                "re_function_name_mapping_set": [
+                                    "core"
+                                ],
+                                "re_rulebase_set": [
+                                    "core"
+                                ],
+                                "regexes_for_supported_peps": [
+                                    "ac[^ ]*",
+                                    "msi[^ ]*",
+                                    "[^ ]*pep_[^ ]*_(pre|post|except|finally)"
+                                ]
+                            },
+                            "shared_memory_instance": "irods_rule_language_rule_engine"
+                        },
+                        {
+                            "instance_name": "irods_rule_engine_plugin-cpp_default_policy-instance",
+                            "plugin_name": "irods_rule_engine_plugin-cpp_default_policy",
+                            "plugin_specific_configuration": {}
+                        }
+                    ]
+                },
+                "rule_engine_namespaces": [
+                    ""
+                ],
+                "schema_name": "server_config",
+                "schema_version": "v5",
+                "server_port_range_end": self.parallel_port_range_end,
+                "server_port_range_start": self.parallel_port_range_begin,
+                "zone_auth_scheme": "native",
+                "zone_key": self.zone_key,
+                "zone_name": self.zone_name,
+                "zone_port": self.zone_port,
+                "zone_user": self.admin_username
+            }
+        }
+
+        if self.irods_version < (4, 90, 0):
+            # Remove iRODS 5 configuration.
+            json_input["server_config"].pop("client_server_policy", None)
+            json_input["server_config"].pop("connection_pool_refresh_time_in_seconds", None)
+            json_input["server_config"].pop("encryption", None)
+            json_input["server_config"].pop("graceful_shutdown_timeout_in_seconds", None)
+            json_input["server_config"].pop("host", None)
+            json_input["server_config"]["log_level"].pop("genquery1", None)
+
+            # Add iRODS 4.3 configuration.
+            json_input["service_account_environment"].update({
+                "irods_client_server_negotiation": "request_server_negotiation",
+                "irods_server_control_plane_encryption_algorithm": "AES-256-CBC",
+                "irods_server_control_plane_encryption_num_hash_rounds": 16,
+                "irods_server_control_plane_key": "32_byte_server_control_plane_key",
+                "irods_server_control_plane_port": 1248,
+                "irods_server_control_plane_timeout_milliseconds": 10000,
+                "schema_version": "v4"
+            })
+            json_input["server_config"]["advanced_settings"]["agent_factory_watcher_sleep_time_in_seconds"] = 5
+            json_input["server_config"]["advanced_settings"]["default_log_rotation_in_days"] = 5
+            json_input["server_config"]["client_api_allowlist_policy"] = "enforce"
+            json_input["server_config"]["plugin_configuration"]["database"] = {
+                self.database_technology: {
+                    "db_host": self.database_server_hostname,
+                    "db_name": self.database_name,
+                    "db_odbc_driver": self.odbc_driver,
+                    "db_password": self.database_password,
+                    "db_port": self.database_server_port,
+                    "db_username": self.database_username
+                }
+            }
+            json_input["server_config"].update({
+                "schema_validation_base_uri": "file:///var/lib/irods/configuration_schemas",
+                "schema_version": "v4",
+                "server_control_plane_encryption_algorithm": "AES-256-CBC",
+                "server_control_plane_encryption_num_hash_rounds": 16,
+                "server_control_plane_key": "32_byte_server_control_plane_key",
+                "server_control_plane_port": 1248,
+                "server_control_plane_timeout_milliseconds": 10000
+            })
+
+        return json.dumps(json_input, sort_keys=True, indent=4)
+
     def build(self):
         """Build the string for the setup script input.
 
@@ -361,10 +802,16 @@ class setup_input_builder(object):
         or a catalog service consumer will be set up and the resulting input string will be
         returned.
         """
-        build_for_role = {
-            'provider': self.build_input_for_catalog_provider,
-            'consumer': self.build_input_for_catalog_consumer
-        }
+        if self.do_unattended_install:
+            build_for_role = {
+                'provider': self.build_unattended_install_input_for_catalog_provider,
+                'consumer': self.build_unattended_install_input_for_catalog_consumer
+            }
+        else:
+            build_for_role = {
+                'provider': self.build_input_for_catalog_provider,
+                'consumer': self.build_input_for_catalog_consumer
+            }
 
         try:
             return build_for_role[self.catalog_service_role]()
@@ -455,7 +902,7 @@ def restart_irods(container):
     return execute.execute_command(container, cmd, user='irods', workdir=context.irods_home())
 
 
-def setup_irods_server(container, setup_input):
+def setup_irods_server(container, setup_input, **kwargs):
     """Set up iRODS server on the given container with the provided input.
 
     After setup completes, rsyslog is restarted to ensure that log messages are being processed
@@ -481,15 +928,24 @@ def setup_irods_server(container, setup_input):
            logging.error(error_msg)
            raise e
 
-    ec = execute.execute_command(container, 'bash -c \'echo "{}" > /input\''.format(setup_input))
+    # Base64 encoding the input file allows the testing environment to transfer it via the
+    # shell without any problems.
+    import base64
+    import shlex
+    b64 = base64.b64encode(setup_input.encode('utf-8')).decode('ascii')
+    ec = execute.execute_command(container, f"bash -lc 'printf %s {shlex.quote(b64)} | base64 -d > /input'")
     if ec != 0:
         raise RuntimeError('failed to create setup script input file [{}]'.format(container.name))
 
     execute.execute_command(container, 'cat /input')
 
     path_to_setup_script = os.path.join(context.irods_home(), 'scripts', 'setup_irods.py')
-    run_setup_script = 'bash -c \'{} {} < /input\''.format(container_info.python(container),
-                                                           path_to_setup_script)
+    if kwargs.get('do_unattended_install', False):
+        run_setup_script = 'bash -c \'{} {} --json_configuration_file /input\''.format(
+            container_info.python(container), path_to_setup_script)
+    else:
+        run_setup_script = 'bash -c \'{} {} < /input\''.format(
+            container_info.python(container), path_to_setup_script)
     ec = execute.execute_command(container, run_setup_script)
     if ec != 0:
         raise RuntimeError('failed to set up iRODS server [{}]'.format(container.name))
@@ -528,13 +984,23 @@ def setup_irods_catalog_provider(ctx,
         )
     )
 
+    logging.debug('database name: [%s]', ctx.database_name())
+    db_technology, db_odbc_driver = {
+        'postgres': ('postgres', 'PostgreSQL ANSI'),
+        'mysql': ('mysql', 'MySQL ANSI'),
+        'mariadb': ('mysql', 'MySQL ANSI')
+    }[ctx.database_name()]
+    logging.debug('database technology: [%s], derived odbc driver: [%s]', db_technology, db_odbc_driver)
+
     setup_input = (setup_input_builder()
         .setup(irods_version=irods_config.get_irods_version(csp_container),
                catalog_service_role='provider',
+               host=context.container_hostname(csp_container),
+               database_technology=db_technology,
+               odbc_driver=odbc_driver or db_odbc_driver, # Ignored for prompt-based installs.
                database_server_hostname=context.container_hostname(db_container),
                database_server_port=database_setup.database_server_port(ctx.database()),
-               **kwargs
-        )
+               **kwargs)
         .build()
     )
 
@@ -542,7 +1008,9 @@ def setup_irods_catalog_provider(ctx,
 
     logging.warning('setting up iRODS catalog provider [{}]'.format(csp_container.name))
 
-    setup_irods_server(csp_container, setup_input)
+    setup_irods_server(csp_container,
+                       setup_input,
+                       do_unattended_install=kwargs.get('do_unattended_install', False))
 
 
 def setup_irods_catalog_consumer(ctx,
@@ -569,9 +1037,17 @@ def setup_irods_catalog_consumer(ctx,
         )
     )
 
+    csc_container_hostname = context.container_hostname(csc_container)
+
+    # Mirrors how setup_irods.py in irods/irods generates the default resource name
+    # for catalog service consumer servers.
+    resource_name = csc_container_hostname.split('.')[0] + 'Resource'
+
     setup_input = (setup_input_builder()
         .setup(irods_version=irods_config.get_irods_version(csc_container),
                catalog_service_role='consumer',
+               host=csc_container_hostname,
+               resource_name=resource_name,
                catalog_service_provider_host=context.container_hostname(csp_container),
                **kwargs)
         .build()
@@ -579,10 +1055,11 @@ def setup_irods_catalog_consumer(ctx,
 
     logging.debug('input to setup script [{}]'.format(setup_input))
 
-    logging.warning('setting up iRODS catalog consumer [{}]'
-                    .format(csc_container.name))
+    logging.warning('setting up iRODS catalog consumer [{}]'.format(csc_container.name))
 
-    setup_irods_server(csc_container, setup_input)
+    setup_irods_server(csc_container,
+                       setup_input,
+                       do_unattended_install=kwargs.get('do_unattended_install', False))
 
 
 def setup_irods_catalog_consumers(ctx,
@@ -696,7 +1173,8 @@ def setup_irods_zone(ctx,
 
 def setup_irods_zones(ctx,
                       zone_info_list,
-                      odbc_driver=None):
+                      odbc_driver=None,
+                      **kwargs):
     import concurrent.futures
 
     rc = 0
@@ -712,6 +1190,7 @@ def setup_irods_zones(ctx,
                             zone_name=z.zone_name,
                             zone_key=z.zone_key,
                             negotiation_key=z.negotiation_key,
+                            **kwargs,
             ): z for i, z in enumerate(zone_info_list)
         }
 

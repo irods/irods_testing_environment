@@ -35,6 +35,12 @@ if __name__ == "__main__":
                             Indicates that TLS should be configured and enabled in the Zone.\
                             '''))
 
+    parser.add_argument('--use-unattended-install',
+                        action='store_true', dest='do_unattended_install',
+                        help='''\
+                            If indicated, the iRODS servers will be set up using \
+                            unattended installation.''')
+
     args = parser.parse_args()
 
     if not args.package_version and not args.install_packages:
@@ -69,7 +75,8 @@ if __name__ == "__main__":
                              package_version=args.package_version,
                              odbc_driver=args.odbc_driver,
                              consumer_count=args.consumer_count,
-                             install_packages=args.install_packages)
+                             install_packages=args.install_packages,
+                             do_unattended_install=args.do_unattended_install)
 
     if args.use_tls:
         tls_setup.configure_tls_in_zone(ctx.docker_client, ctx.compose_project)

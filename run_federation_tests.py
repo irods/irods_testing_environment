@@ -103,7 +103,8 @@ if __name__ == "__main__":
                                              odbc_driver=args.odbc_driver,
                                              zone_name=z.zone_name,
                                              zone_key=z.zone_key,
-                                             negotiation_key=z.negotiation_key)
+                                             negotiation_key=z.negotiation_key,
+                                             do_unattended_install=args.do_unattended_install)
 
             federate.form_federation_clique(ctx, zone_info_list)
 

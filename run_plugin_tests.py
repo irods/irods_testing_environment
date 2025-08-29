@@ -81,7 +81,8 @@ try:
                                    package_version=args.package_version,
                                    odbc_driver=args.odbc_driver,
                                    consumer_count=consumer_count,
-                                   install_packages=args.install_packages)
+                                   install_packages=args.install_packages,
+                                   do_unattended_install=args.do_unattended_install)
 
         # Configure the containers for running iRODS automated tests
         logging.info('configuring iRODS containers for testing')
