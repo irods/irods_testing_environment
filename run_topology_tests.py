@@ -10,7 +10,6 @@ from irods_testing_environment import context
 from irods_testing_environment import execute
 from irods_testing_environment import install
 from irods_testing_environment import irods_config
-from irods_testing_environment import irods_setup
 from irods_testing_environment import services
 from irods_testing_environment import tls_setup
 from irods_testing_environment import test_utils
@@ -95,7 +94,8 @@ if __name__ == "__main__":
                                        package_version=args.package_version,
                                        odbc_driver=args.odbc_driver,
                                        consumer_count=consumer_count,
-                                       install_packages=args.install_packages)
+                                       install_packages=args.install_packages,
+                                       do_unattended_install=args.do_unattended_install)
 
             # Configure the containers for running iRODS automated tests
             logging.info('configuring iRODS containers for testing')

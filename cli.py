@@ -131,6 +131,12 @@ def add_irods_test_args(parser):
                         action='store_false', dest='do_setup',
                         help='If indicated, the iRODS servers will not be set up.')
 
+    parser.add_argument('--use-unattended-install',
+                        action='store_true', dest='do_unattended_install',
+                        help='''\
+                            If indicated, the iRODS servers will be set up using \
+                            unattended installation.''')
+
 
 def add_database_config_args(parser):
     '''Add argparse options related to setting up and configuring iRODS.

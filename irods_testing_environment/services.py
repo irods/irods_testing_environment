@@ -15,7 +15,8 @@ def create_topologies(ctx,
                       odbc_driver=None,
                       zone_name='tempZone',
                       consumer_count=0,
-                      install_packages=True):
+                      install_packages=True,
+                      **kwargs):
     """Create several generic topologies of iRODS servers with the given inputs.
 
     This is a convenience function for standing up multiple, identical iRODS Zones with the
@@ -50,7 +51,7 @@ def create_topologies(ctx,
     # This should generate a list of identical zone infos
     zone_info_list = irods_setup.get_info_for_zones(ctx, zone_names, consumer_count)
 
-    irods_setup.setup_irods_zones(ctx, zone_info_list, odbc_driver=odbc_driver)
+    irods_setup.setup_irods_zones(ctx, zone_info_list, odbc_driver=odbc_driver, **kwargs)
 
 
 def create_topology(ctx,
@@ -59,7 +60,8 @@ def create_topology(ctx,
                     package_version=None,
                     odbc_driver=None,
                     consumer_count=0,
-                    install_packages=True):
+                    install_packages=True,
+                    **kwargs):
     """Create a generic topology of iRODS servers with the given inputs.
 
     This is a convenience function for standing up an iRODS Zone with the default
@@ -81,7 +83,8 @@ def create_topology(ctx,
                              package_version=package_version,
                              odbc_driver=odbc_driver,
                              consumer_count=consumer_count,
-                             install_packages=install_packages)
+                             install_packages=install_packages,
+                             **kwargs)
 
 
 def clone_repository_to_container(container,
