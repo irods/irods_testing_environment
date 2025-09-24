@@ -12,6 +12,34 @@ from . import execute
 # Flip this bool to switch which ODBC driver is used for MariaDB projects.
 mariadb_use_mysql_odbc_driver = True
 
+def make_postgres_odbcinst_ini(csp_container):
+    """Generate content for the /etc/odbcinst.ini configuration file used by postgres.
+    Most of the time this is not needed.
+
+    Arguments:
+    csp_container -- container running iRODS catalog service provider using the ODBC driver
+    """
+    odbcinst_ini_path = os.path.join('/etc', 'odbcinst.ini')
+
+    logging.debug('configuring odbcinst.ini with PostgreSQL drivers')
+    odbcinst_ini_contents = textwrap.dedent("""\
+        [PostgreSQL ANSI]
+        Description     = ODBC for PostgreSQL
+        Driver          = /usr/lib/psqlodbcw.so
+        Setup           = /usr/lib/libodbcpsqlS.so
+        Driver64        = /usr/lib64/psqlodbcw.so
+        Setup64         = /usr/lib64/libodbcpsqlS.so
+        FileUsage       = 1
+        """)
+
+    cmd = 'bash -c \'echo "{0}" > {1}\''.format(odbcinst_ini_contents, odbcinst_ini_path)
+    ec = execute.execute_command(csp_container, cmd)
+    if ec is not 0:
+        raise RuntimeError('failed to populate odbcinst.ini [ec=[{0}], container=[{1}]]'
+            .format(ec, csp_container))
+
+    execute.execute_command(csp_container, 'cat {}'.format(odbcinst_ini_path))
+
 def configure_postgres_odbc_driver(csp_container, odbc_driver):
     """Configure ODBC driver for postgres.
 
@@ -237,6 +265,14 @@ def configure_odbc_driver_rockylinux_9_postgres_17(csp_container, odbc_driver):
     """
     configure_postgres_odbc_driver(csp_container, odbc_driver)
 
+def configure_odbc_driver_el10_postgres(csp_container, odbc_driver):
+    """Configure ODBC driver for postgres on EL10.
+
+    Argument:
+    csp_container -- docker container on which the iRODS catalog service provider is running
+    """
+    make_postgres_odbcinst_ini(csp_container)
+
 def configure_odbc_driver_almalinux_10_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on almalinux 10.
 
@@ -244,7 +280,7 @@ def configure_odbc_driver_almalinux_10_postgres_16(csp_container, odbc_driver):
     csp_container -- docker container on which the iRODS catalog service provider is running
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
-    configure_postgres_odbc_driver(csp_container, odbc_driver)
+    configure_odbc_driver_el10_postgres(csp_container, odbc_driver)
 
 def configure_odbc_driver_almalinux_10_postgres_17(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 17 on almalinux 10.
@@ -253,7 +289,7 @@ def configure_odbc_driver_almalinux_10_postgres_17(csp_container, odbc_driver):
     csp_container -- docker container on which the iRODS catalog service provider is running
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
-    configure_postgres_odbc_driver(csp_container, odbc_driver)
+    configure_odbc_driver_el10_postgres(csp_container, odbc_driver)
 
 def configure_odbc_driver_rockylinux_10_postgres_16(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 16 on rockylinux 10.
@@ -262,7 +298,7 @@ def configure_odbc_driver_rockylinux_10_postgres_16(csp_container, odbc_driver):
     csp_container -- docker container on which the iRODS catalog service provider is running
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
-    configure_postgres_odbc_driver(csp_container, odbc_driver)
+    configure_odbc_driver_el10_postgres(csp_container, odbc_driver)
 
 def configure_odbc_driver_rockylinux_10_postgres_17(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 17 on rockylinux 10.
@@ -271,7 +307,7 @@ def configure_odbc_driver_rockylinux_10_postgres_17(csp_container, odbc_driver):
     csp_container -- docker container on which the iRODS catalog service provider is running
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
-    configure_postgres_odbc_driver(csp_container, odbc_driver)
+    configure_odbc_driver_el10_postgres(csp_container, odbc_driver)
 
 def make_mysql_odbcinst_ini(csp_container, container_odbc_driver_dir):
     """Generate content for the /etc/odbcinst.ini configuration file used by mysql.
