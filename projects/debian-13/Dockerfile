@@ -56,6 +56,10 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/*
 
+# Given this is for testing purposes, we remove the file which blocks pip from
+# touching system packages. See https://peps.python.org/pep-0668/ for details.
+RUN rm /usr/lib/python3.*/EXTERNALLY-MANAGED
+
 RUN mkdir -p /irods_testing_environment_mount_dir && chmod 777 /irods_testing_environment_mount_dir
 
 ENTRYPOINT ["bash", "-c", "until false; do sleep 2147483647d; done"]
