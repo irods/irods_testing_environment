@@ -438,6 +438,57 @@ def configure_univmss_script(docker_client, compose_project):
         raise RuntimeError('failed to configure univMSS script on some service')
 
 
+def install_python_irodsclient(docker_client, compose_project):
+    """Install python-irodsclient because some iRODS tests use it.
+
+    Arguments:
+    docker_client -- docker client for interacting with the docker-compose project
+    compose_project -- compose.Project in which the iRODS servers are running
+    """
+    def pip_install_python_irodsclient(docker_client, docker_compose_container, version="3.0.0"):
+        pip_install = f"python3 -m pip install python-irodsclient=={version}"
+
+        on_container = docker_client.containers.get(docker_compose_container.name)
+        if 0 != execute.execute_command(on_container, pip_install):
+            raise RuntimeError(f"[{on_container.name}] failed to install pip package")
+
+        return 0
+
+    import concurrent.futures
+
+    containers = compose_project.containers(service_names=[
+        context.irods_catalog_provider_service(),
+        context.irods_catalog_consumer_service()])
+
+    rc = 0
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures_to_containers = {
+            executor.submit(
+                pip_install_python_irodsclient, docker_client, c
+            ): c for c in containers
+        }
+
+        logging.debug(futures_to_containers)
+
+        for f in concurrent.futures.as_completed(futures_to_containers):
+            container = futures_to_containers[f]
+            try:
+                ec = f.result()
+                if 0 != ec:
+                    logging.error(f"error while installing python-irodsclient on container [{container.name}]")
+                    rc = ec
+                else:
+                    logging.info(f"[{container.name}] installed python-irodsclient successfully")
+
+            except Exception as e:
+                logging.error(f"[{container.name}] exception raised while installing python-irodsclient")
+                logging.error(e)
+                rc = 1
+
+    if 0 != rc:
+        raise RuntimeError("failed to install python-irodsclient on some service")
+
+
 def configure_irods_testing(docker_client, compose_project):
     """Run a series of prerequisite configuration steps for iRODS tests.
 
@@ -446,13 +497,11 @@ def configure_irods_testing(docker_client, compose_project):
     compose_project -- compose.Project in which the iRODS servers are running
     """
     configure_host_resolution(docker_client, compose_project)
-
     configure_hello_script(docker_client, compose_project)
     configure_univmss_script(docker_client, compose_project)
-
     configure_pam_for_auth_plugin(docker_client, compose_project)
-
     configure_users_for_auth_tests(docker_client, compose_project)
+    install_python_irodsclient(docker_client, compose_project)
 
 
 def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_run):
