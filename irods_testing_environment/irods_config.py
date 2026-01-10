@@ -203,7 +203,7 @@ def configure_host_resolution(docker_client, compose_project):
                 'address_type': 'local',
                 'addresses': [
                     context.container_hostname(container),
-                    context.container_ip(container),
+                    context.container_ip(container, compose_project.name + '_default'),
                     alias
                 ]
             }
@@ -225,7 +225,7 @@ def configure_host_resolution(docker_client, compose_project):
                     'address_type': 'remote',
                     'addresses': [
                         context.container_hostname(other),
-                        context.container_ip(other),
+                        context.container_ip(other, compose_project.name + '_default'),
                         remote_address
                     ]
                 }

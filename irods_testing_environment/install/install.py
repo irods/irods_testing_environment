@@ -110,8 +110,6 @@ class installer(object):
 
         packages = self.get_list_of_package_paths(package_directory, package_name_list)
 
-        logging.info('packages to install [{}]'.format(packages))
-
         tarfile_path = archive.create_archive(packages)
 
         rc = 0
@@ -146,6 +144,17 @@ class installer(object):
 
 
     def install_official_irods_packages(self, ctx, version, containers):
+        """
+        Install iRODS packages from the Consortium repositories with the given version string on the given containers.
+
+        Arguments:
+            ctx: Context object about where the packages are to be installed.
+            version: The version string to use when installing packages (e.g. "5.0.2-0~noble").
+            containers: List of containers into which packages will be downloaded and installed.
+
+        Returns:
+            An integer value with 0 indicating success, and any other value indicating an error code.
+        """
         def install_packages_(ctx, docker_compose_container, packages_list):
             container = ctx.docker_client.containers.get(docker_compose_container.name)
 
@@ -178,11 +187,13 @@ class installer(object):
         else:
             packages = context.irods_package_names(ctx.database_name())
 
-        logging.info('packages to install [{}]'.format(packages))
-
         rc = 0
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            futures_to_containers = {executor.submit(install_packages_, ctx, c, packages): c for c in containers}
+            futures_to_containers = {
+                executor.submit(install_packages_, ctx, c, packages): c
+                for c in containers
+                if not context.is_catalog_database_container(c)
+            }
             logging.debug(futures_to_containers)
 
             for f in concurrent.futures.as_completed(futures_to_containers):
@@ -257,14 +268,37 @@ class installer(object):
 
 
 def make_installer(platform_name):
+    """
+    Create and return an installer suited to the given platform_name.
+
+    Returns:
+        An installer suited to the given platform_name.
+
+    Raises:
+        ValueError: If platform_name is not in the list of supported platforms.
+    """
     from . import almalinux_installer
     from . import debian_installer
     from . import rockylinux_installer
     from . import ubuntu_installer
 
-    name = '_'.join([platform_name, 'installer'])
+    normalized = platform_name.lower()
+    for prefix in ("almalinux", "rockylinux", "debian", "ubuntu"):
+        if normalized.startswith(prefix):
+            normalized = prefix
+            break
 
-    return eval('.'.join([name, name]))()
+    installers = {
+        "almalinux": almalinux_installer.almalinux_installer,
+        "rockylinux": rockylinux_installer.rockylinux_installer,
+        "debian": debian_installer.debian_installer,
+        "ubuntu": ubuntu_installer.ubuntu_installer,
+    }
+
+    if normalized not in installers:
+        raise ValueError(f"unsupported platform [{platform_name}]")
+
+    return installers[normalized]()
 
 
 def install_pip_package_from_repo(container,
