@@ -1,3 +1,20 @@
+"""Manages information about iRODS test containers and services, and provides other utilities."""
+
+import docker
+
+_docker_client = None
+
+
+def docker_client():
+    """
+    Return a static docker.client instance constructed from the local environment.
+
+    Returns:
+        A docker.client instance.
+    """
+    return _docker_client or docker.from_env()
+
+
 class context(object):
     """Class for holding Docker/Compose environment and container context information."""
     def __init__(self, docker_client=None, compose_project=None):
@@ -8,8 +25,7 @@ class context(object):
         docker_client -- Docker client environment with which we communicate with the daemon
         compose_project -- compose.project information
         """
-        import docker
-        self.docker_client = docker_client or docker.from_env()
+        self.docker_client = docker_client or docker_client()
         self.compose_project = compose_project
         self.platform_image_tag = None
         self.database_image_tag = None
@@ -22,12 +38,25 @@ class context(object):
         platform_service_instance -- service instance to target for platform derivation
         """
         if not self.platform_image_tag:
-            self.platform_image_tag = base_image(self.docker_client.containers.get(
-                container_name(self.compose_project.name,
+            container = self.docker_client.containers.get(
+                container_name(
+                    self.compose_project.name,
                     platform_service_name or irods_catalog_provider_service(),
-                    platform_service_instance)))
+                    platform_service_instance,
+                )
+            )
 
-        return self.platform_image_tag.split('/')[-1]
+            # This is a reliable way to get the image tag for the platform. This has historically been derived from
+            # the image layer history, but the images from the base layers can shift and information is lost over
+            # time, so this is not reliable. Another way to do this would be through the use of Docker image labels.
+            command = "python3 -c \"import distro; print(f'{distro.id()}:{distro.version()}')\""
+            exit_code, output = container.exec_run(command)
+            if exit_code != 0:
+                raise RuntimeError(f"Failed to get platform for container [{container.name}]")
+
+            self.platform_image_tag = output.decode().strip()
+
+        return self.platform_image_tag
 
     def database(self, database_service_instance=1):
         """Return database Docker image from the database service in `self.compose_project`.
@@ -36,10 +65,13 @@ class context(object):
         database_service_instance -- service instance to target for database derivation
         """
         if not self.database_image_tag:
-            self.database_image_tag = base_image(self.docker_client.containers.get(
-                irods_catalog_database_container(self.compose_project.name)))
+            container = self.docker_client.containers.get(
+                container_name(self.compose_project.name, irods_catalog_database_service(), database_service_instance)
+            )
+            # Just take the first tag as it is likely the database image tag.
+            self.database_image_tag = container.image.tags[0]
 
-        return self.database_image_tag.split('/')[-1]
+        return self.database_image_tag
 
     def platform_name(self):
         """Return the repo name for the OS platform image for this Compose project."""
@@ -145,50 +177,62 @@ def sanitize(repo_or_tag):
 
 
 def project_name(container_name):
-    """Return the docker-compose project name based on the `container_name`.
-
-    NOTE: docker-compose "sanitizes" project names to remove certain special characters, so the
-    `--project-name` provided to `docker-compose` may be different from the project name used
-    when constructed the name of the image(s) and container(s).
+    """
+    Return the docker compose project name based on the `container_name`.
 
     Arguments:
-    container_name -- the name of the container from which the project name is extracted
+        container_name: the name of the container from which the project name is extracted
+
+    Returns:
+        The Compose project name associated with the named container.
     """
-    return container_name.split('_')[0]
+    return docker_client().api.inspect_container(container_name)["Config"]["Labels"]["com.docker.compose.project"]
 
 
 def service_name(container_name):
-    """Return the docker-compose project service name based on the `container_name`.
+    """
+    Return the docker compose service name based on the `container_name`.
 
     Arguments:
-    container_name -- the name of the container from which the service name is extracted
+        container_name: the name of the container from which the service name is extracted
+
+    Returns:
+        The Compose service name associated with the named container.
     """
-    return container_name.split('_')[1]
+    return docker_client().api.inspect_container(container_name)["Config"]["Labels"]["com.docker.compose.service"]
 
 
 def service_instance(container_name):
-    """Return the service instance number based on the `container_name`.
+    """
+    Return the docker compose service instance (i.e. container number) based on the `container_name`.
 
     Arguments:
-    container_name -- the name of the container from which the service instance is extracted
+        container_name: the name of the container from which the service instance is extracted
+
+    Returns:
+        The Compose service instance (i.e. container number) associated with the named container.
     """
-    return int(container_name.split('_')[2])
+    return int(
+        docker_client().api.inspect_container(container_name)["Config"]["Labels"]["com.docker.compose.container-number"]
+    )
 
 
 def container_name(project_name, service_name, service_instance=1):
-    """Return the name of the container as constructed by docker-compose.
+    """
+    Return the name of the container as constructed by docker compose v2.
 
-    The passed in `project_name` will have dots (.) removed because docker-compose strips all
-    dots from its project names. docker-compose container names are generated in three parts
-    which are delimited by underscores, like this:
-        project-name_service-name_service-instance-as-a-1-indexed-integer
+    docker compose v2 container names are generated in three parts delimited by dashes:
+        project-name-service-name-service-instance-as-a-1-indexed-integer
 
     Arguments:
-    project_name -- name of the docker-compose project (1)
-    service_name -- name of the service in the docker-compose project (2)
-    service_instance -- number of the instance of the service instance (3)
+        project_name: name of the docker compose project (1)
+        service_name: name of the service in the docker compose project (2)
+        service_instance: number of the instance of the service instance (3)
+
+    Returns:
+        The name of the container as constructed by Docker Compose.
     """
-    return '_'.join([sanitize(project_name), service_name, str(service_instance)])
+    return '-'.join([sanitize(project_name), service_name, str(service_instance)])
 
 
 def base_image(container, tag=0):
@@ -209,22 +253,30 @@ def base_image(container, tag=0):
 
 
 def container_hostname(container):
-    """Return the hostname for the specified docker.container.
+    """
+    Return the hostname for the specified docker.container.
 
     Arguments:
-    container -- docker.container from which the hostname is to be extracted
+        container: docker.container from which the hostname is to be extracted
+
+    Returns:
+        The hostname for the specified container.
     """
-    return container.client.api.inspect_container(container.name)['Config']['Hostname']
+    return docker_client().api.inspect_container(container.name)['Config']['Hostname']
 
 
 def container_ip(container, network_name=None):
-    """Return the IP address for the specified docker.container.
+    """
+    Return the IP address for the specified docker.container.
 
     Arguments:
-    container -- docker.container from which the IP is to be extracted
-    network_name -- name of the docker network to inspect (if None, default network is used)
+        container: docker.container from which the IP is to be extracted
+        network_name: name of the docker network to inspect (if None, default network is used)
+
+    Returns:
+        The IP address for the specified container.
     """
-    return (container.client.api.inspect_container(container.name)
+    return (docker_client().api.inspect_container(container.name)
         ['NetworkSettings']
         ['Networks']
         [network_name or '_'.join([project_name(container.name), 'default'])]

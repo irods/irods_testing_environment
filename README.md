@@ -29,40 +29,14 @@ The following database Docker image tags are currently supported (although not f
 
 ## Requirements
 
-A recent-ish version of docker, python, and git are required to run this project.
+Python 3.9 or later, and recent versions of Git and pip are required to run this project.
 
 It is *highly recommended* to use a `virtualenv` python virtual environment. You can set one up which installs the Minimum Requirements (see above) like this:
 ```bash
-virtualenv -p python3 ~/irods_testing_environment
-source ~/irods_testing_environment/bin/activate
-pip install docker-compose GitPython
-pip freeze
-```
-Compare the output to `requirements.txt`.
-
-### A note about `docker-compose`
-
-`docker-compose` is being phased out by Docker and you may experience problems installing it via `pip`.
-
-If this happens to you, try doing the following:
-
-Clone the Docker Compose Git repository:
-```bash
-git clone https://github.com/docker/compose
-```
-
-Check out the latest tag which was still using the Python implementation:
-```bash
-cd compose
-git checkout 1.29.2
-```
-
-At this point, you can make the modifications needed to fix any problems you may encounter.
-
-Once done, back out and pip install the local directory:
-```bash
-cd -
-pip install ./compose
+python3 -m virtualenv /path/to/new/virtualenv
+source /path/to/new/virtualenv/bin/activate
+python3 -m pip install docker GitPython cryptography
+python3 -m pip freeze
 ```
 
 ## Run iRODS Tests

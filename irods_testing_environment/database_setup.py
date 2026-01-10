@@ -431,8 +431,8 @@ def wait_for_database_service(ctx,
 
     db_container = ctx.docker_client.containers.get(
         context.irods_catalog_database_container(ctx.compose_project.name, database_service_instance))
-    db_address = context.container_ip(db_container)
-    db_port = database_server_port(context.base_image(db_container))
+    db_address = context.container_ip(db_container, ctx.compose_project.name + '_default')
+    db_port = database_server_port(ctx.database())
 
     logging.info(f'waiting for catalog to be ready [{db_container.name}]')
 
