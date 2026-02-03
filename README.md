@@ -124,7 +124,7 @@ The path for plugin packages used should be `/path/to/plugin/packages`. The test
 $ ls -l /path/to/plugin/packages
 total 8
 drwxr-xr-x 2 user user 4096 Apr 11 17:17  rocky-9
-lrwxrwxrwx 1 user user    8 May 27 14:54 'Rocky linux_7' -> rocky-9
+lrwxrwxrwx 1 user user    8 May 27 14:54 'Rocky linux_9' -> rocky-9
 lrwxrwxrwx 1 user user   12 May 27 14:54  Ubuntu_22 -> ubuntu-22.04
 drwxr-xr-x 3 user user 4096 Apr 11 17:15  ubuntu-22.04
 ```
