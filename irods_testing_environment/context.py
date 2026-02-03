@@ -69,7 +69,7 @@ class context(object):
                 container_name(self.compose_project.name, irods_catalog_database_service(), database_service_instance)
             )
             # Just take the first tag as it is likely the database image tag.
-            self.database_image_tag = container.image.tags[0]
+            self.database_image_tag = container.image.tags[0].split("/")[-1]
 
         return self.database_image_tag
 
