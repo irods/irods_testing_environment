@@ -233,7 +233,7 @@ docker run --rm -d \
 ```
 
 This does the following:
- 1. Runs the `xunit-viewer1 container with the specified test results as a server on the default port.
+ 1. Runs the `xunit-viewer1` container with the specified test results as a server on the default port.
  2. Provides `/results` as a volume mount in the container. `/path/to/test-results` is the location of the test results as specified by the `--output-directory`/`-o` option for the test-running scripts.
  3. Exposes port 3000 in the container as 3000 on the host. This is the default port for the `xunit-viewer` server.
 
