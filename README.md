@@ -215,6 +215,12 @@ See `ssh-agent` and `ssh-add` man pages for more details.
 
 For more information about remote execution on Docker, read this: [https://www.docker.com/blog/how-to-deploy-on-remote-docker-hosts-with-docker-compose/](https://www.docker.com/blog/how-to-deploy-on-remote-docker-hosts-with-docker-compose/)
 
+## Specify an alternative Compose project name
+
+By default, Docker Compose uses the directory housing the target Compose file as the "project name". The project name appears at the beginning of the container and network names created by Compose when a project is brought up. The Docker Compose CLI includes an option to specify an alternative project name: `--project-name`. The scripts used for running tests and standing up iRODS zones all include a `--project-name` option as well. This functions identically to the `--project-name` option used with the Docker Compose CLI.
+
+For more information about Compose project names, read this: [https://docs.docker.com/compose/how-tos/project-name](https://docs.docker.com/compose/how-tos/project-name/).
+
 ## View results with `xunit-viewer`
 
 An `xunit-viewer` (https://github.com/lukejpreston/xunit-viewer) Dockerfile was added so that the JUnit XML reports can be viewed a little more easily.
