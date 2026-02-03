@@ -1,5 +1,8 @@
 FROM almalinux:8
 
+# BASE_IMAGE_TAG must always match the image name for this build stage (the argument to the FROM instruction above).
+ENV BASE_IMAGE_TAG=almalinux:8
+
 RUN yum check-update -q >/dev/null || { [ "$?" -eq 100 ] && yum update -y; } && \
     yum install -y \
         ca-certificates \
