@@ -2,6 +2,9 @@
 
 FROM almalinux:10
 
+# BASE_IMAGE_TAG must always match the image name for this build stage (the argument to the FROM instruction above).
+ENV BASE_IMAGE_TAG=almalinux:10
+
 SHELL [ "/usr/bin/bash", "-c" ]
 
 # Make sure we're starting with an up-to-date image

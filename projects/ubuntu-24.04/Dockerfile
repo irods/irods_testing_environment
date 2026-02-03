@@ -1,5 +1,8 @@
 FROM ubuntu:24.04
 
+# BASE_IMAGE_TAG must always match the image name for this build stage (the argument to the FROM instruction above).
+ENV BASE_IMAGE_TAG=ubuntu:24.04
+
 SHELL [ "/bin/bash", "-c" ]
 ENV DEBIAN_FRONTEND=noninteractive
 

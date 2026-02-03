@@ -49,12 +49,12 @@ class context(object):
             # This is a reliable way to get the image tag for the platform. This has historically been derived from
             # the image layer history, but the images from the base layers can shift and information is lost over
             # time, so this is not reliable. Another way to do this would be through the use of Docker image labels.
-            command = "python3 -c \"import distro; print(f'{distro.id()}:{distro.version()}')\""
+            command = "bash -c 'echo ${BASE_IMAGE_TAG}'"
             exit_code, output = container.exec_run(command)
             if exit_code != 0:
-                raise RuntimeError(f"Failed to get platform for container [{container.name}]")
-
-            self.platform_image_tag = output.decode().strip()
+                raise RuntimeError(f"[{container.name}]: Failed to get platform ID and version")
+            # Some image tags use forward slashes as delimiters, but the last part usually contains the platform name.
+            self.platform_image_tag = output.decode().strip().split("/")[-1]
 
         return self.platform_image_tag
 
@@ -68,7 +68,8 @@ class context(object):
             container = self.docker_client.containers.get(
                 container_name(self.compose_project.name, irods_catalog_database_service(), database_service_instance)
             )
-            # Just take the first tag as it is likely the database image tag.
+            # Just take the first tag as it is likely the database image tag. Some image tags use forward slashes as
+            # delimiters, but the last part usually contains the platform name.
             self.database_image_tag = container.image.tags[0].split("/")[-1]
 
         return self.database_image_tag
