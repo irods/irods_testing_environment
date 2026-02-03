@@ -243,3 +243,5 @@ This does the following:
  2. Provides `/results` as a volume mount in the container. `/path/to/test-results` is the location of the test results as specified by the `--output-directory`/`-o` option for the test-running scripts.
  3. Exposes port 3000 in the container as 3000 on the host. This is the default port for the `xunit-viewer` server.
 
+> [!Note]
+> If using SELinux or RHEL, you may need to use the `Z` option on the `/results` bind mount. See [https://docs.docker.com/engine/storage/bind-mounts/#configure-the-selinux-label](https://docs.docker.com/engine/storage/bind-mounts/#configure-the-selinux-label) for details.
