@@ -122,6 +122,9 @@ except Exception as e:
     raise
 
 finally:
+    # TODO(#286): Replace use of root logger
+    logging.error("message:[%s]", args.job_message)  # noqa: LOG015
+
     if args.save_logs:
         try:
             logging.warning('collecting logs [{}]'.format(output_directory))

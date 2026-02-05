@@ -104,6 +104,9 @@ if __name__ == "__main__":
             # Just grab the version and sha from the first container since they are all running the same thing.
             cli.log_irods_version_and_commit_id(containers[0])
 
+        # TODO(#286): Replace use of root logger
+        logging.error("message:[%s]", args.job_message)  # noqa: LOG015
+
         if args.save_logs:
             logging.warning('collecting logs [{}]'.format(output_directory))
 
