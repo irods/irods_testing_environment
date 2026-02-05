@@ -158,6 +158,9 @@ if __name__ == "__main__":
             # Just grab the version and sha from the test container since it is what is being tested.
             cli.log_irods_version_and_commit_id(container)
 
+        # TODO(#286): Replace use of root logger
+        logging.error("message:[%s]", args.job_message)  # noqa: LOG015
+
         if args.save_logs:
             try:
                 logging.error('collecting logs [{}]'.format(output_directory))
