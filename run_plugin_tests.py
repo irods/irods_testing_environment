@@ -56,13 +56,13 @@ ctx = context.context(docker.from_env(use_ssh_client=True),
                           project_dir=project_directory,
                           project_name=args.project_name))
 
+job_name = test_utils.job_name(ctx.compose_project.name, args.job_name)
+
 if args.output_directory:
     dirname = args.output_directory
 else:
     import tempfile
-    dirname = tempfile.mkdtemp(prefix=ctx.compose_project.name)
-
-job_name = test_utils.job_name(ctx.compose_project.name, args.job_name)
+    dirname = tempfile.mkdtemp(prefix=job_name)
 
 output_directory = test_utils.make_output_directory(dirname, job_name)
 
