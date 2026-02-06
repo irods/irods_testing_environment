@@ -34,7 +34,7 @@ def make_postgres_odbcinst_ini(csp_container):
 
     cmd = 'bash -c \'echo "{0}" > {1}\''.format(odbcinst_ini_contents, odbcinst_ini_path)
     ec = execute.execute_command(csp_container, cmd)
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to populate odbcinst.ini [ec=[{0}], container=[{1}]]'
             .format(ec, csp_container))
 
@@ -331,7 +331,7 @@ def make_mysql_odbcinst_ini(csp_container, container_odbc_driver_dir):
 
     cmd = 'bash -c \'echo "{0}" > {1}\''.format(odbcinst_ini_contents, odbcinst_ini_path)
     ec = execute.execute_command(csp_container, cmd)
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to populate odbcinst.ini [ec=[{0}], container=[{1}]]'
             .format(ec, csp_container))
 
@@ -632,7 +632,7 @@ def make_mariadb_odbcinst_ini(csp_container, container_odbc_lib_dir):
 
     cmd = 'bash -c \'echo "{0}" > {1}\''.format(odbcinst_ini_contents, odbcinst_ini_path)
     ec = execute.execute_command(csp_container, cmd)
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to populate odbcinst.ini [ec=[{0}], container=[{1}]]'
             .format(ec, csp_container))
 

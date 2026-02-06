@@ -129,7 +129,7 @@ def configure_users_for_auth_tests(docker_client, compose_project):
         for username, password in usernames_and_passwords:
             create_user = f'useradd {username}'
 
-            if execute.execute_command(container, create_user) is not 0:
+            if execute.execute_command(container, create_user) != 0:
                 raise RuntimeError(f'[{container.name}] failed to create user [{username}]')
 
             if password is None or password == '':
@@ -137,7 +137,7 @@ def configure_users_for_auth_tests(docker_client, compose_project):
 
             set_password = f'bash -c "echo \'{username}:{password}\' | chpasswd"'
 
-            if execute.execute_command(container, set_password) is not 0:
+            if execute.execute_command(container, set_password) != 0:
                 raise RuntimeError(f'[{container.name}] failed to set password [{password}] for user [{username}]')
 
         return 0
@@ -167,7 +167,7 @@ def configure_users_for_auth_tests(docker_client, compose_project):
             container = futures_to_containers[f]
             try:
                 ec = f.result()
-                if ec is not 0:
+                if ec != 0:
                     logging.error(f'[{container.name}] error while creating test user accounts')
                     rc = ec
                 else:
@@ -178,7 +178,7 @@ def configure_users_for_auth_tests(docker_client, compose_project):
                 logging.error(e)
                 rc = 1
 
-    if rc is not 0:
+    if rc != 0:
         raise RuntimeError('failed to create test user accounts on some service')
 
 
@@ -236,7 +236,7 @@ def configure_host_resolution(docker_client, compose_project):
         update_host_resolution_config = '''bash -c "sed -i 's/\\"host_entries\\": \\[\\]/\\"host_entries\\": {}/g' /etc/irods/server_config.json"'''.format(
             json.dumps(host_entries).replace('"', '\\"'))
 
-        if execute.execute_command(container, update_host_resolution_config ) is not 0:
+        if execute.execute_command(container, update_host_resolution_config) != 0:
             raise RuntimeError('failed to update host_resolution configuration for [{}]'.format(container.name))
 
         execute.execute_command(container, 'bash -c "cat /etc/irods/server_config.json"')
@@ -260,7 +260,7 @@ def configure_host_resolution(docker_client, compose_project):
             container = futures_to_containers[f]
             try:
                 ec = f.result()
-                if ec is not 0:
+                if ec != 0:
                     logging.error('error while configuring host resolution on container [{}]'
                                   .format(container.name))
                     rc = ec
@@ -274,7 +274,7 @@ def configure_host_resolution(docker_client, compose_project):
                 logging.error(e)
                 rc = 1
 
-    if rc is not 0:
+    if rc != 0:
         raise RuntimeError('failed to configure host resolution on some service')
 
 
@@ -291,21 +291,18 @@ def configure_hello_script(docker_client, compose_project):
         make_script_executable = 'chmod 544 {}'.format(script)
 
         on_container = docker_client.containers.get(docker_compose_container.name)
-        if execute.execute_command(on_container, chown_msiexec) is not 0:
+        if execute.execute_command(on_container, chown_msiexec) != 0:
             raise RuntimeError('failed to change ownership to msiExecCmd_bin [{}]'
                                .format(on_container.name))
 
-        if execute.execute_command(on_container,
-                                   copy_from_template,
-                                   user='irods',
-                                   workdir=context.irods_home()) is not 0:
+        if execute.execute_command(on_container, copy_from_template, user="irods", workdir=context.irods_home()) != 0:
             raise RuntimeError('failed to copy hello.template template file [{}]'
                                .format(on_container.name))
 
-        if execute.execute_command(on_container,
-                                   make_script_executable,
-                                   user='irods',
-                                   workdir=context.irods_home()) is not 0:
+        if (
+            execute.execute_command(on_container, make_script_executable, user="irods", workdir=context.irods_home())
+            != 0
+        ):
             raise RuntimeError('failed to change permissions on hello script [{}]'
                                .format(on_container.name))
 
@@ -342,7 +339,7 @@ def configure_hello_script(docker_client, compose_project):
             container = futures_to_containers[f]
             try:
                 ec = f.result()
-                if ec is not 0:
+                if ec != 0:
                     logging.error('error while configuring hello script on container [{}]'
                                   .format(container.name))
                     rc = ec
@@ -354,7 +351,7 @@ def configure_hello_script(docker_client, compose_project):
                 logging.error(e)
                 rc = 1
 
-    if rc is not 0:
+    if rc != 0:
         raise RuntimeError('failed to configure hello script on some service')
 
 
@@ -372,28 +369,27 @@ def configure_univmss_script(docker_client, compose_project):
         make_script_executable = 'chmod 544 {}'.format(script)
 
         on_container = docker_client.containers.get(docker_compose_container.name)
-        if execute.execute_command(on_container, chown_msiexec) is not 0:
+        if execute.execute_command(on_container, chown_msiexec) != 0:
             raise RuntimeError('failed to change ownership to msiExecCmd_bin [{}]'
                                .format(on_container.name))
 
-        if execute.execute_command(on_container,
-                                   copy_from_template,
-                                   user='irods',
-                                   workdir=context.irods_home()) is not 0:
+        if execute.execute_command(on_container, copy_from_template, user="irods", workdir=context.irods_home()) != 0:
             raise RuntimeError('failed to copy univMSSInterface.sh template file [{}]'
                                .format(on_container.name))
 
-        if execute.execute_command(on_container,
-                                   remove_template_from_commands,
-                                   user='irods',
-                                   workdir=context.irods_home()) is not 0:
+        if (
+            execute.execute_command(
+                on_container, remove_template_from_commands, user="irods", workdir=context.irods_home()
+            )
+            != 0
+        ):
             raise RuntimeError('failed to modify univMSSInterface.sh template file [{}]'
                                .format(on_container.name))
 
-        if execute.execute_command(on_container,
-                                   make_script_executable,
-                                   user='irods',
-                                   workdir=context.irods_home()) is not 0:
+        if (
+            execute.execute_command(on_container, make_script_executable, user="irods", workdir=context.irods_home())
+            != 0
+        ):
             raise RuntimeError('failed to change permissions on univMSSInterface.sh [{}]'
                                .format(on_container.name))
 
@@ -422,7 +418,7 @@ def configure_univmss_script(docker_client, compose_project):
             container = futures_to_containers[f]
             try:
                 ec = f.result()
-                if ec is not 0:
+                if ec != 0:
                     logging.error('error while configuring univMSS script on container [{}]'
                                   .format(container.name))
                     rc = ec
@@ -434,7 +430,7 @@ def configure_univmss_script(docker_client, compose_project):
                 logging.error(e)
                 rc = 1
 
-    if rc is not 0:
+    if rc != 0:
         raise RuntimeError('failed to configure univMSS script on some service')
 
 
@@ -477,7 +473,7 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
     username = '#'.join(['zonehopper', zone_where_tests_will_run.zone_name])
     mkuser = 'iadmin mkuser {} rodsuser'.format(username)
     logging.info('creating user [{}] in container [{}]'.format(username, container.name))
-    if execute.execute_command(container, mkuser, user='irods') is not 0:
+    if execute.execute_command(container, mkuser, user="irods") != 0:
         raise RuntimeError('failed to create remote user [{}] [{}]'
                            .format(username, container.name))
 
@@ -485,14 +481,14 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
     username = '#'.join(['zonehopper', remote_zone.zone_name])
     mkuser = 'iadmin mkuser {} rodsuser'.format(username)
     logging.info('creating user [{}] in container [{}]'.format(username, container.name))
-    if execute.execute_command(container, mkuser, user='irods') is not 0:
+    if execute.execute_command(container, mkuser, user="irods") != 0:
         raise RuntimeError('failed to create remote user [{}] [{}]'
                            .format(username, container.name))
 
     # set password of zonehopper#<remote_zone> user
     moduser = 'iadmin moduser {} password 53CR37'.format(username)
     logging.info('setting password of user [{}] in container [{}]'.format(username, container.name))
-    if execute.execute_command(container, moduser, user='irods') is not 0:
+    if execute.execute_command(container, moduser, user="irods") != 0:
         raise RuntimeError('failed to set password for remote user [{}] [{}]'
                            .format(username, container.name))
 
@@ -502,7 +498,7 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
     ptname = 'federation_remote_passthrough'
     make_pt = 'iadmin mkresc {} passthru'.format(ptname)
     logging.info('creating passthrough resource [{}] [{}]'.format(make_pt, container.name))
-    if execute.execute_command(container, make_pt, user='irods') is not 0:
+    if execute.execute_command(container, make_pt, user="irods") != 0:
         raise RuntimeError('failed to create passthrough resource [{}] [{}]'
                            .format(ptname, container.name))
 
@@ -512,14 +508,14 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
         ufsname, context.container_hostname(container),
         os.path.join('/tmp', ufsname))
     logging.info('creating unixfilesystem resource [{}] [{}]'.format(make_ufs, container.name))
-    if execute.execute_command(container, make_ufs, user='irods') is not 0:
+    if execute.execute_command(container, make_ufs, user="irods") != 0:
         raise RuntimeError('failed to create unixfilesystem resource [{}] [{}]'
                            .format(ufsname, container.name))
 
     # make the hierarchy
     make_hier = 'iadmin addchildtoresc {} {}'.format(ptname, ufsname)
     logging.info('creating hierarchy [{}] [{}]'.format(make_hier, container.name))
-    if execute.execute_command(container, make_hier, user='irods') is not 0:
+    if execute.execute_command(container, make_hier, user="irods") != 0:
         raise RuntimeError('failed to create hierarchy [{};{}] [{}]'
                            .format(ptname, ufsname, container.name))
 
@@ -527,7 +523,7 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
     bug_3466_query = 'select alias, sqlStr from R_SPECIFIC_QUERY'
     asq = 'iadmin asq \'{}\' {}'.format(bug_3466_query, 'bug_3466_query')
     logging.info('creating specific query [{}] [{}]'.format(asq, container.name))
-    if execute.execute_command(container, asq, user='irods') is not 0:
+    if execute.execute_command(container, asq, user="irods") != 0:
         raise RuntimeError('failed to create specific query [{}] [{}]'
                            .format(bug_3466_query, container.name))
 
@@ -535,7 +531,7 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
     if server_version_is_irods_5(container):
         reload_config = "python3 -c 'from scripts.irods.controller import IrodsController; IrodsController().reload_configuration()'"
         logging.info('reloading configuration for [{}] [{}]'.format(reload_config, container.name))
-        if execute.execute_command(container, reload_config, user='irods', workdir=context.irods_home()) is not 0:
+        if execute.execute_command(container, reload_config, user="irods", workdir=context.irods_home()) != 0:
             raise RuntimeError('failed to reload configuration [{}] [{}]'
                                .format(reload_config, container.name))
 
@@ -547,7 +543,7 @@ def configure_irods_federation_testing(ctx, remote_zone, zone_where_tests_will_r
         )
 
         logging.info('reloading configuration for [{}] [{}]'.format(reload_config, container.name))
-        if execute.execute_command(container, reload_config, user='irods', workdir=context.irods_home()) is not 0:
+        if execute.execute_command(container, reload_config, user="irods", workdir=context.irods_home()) != 0:
             raise RuntimeError('failed to reload configuration [{}] [{}]'
                                .format(reload_config, container.name))
 

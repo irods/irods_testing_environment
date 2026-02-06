@@ -62,7 +62,7 @@ class test_manager:
             r = r + tr.result_string()
             tests_were_skipped = tests_were_skipped if tests_were_skipped else len(tr.skipped_tests()) > 0
 
-        if self.return_code() is not 0:
+        if self.return_code() != 0:
             r = r + 'List of failed tests:\n\t{}\n'.format(' '.join([t or 'all tests' for t,_ in self.failed_tests()]))
             r = r + 'Return code:[{}]\n'.format(self.return_code())
 
