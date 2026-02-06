@@ -162,7 +162,7 @@ class test_runner:
 
         self.duration = run_end - run_start
 
-        if self.rc is not 0:
+        if self.rc != 0:
             logging.error('[{}]: tests that failed [{}]'.format(self.name(), self.failed_tests()))
 
 

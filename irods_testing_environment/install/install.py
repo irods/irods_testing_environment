@@ -92,12 +92,12 @@ class installer(object):
         logging.warning('executing cmd [{0}] on container [{1}]'.format(cmd, container.name))
 
         ec = execute.execute_command(container, self.update_command())
-        if ec is not 0:
+        if ec != 0:
             logging.error('failed to update local repositories [{}]'.format(container.name))
             return ec
 
         ec = execute.execute_command(container, cmd)
-        if ec is not 0:
+        if ec != 0:
             logging.error(
                 'failed to install packages on container [ec=[{0}], container=[{1}]'.format(ec, container.name))
             return ec
@@ -126,7 +126,7 @@ class installer(object):
                 container = futures_to_containers[f]
                 try:
                     ec = f.result()
-                    if ec is not 0:
+                    if ec != 0:
                         logging.error('error while installing packages on container [{}]'
                                       .format(container.name))
                         rc = ec
@@ -165,12 +165,12 @@ class installer(object):
             logging.warning('executing cmd [{0}] on container [{1}]'.format(cmd, container.name))
 
             ec = execute.execute_command(container, self.update_command())
-            if ec is not 0:
+            if ec != 0:
                 logging.error('failed to update local repositories [{}]'.format(container.name))
                 return ec
 
             ec = execute.execute_command(container, cmd)
-            if ec is not 0:
+            if ec != 0:
                 logging.error(
                     'failed to install packages on container [ec=[{0}], container=[{1}]'.format(ec, container.name))
 
@@ -200,7 +200,7 @@ class installer(object):
                 container = futures_to_containers[f]
                 try:
                     ec = f.result()
-                    if ec is not 0:
+                    if ec != 0:
                         logging.error('error while installing packages on container [{}]'.format(container.name))
                         rc = ec
 
@@ -243,7 +243,7 @@ class installer(object):
                                        os.path.abspath(externals_directory),
                                        ctx.irods_containers(),
                                        context.irods_externals_package_names())
-            if ec is not 0:
+            if ec != 0:
                 raise RuntimeError('failed to install externals')
 
         if package_directory:
@@ -254,7 +254,7 @@ class installer(object):
                                        os.path.abspath(package_directory),
                                        ctx.irods_containers(),
                                        context.irods_package_names(ctx.database_name()))
-            if ec is not 0:
+            if ec != 0:
                 raise RuntimeError('failed to install iRODS packages')
 
         else:
@@ -263,7 +263,7 @@ class installer(object):
                             .format(package_version))
 
             ec = self.install_official_irods_packages(ctx, package_version, ctx.irods_containers())
-            if ec is not 0:
+            if ec != 0:
                 raise RuntimeError('failed to install iRODS packages')
 
 
@@ -321,6 +321,6 @@ def install_pip_package_from_repo(container,
     ec = execute.execute_command(container, ' '.join(
                                  [container_info.python(container),
                                   '-m', 'pip', 'install', repo_path]))
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('Failed to install pip package [{}] [{}]'
                            .format(repo_path, container.name))

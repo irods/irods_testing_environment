@@ -144,7 +144,7 @@ def run_python_test_suite(container, options=None):
                                  workdir=context.irods_home(),
                                  stream_output=True)
 
-    if ec is not 0:
+    if ec != 0:
         logging.warning('command exited with error code [{}] [{}] [{}]'
                         .format(ec, command, container.name))
 
