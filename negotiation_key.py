@@ -64,8 +64,8 @@ def do_negotiation_key_tests(target_container,
 def test_negotiation_key(target_container, remote_container):
     logging.info('target [{}] remote [{}]'.format(target_container.name, remote_container.name))
 
-    execute.execute_command(target_container, 'apt install -y jq')
-    execute.execute_command(remote_container, 'apt install -y jq')
+    execute.execute_command(target_container, "apt-get install -y jq")
+    execute.execute_command(remote_container, "apt-get install -y jq")
 
     irods_client_server_policies = ['CS_NEG_DONT_CARE',
                                     'CS_NEG_REFUSE',
