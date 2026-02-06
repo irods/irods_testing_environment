@@ -56,13 +56,13 @@ ctx = context.context(docker.from_env(use_ssh_client=True),
                           project_dir=project_directory,
                           project_name=args.project_name))
 
+job_name = test_utils.job_name(ctx.compose_project.name, args.job_name)
+
 if args.output_directory:
     dirname = args.output_directory
 else:
     import tempfile
-    dirname = tempfile.mkdtemp(prefix=ctx.compose_project.name)
-
-job_name = test_utils.job_name(ctx.compose_project.name, args.job_name)
+    dirname = tempfile.mkdtemp(prefix=job_name)
 
 output_directory = test_utils.make_output_directory(dirname, job_name)
 
@@ -122,6 +122,9 @@ except Exception as e:
     raise
 
 finally:
+    # TODO(#286): Replace use of root logger
+    logging.error("message:[%s]", args.job_message)  # noqa: LOG015
+
     if args.save_logs:
         try:
             logging.warning('collecting logs [{}]'.format(output_directory))
@@ -135,18 +138,18 @@ finally:
                                                   [os.path.join(context.irods_home(), 'test-reports')],
                                                   output_directory)
 
+            # ...and then the extra logs.
+            if args.extra_logs_path:
+                archive.collect_files_from_containers(
+                    ctx.docker_client, ctx.irods_containers(), [args.extra_logs_path], output_directory
+                )
+
         except Exception as e:
             logging.error(e)
             logging.error('failed to collect some log files')
 
             if rc == 0:
                 rc = 1
-
-    if args.extra_logs_path:
-        try:
-            logs.collect_logs(ctx.docker_client, ctx.irods_containers(), output_directory, logfile_path = args.extra_logs_path)
-        except docker.errors.NotFound:
-            logging.warning('Path in container not found for --extra-logs-path {!r}'.format(args.extra_logs_path))
 
     if args.cleanup_containers:
         ctx.compose_project.down(include_volumes=True, remove_image_type=False)

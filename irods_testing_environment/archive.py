@@ -184,7 +184,7 @@ def copy_files_in_container(container, sources_and_destinations):
             'copying source [{}] in container to destination in container [{}] [{}]'.format(
             s, d, container.name))
 
-        if execute.execute_command(container, 'cp {} {}'.format(s, d)) is not 0:
+        if execute.execute_command(container, f"cp {s} {d}") != 0:
             raise RuntimeError('failed to copy file src [{}] dest [{}] [{}]'
                 .format(s, d, container.name))
 

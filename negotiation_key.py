@@ -11,13 +11,13 @@ import json_utils
 
 def backup_file(container, file_path):
     backup_file_path = file_path + '.orig'
-    if execute.execute_command(container, 'cp {} {}'.format(file_path, backup_file_path)) is not 0:
+    if execute.execute_command(container, f"cp {file_path} {backup_file_path}") != 0:
         raise RuntimeError('failed to backup [{}] [{}]'.format(file_path, container.name))
 
 
 def restore_file(container, file_path):
     backup_file_path = file_path + '.orig'
-    if execute.execute_command(container, 'cp {} {}'.format(backup_file_path, file_path)) is not 0:
+    if execute.execute_command(container, f"cp {backup_file_path} {file_path}") != 0:
         raise RuntimeError('failed to restore [{}] [{}]'.format(file_path, container.name))
 
 
@@ -51,7 +51,7 @@ def do_negotiation_key_tests(target_container,
                 show_configurations(target_container)
 
                 ec = execute.execute_command(target_container, 'ils', user='irods', stream_output=True)
-                if ec is not 0:
+                if ec != 0:
                     logging.error('running "ils" resulted in an error [{}] [{}] [{}] [{}]'
                                   .format(ec, client_tls_negotiation, server_tls_negotiation, nk))
                     rc = ec
@@ -64,8 +64,8 @@ def do_negotiation_key_tests(target_container,
 def test_negotiation_key(target_container, remote_container):
     logging.info('target [{}] remote [{}]'.format(target_container.name, remote_container.name))
 
-    execute.execute_command(target_container, 'apt install -y jq')
-    execute.execute_command(remote_container, 'apt install -y jq')
+    execute.execute_command(target_container, "apt-get install -y jq")
+    execute.execute_command(remote_container, "apt-get install -y jq")
 
     irods_client_server_policies = ['CS_NEG_DONT_CARE',
                                     'CS_NEG_REFUSE',

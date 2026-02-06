@@ -1123,7 +1123,7 @@ def setup_irods_catalog_consumers(ctx,
                 logging.error(e)
                 rc = 1
 
-    if rc is not 0:
+    if rc != 0:
         raise RuntimeError('failed to set up one or more catalog service consumers, ec=[{}]'
                            .format(rc))
 
@@ -1205,7 +1205,7 @@ def setup_irods_zones(ctx,
                 logging.error(e)
                 rc = 1
 
-    if rc is not 0:
+    if rc != 0:
         raise RuntimeError('failed to set up one or more iRODS Zones, ec=[{}]'.format(rc))
 
 

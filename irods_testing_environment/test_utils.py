@@ -1,34 +1,36 @@
 # grown-up modules
+import datetime
+import errno
 import logging
 import os
 import tempfile
-import errno
+import uuid
 
 # local modules
-from . import archive
-from . import container_info
-from . import context
-from . import execute
-from . import services
-from . import test_manager
+from . import container_info, context, execute, test_manager
 
-def job_name(project_name, prefix=None):
-    """Construct unique job name based on the docker-compose project name.
 
-    The job name returned will be of the form: `project_name`_`prefix`_`uuid.uuid4()`
-
-    If no `prefix` is provided, the job name will be of the form: `project_name`_`uuid.uuid4()`
+def job_name(project_name, prefix=None, unique=False):
+    """
+    Construct unique job name based on the Docker Compose project name.
 
     Arguments:
-    project_name -- docker-compose project name which identifies the type of test being run
-    prefix -- optional prefix for the job name
-    """
-    import uuid
-    # TODO: use timestamps, also
-    if prefix:
-        return '_'.join([prefix, project_name, str(uuid.uuid4())])
+        project_name: Docker Compose project name which identifies the type of test being run.
+        prefix: Optional prefix for the job name.
+        unique: If True, appends a UUID to the job name.
 
-    return '_'.join([project_name, str(uuid.uuid4())])
+    Returns:
+        A job name with the following components, separated by underscores:
+            - prefix string (only included if prefix is a non-empty string)
+            - project_name
+            - current UTC timestamp in ISO-8601 format
+            - uuid.uuid4() (as a string; only included if unique is True)
+    """
+    timestamp = datetime.datetime.now(tz=datetime.timezone.utc).isoformat()
+    name = f"{project_name}_{timestamp}"
+    if unique:
+        name = f"{name}_{uuid.uuid4()!s}"
+    return f"{prefix}_{name}" if prefix else name
 
 
 def make_output_directory(dirname, basename):
@@ -142,7 +144,7 @@ def run_python_test_suite(container, options=None):
                                  workdir=context.irods_home(),
                                  stream_output=True)
 
-    if ec is not 0:
+    if ec != 0:
         logging.warning('command exited with error code [{}] [{}] [{}]'
                         .format(ec, command, container.name))
 

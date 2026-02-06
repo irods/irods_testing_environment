@@ -69,7 +69,7 @@ def federate_zones(ctx, zone_info_list, local_zone, include_consumers=True):
                                                                           remote_zone.provider_hostname(ctx),
                                                                           remote_zone.zone_port)
 
-                if execute.execute_command(container, make_remote_zone, user='irods') is not 0:
+                if execute.execute_command(container, make_remote_zone, user="irods") != 0:
                     raise RuntimeError('failed to create remote zone [{}]'
                                        .format(container.name))
 
@@ -110,5 +110,5 @@ def form_federation_clique(ctx, zone_info_list, include_consumers=True):
                 logging.error(e)
                 rc = 1
 
-    if rc is not 0:
+    if rc != 0:
         raise RuntimeError('failed to federate one or more iRODS Zones, ec=[{}]'.format(rc))

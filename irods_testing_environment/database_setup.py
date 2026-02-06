@@ -173,7 +173,7 @@ class postgres_database_setup_strategy(database_setup_strategy):
         """
         ec = self.execute_psql_command('grant all privileges on database \\\"{0}\\\" to {1};'
             .format(database, username))
-        if ec is not 0:
+        if ec != 0:
             return ec
         return self.execute_psql_command('alter database \\\"{0}\\\" owner to {1};'
             .format(database, username))
@@ -395,15 +395,15 @@ def setup_catalog(ctx,
     strat = make_strategy(ctx.database(), db_container, database_port, root_password)
 
     ec = strat.create_database(database_name, force_recreate)
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to create database [{}]'.format(database_name))
 
     ec = strat.create_user(database_user, database_password, force_recreate)
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to create user [{}]'.format(database_user))
 
     ec = strat.grant_privileges(database_name, database_user)
-    if ec is not 0:
+    if ec != 0:
         raise RuntimeError('failed to grant privileges to user [{0}] on database [{1}]'.format(database_user, database_name))
 
     strat.list_databases()
