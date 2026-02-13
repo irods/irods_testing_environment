@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   catalog:
     image: mariadb:10.11
