@@ -254,7 +254,7 @@ def configure_odbc_driver_rockylinux_9_postgres_16(csp_container, odbc_driver):
     csp_container -- docker container on which the iRODS catalog service provider is running
     odbc_driver -- path to local archive file containing the ODBC driver package
     """
-    configure_postgres_odbc_driver(csp_container, odbc_driver)
+    make_postgres_odbcinst_ini(csp_container)
 
 def configure_odbc_driver_rockylinux_9_postgres_17(csp_container, odbc_driver):
     """Configure ODBC driver for postgres 17 on rockylinux 9.
