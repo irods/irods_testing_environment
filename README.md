@@ -221,6 +221,38 @@ By default, Docker Compose uses the directory housing the target Compose file as
 
 For more information about Compose project names, read this: [https://docs.docker.com/compose/how-tos/project-name](https://docs.docker.com/compose/how-tos/project-name/).
 
+## Upgrading packages before running tests
+
+The `--upgrade-package-version` and `--upgrade-package-directory` options allow the user to specify packages to install after initially installing iRODS packages and setting up the iRODS Zone. This is helpful for ensuring that upgrade logic for a particular release is behaving as expected, at least for a default-configured iRODS Zone. Package upgrades only occur if one of these two options are specified.
+
+> [!NOTE]
+> Remember: Downgrading iRODS servers is not supported.
+
+For instance, if you want to run core tests after upgrading an iRODS 4.3.5 Zone to an iRODS 5.0.2 Zone, you can run the following:
+```bash
+python3 run_core_tests.py \
+    --project-dir projects/ubuntu-24.04/ubuntu-24.04-postgres-16/ \
+    --irods-package-version 4.3.5 \
+    --upgrade-package-version 5.0.2
+```
+
+If you want to upgrade to locally built packages instead, you can run the following:
+```bash
+python3 run_core_tests.py \
+    --project-dir projects/ubuntu-24.04/ubuntu-24.04-postgres-16/ \
+    --irods-package-version 4.3.5 \
+    --upgrade-package-directory /path/to/irods/package/directory
+```
+
+You can use these options in conjunction with `--skip-setup` to upgrade packages and then run tests on an already running iRODS server, like this:
+```bash
+# --upgrade-package-version also works in this case
+python3 run_core_tests.py \
+    --project-dir projects/ubuntu-24.04/ubuntu-24.04-postgres-16/ \
+    --upgrade-package-directory /path/to/irods/package/directory \
+    --skip-setup
+```
+
 ## View results with `xunit-viewer`
 
 An `xunit-viewer` (https://github.com/lukejpreston/xunit-viewer) Dockerfile was added so that the JUnit XML reports can be viewed a little more easily.
