@@ -39,11 +39,38 @@ def get_irods_zone_name(container):
     return irods_zone[container.name]
 
 
-def get_irods_version(container):
-    """Return the version of iRODS running on `container` as a tuple (major, minor, patch).
+def _get_irods_version_from_file(container):
+    """
+    Get the version of iRODS running on container from the iRODS version file.
 
-    Arguments:
-    container -- container in which file is found
+    Args:
+        container: container where version is being checked
+
+    Returns:
+        iRODS version tuple in the form (major, minor, patch).
+    """
+    return tuple(int(i) for i in get_irods_version_info(container, 'irods_version').split('.'))
+
+
+def update_cached_irods_version(container):
+    """
+    Update the cached version tuple of iRODS running on container.
+
+    Args:
+        container: container in which file is found
+    """
+    irods_version[container.name] = _get_irods_version_from_file(container)
+
+
+def get_irods_version(container):
+    """
+    Return the version of iRODS running on container.
+
+    Args:
+        container: container in which file is found
+
+    Returns:
+        iRODS version tuple in the form (major, minor, patch).
     """
     global irods_version
 
@@ -51,18 +78,30 @@ def get_irods_version(container):
     if container.name in irods_version:
         return irods_version[container.name]
 
-    irods_version[container.name] = tuple(
-        int(i) for i in get_irods_version_info(container, 'irods_version').split('.')
-    )
+    update_cached_irods_version(container)
 
     return irods_version[container.name]
 
 
-def get_irods_commit_id(container):
-    """Return the commit ID of the build of iRODS running on `container`.
+def update_cached_irods_commit_id(container):
+    """
+    Update cached commit ID of the build of iRODS running on container.
 
-    Arguments:
-    container -- container in which file is found
+    Args:
+        container: container in which version file is found
+    """
+    irods_commit_id[container.name] = get_irods_version_info(container, 'commit_id')
+
+
+def get_irods_commit_id(container):
+    """
+    Get the commit ID of iRODS running on container.
+
+    Args:
+        container: container in which version file is found
+
+    Returns:
+        Commit ID (sha) for the build of iRODS running in container.
     """
     global irods_commit_id
 
@@ -70,7 +109,7 @@ def get_irods_commit_id(container):
     if container.name in irods_commit_id:
         return irods_commit_id[container.name]
 
-    irods_commit_id[container.name] = get_irods_version_info(container, 'commit_id')
+    update_cached_irods_commit_id(container)
 
     return irods_commit_id[container.name]
 

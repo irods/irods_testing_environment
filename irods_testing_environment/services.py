@@ -119,3 +119,33 @@ def clone_repository_to_container(container,
                                             [os.path.abspath(repo_path)], repo_name))
 
     return repo_path
+
+
+def upgrade_irods_packages(
+    ctx, zone_count, package_directory=None, package_version=None, zone_name='tempZone', consumer_count=0
+):
+    """
+    Upgrade existing iRODS packages on the specified, identically-named iRODS Zones.
+
+    This is a convenience function for upgrading iRODS packages on multiple iRODS Zones.
+
+    Args:
+        ctx: context object which holds the Docker client and Compose project information
+        zone_count: number of identical zones to scale up to
+        package_directory: path to directory in which iRODS packages are housed
+        package_version: version tag for official iRODS packages to download and install
+        zone_name: the Zone name shared by all the iRODS Zones
+        consumer_count: number of iRODS Catalog Service Consumers to create and set up for each Zone
+    """
+    install.make_installer(ctx.platform_name()).install_irods_packages(
+        ctx,
+        package_directory=package_directory,
+        package_version=package_version,
+    )
+
+    zone_names = [zone_name for i in range(zone_count)]
+
+    # This should generate a list of identical zone infos
+    zone_info_list = irods_setup.get_info_for_zones(ctx, zone_names, consumer_count)
+
+    irods_setup.upgrade_irods_zones(ctx, zone_info_list)
