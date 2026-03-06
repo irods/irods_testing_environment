@@ -1,16 +1,14 @@
 # grown-up modules
-import compose.cli.command
-import docker
 import logging
 import os
+import sys
+
+import docker
+
+import compose.cli.command
 
 # local modules
-from irods_testing_environment import archive
-from irods_testing_environment import context
-from irods_testing_environment import irods_config
-from irods_testing_environment import tls_setup
-from irods_testing_environment import services
-from irods_testing_environment import test_utils
+from irods_testing_environment import archive, context, irods_config, services, test_utils, tls_setup
 
 if __name__ == "__main__":
     import argparse
@@ -27,6 +25,26 @@ if __name__ == "__main__":
     cli.add_irods_setup_args(parser)
     cli.add_irods_test_args(parser)
 
+    parser.add_argument(
+        '--upgrade-package-directory',
+        metavar='PATH_TO_DIRECTORY_WITH_PACKAGES',
+        dest='upgrade_package_directory',
+        help=textwrap.dedent('''\
+                            Path to local directory which contains iRODS packages to upgrade previously installed \
+                            packages. If neither this or --upgrade-package-version are specified, packages will not \
+                            be upgraded.'''),
+    )
+
+    parser.add_argument(
+        '--upgrade-package-version',
+        metavar='PACKAGE_VERSION_TO_DOWNLOAD',
+        dest='upgrade_package_version',
+        help=textwrap.dedent('''\
+                            Version of official iRODS packages to download and install, upgrading previously installed \
+                            packages. If neither this or --upgrade-package-directory are specified, packages will not \
+                            be upgraded.'''),
+    )
+
     args = parser.parse_args()
 
     if not args.package_version and not args.install_packages:
@@ -36,6 +54,10 @@ if __name__ == "__main__":
     if args.package_directory and args.package_version:
         print('--irods-package-directory and --irods-package-version are incompatible')
         exit(1)
+
+    if args.upgrade_package_directory and args.upgrade_package_version:
+        print('--upgrade-package-directory and --upgrade-package-version are incompatible')
+        sys.exit(1)
 
     project_directory = os.path.abspath(args.project_directory or os.getcwd())
 
@@ -66,10 +88,10 @@ if __name__ == "__main__":
     containers = None
 
     try:
+        consumer_count = 0
         if args.do_setup:
             # Bring up the services
             logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
-            consumer_count = 0
             services.create_topologies(ctx,
                                        zone_count=args.executor_count,
                                        externals_directory=args.irods_externals_package_directory,
@@ -94,6 +116,21 @@ if __name__ == "__main__":
             for i in range(args.executor_count)
         ]
         logging.debug('got containers to run on [{}]'.format(container.name for container in containers))
+
+        if args.upgrade_package_directory or args.upgrade_package_version:
+            # Log the iRODS commit ID before upgrade.
+            logging.error("upgrading iRODS packages from current version...")  # noqa: LOG015
+            cli.log_irods_version_and_commit_id(containers[0])
+            services.upgrade_irods_packages(
+                ctx,
+                zone_count=args.executor_count,
+                package_directory=args.upgrade_package_directory,
+                package_version=args.upgrade_package_version,
+                consumer_count=consumer_count,
+            )
+            # Log the new SHA and version after upgrade.
+            logging.error("iRODS packages upgraded")  # noqa: LOG015
+            cli.log_irods_version_and_commit_id(containers[0])
 
         options = ['--xml_output']
 
