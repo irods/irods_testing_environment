@@ -146,18 +146,28 @@ def add_irods_test_args(parser):
     )
 
 
-def add_database_config_args(parser):
-    '''Add argparse options related to setting up and configuring iRODS.
+def add_irods_setup_args(parser):
+    """
+    Add argparse options related to setting up and configuring iRODS.
 
-    Arguments:
-    parser -- argparse.ArgumentParser to augment
-    '''
+    Args:
+        parser: argparse.ArgumentParser to augment
+    """
     parser.add_argument('--odbc-driver-path',
                         metavar='PATH_TO_ODBC_DRIVER_ARCHIVE',
                         dest='odbc_driver',
                         help=textwrap.dedent('''\
                             Path to the ODBC driver archive file on the local machine. \
                             If not provided, the driver will be downloaded.'''))
+
+    parser.add_argument(
+        '--use-tls',
+        dest='use_tls',
+        action='store_true',
+        help=textwrap.dedent('''\
+                            Indicates that TLS should be configured and enabled in the test Zone.'''),
+    )
+
 
 def add_common_args(parser):
     '''Add argparse options common to irods_testing_environment scripts.

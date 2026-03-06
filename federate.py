@@ -27,8 +27,8 @@ if __name__ == "__main__":
 
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
-    cli.add_database_config_args(parser)
     cli.add_irods_package_args(parser)
+    cli.add_irods_setup_args(parser)
 
     parser.add_argument('--consumers-per-zone',
                         metavar='IRODS_CATALOG_CONSUMER_INSTANCES_PER_ZONE',
@@ -53,12 +53,6 @@ if __name__ == "__main__":
     parser.add_argument('--skip-setup',
                         action='store_false', dest='do_setup',
                         help='If indicated, the Zones will not be set up, only federated.')
-
-    parser.add_argument('--use-tls',
-                        dest='use_tls', action='store_true',
-                        help=textwrap.dedent('''\
-                            Indicates that TLS should be configured and enabled in each Zone.\
-                            '''))
 
     parser.add_argument('--use-unattended-install',
                         action='store_true', dest='do_unattended_install',

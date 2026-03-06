@@ -20,20 +20,14 @@ if __name__ == "__main__":
 
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
-    cli.add_database_config_args(parser)
     cli.add_irods_package_args(parser)
+    cli.add_irods_setup_args(parser)
 
     parser.add_argument('--consumer-instance-count',
                         metavar='IRODS_CATALOG_SERVICE_CONSUMER_INSTANCE_COUNT',
                         dest='consumer_count', type=int, default=0,
                         help=textwrap.dedent('''\
                             Number of iRODS Catalog Service Consumer service instances.'''))
-
-    parser.add_argument('--use-tls',
-                        dest='use_tls', action='store_true',
-                        help=textwrap.dedent('''\
-                            Indicates that TLS should be configured and enabled in the Zone.\
-                            '''))
 
     parser.add_argument('--use-unattended-install',
                         action='store_true', dest='do_unattended_install',

@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
-    cli.add_database_config_args(parser)
+    cli.add_irods_setup_args(parser)
 
     parser.add_argument('--irods-zone-name',
                         metavar='ZONE_NAME',

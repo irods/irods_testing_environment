@@ -22,8 +22,8 @@ if __name__ == "__main__":
 
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
-    cli.add_database_config_args(parser)
     cli.add_irods_package_args(parser)
+    cli.add_irods_setup_args(parser)
     cli.add_irods_test_args(parser)
 
     args = parser.parse_args()
@@ -91,6 +91,8 @@ if __name__ == "__main__":
                 )
             for i in range(args.executor_count)
         ]
+
+        # TODO(#296): configure TLS here if --use-tls was specified
 
         rc = test_utils.run_unit_tests(containers, args.tests, args.fail_fast)
 
