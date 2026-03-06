@@ -1,16 +1,12 @@
 # grown-up modules
-import compose
-import docker
+import concurrent.futures
 import json
 import logging
 import os
 
 # local modules
-from . import context
-from . import database_setup
-from . import odbc_setup
-from . import execute
-from . import irods_config
+from . import context, database_setup, execute, irods_config, odbc_setup
+
 
 class zone_info(object):
     """Class to hold information about an iRODS Zone and the containers running the servers."""
@@ -1262,3 +1258,128 @@ def get_info_for_zones(ctx, zone_names, consumer_service_instances_per_zone=0):
         )
 
     return zone_info_list
+
+
+def upgrade_irods_zone(ctx, provider_service_instance=1, consumer_service_instances=None):
+    """
+    Run the iRODS upgrade script in the Zone indicated by the catalog service provider instance.
+
+    Args:
+        ctx: context object which contains information about the Docker environment
+        provider_service_instance: service instance for the iRODS CSP container for this Zone
+        consumer_service_instances: service instances for the iRODS Catalog Service Consumer containers for this Zone
+                                    (if None is provided, all running iRODS Catalog Service Consumer service instances
+                                    are determined to be part of this Zone, per the irods_setup interfaces. list()
+                                    indicates that no iRODS Catalog Service Consumers are in this zone.
+
+    Raises:
+        RuntimeError: if an error occurs while running the upgrade script on any container in the Zone
+    """
+
+    def upgrade_irods(container):
+        # iRODS 5 introduced the upgrade script concept. Skip for anything before then.
+        if irods_config.server_version_is_irods_5(container):
+            ec = execute.execute_command(
+                container, 'python3 scripts/upgrade_irods.py', user='irods', workdir=context.irods_home()
+            )
+            if ec != 0:
+                raise RuntimeError(f'[{container.name}]: failed to run upgrade script')
+
+        if restart_irods(container) != 0:
+            raise RuntimeError(f'[{container.name}]: failed to start iRODS server after upgrade')
+
+        # After upgrade, need to invalidate the version and commit ID kept in cache in irods_config.
+        irods_config.update_cached_irods_version(container)
+        irods_config.update_cached_irods_commit_id(container)
+
+    rc = 0
+
+    # Upgrade catalog service provider first.
+    csp_container = ctx.docker_client.containers.get(
+        context.irods_catalog_provider_container(ctx.compose_project.name, provider_service_instance)
+    )
+    upgrade_irods(csp_container)
+
+    # Get information about the catalog service consumers, if any.
+    catalog_consumer_containers = ctx.compose_project.containers(
+        service_names=[context.irods_catalog_consumer_service()]
+    )
+
+    if consumer_service_instances:
+        if len(consumer_service_instances) == 0:
+            logging.warning('empty list of iRODS catalog service consumers to set up')  # noqa: LOG015
+            return
+
+        consumer_service_instances = [
+            context.service_instance(c.name)
+            for c in catalog_consumer_containers
+            if context.service_instance(c.name) in consumer_service_instances
+        ]
+    else:
+        consumer_service_instances = [context.service_instance(c.name) for c in catalog_consumer_containers]
+
+    # Upgrade all the catalog consumers at once.
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures_to_catalog_consumer_instances = {
+            executor.submit(
+                upgrade_irods,
+                ctx.docker_client.containers.get(
+                    context.irods_catalog_consumer_container(ctx.compose_project.name, instance)
+                ),
+            ): instance
+            for instance in consumer_service_instances
+        }
+
+        logging.debug(futures_to_catalog_consumer_instances)  # noqa: LOG015
+
+        for f in concurrent.futures.as_completed(futures_to_catalog_consumer_instances):
+            i = futures_to_catalog_consumer_instances[f]
+            container_name = context.irods_catalog_consumer_container(ctx.compose_project.name, i + 1)
+            try:
+                f.result()
+                logging.debug('[%s]: upgrade completed successfully', container_name)  # noqa: LOG015
+
+            except Exception:
+                logging.exception("[%s]: Exception occurred while upgrading packages", container_name)  # noqa: LOG015
+                rc = 1
+
+    if rc != 0:
+        raise RuntimeError(f'failed to upgrade packages one or more catalog service consumers, ec=[{rc}]')
+
+
+def upgrade_irods_zones(ctx, zone_info_list):
+    """
+    Run the iRODS upgrade script in specified Zones.
+
+    Args:
+        ctx: context object which contains information about the Docker environment
+        zone_info_list: list of iRODS Zone information for the Zones on which packages should be upgraded
+
+    Raises:
+        RuntimeError: if an error occurs while upgrading the iRODS packages on any container
+    """
+    rc = 0
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures_to_zone_infos = {
+            executor.submit(
+                upgrade_irods_zone,
+                ctx,
+                provider_service_instance=z.provider_service_instance,
+                consumer_service_instances=z.consumer_service_instances,
+            ): z
+            for z in zone_info_list
+        }
+
+        for f in concurrent.futures.as_completed(futures_to_zone_infos):
+            zone = futures_to_zone_infos[f]
+            try:
+                f.result()
+                logging.debug('[%s]: iRODS Zone upgrade completed successfully', zone)  # noqa: LOG015
+
+            except Exception:
+                logging.exception("Exception occurred while upgrading packages in Zone [%s]", zone)  # noqa: LOG015
+                rc = 1
+
+    if rc != 0:
+        raise RuntimeError(f'failed to upgrade packages on one or more iRODS Zones, ec=[{rc}]')
