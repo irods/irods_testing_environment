@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     cli.add_common_args(parser)
     cli.add_compose_args(parser)
-    cli.add_database_config_args(parser)
+    cli.add_irods_setup_args(parser)
     cli.add_irods_package_args(parser)
     cli.add_irods_test_args(parser)
 
@@ -35,12 +35,6 @@ if __name__ == "__main__":
                         help=textwrap.dedent('''\
                             Indicates whether to run tests from provider or from consumer.\
                             '''))
-
-    parser.add_argument('--use-tls',
-                        dest='use_tls', action='store_true',
-                        help=textwrap.dedent('''\
-                            Indicates that TLS should be configured and enabled in the test \
-                            Zone.'''))
 
     args = parser.parse_args()
 

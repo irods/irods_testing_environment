@@ -20,10 +20,10 @@ parser = argparse.ArgumentParser(description='Run iRODS plugin test hooks in a c
 
 cli.add_common_args(parser)
 cli.add_compose_args(parser)
-cli.add_database_config_args(parser)
 cli.add_irods_package_args(parser)
-cli.add_irods_test_args(parser)
 cli.add_irods_plugin_args(parser)
+cli.add_irods_setup_args(parser)
+cli.add_irods_test_args(parser)
 
 parser.add_argument('--test-hook-path',
                     metavar='PATH_TO_TEST_HOOK_FILE',
@@ -108,6 +108,8 @@ try:
                                           args.plugin_name))
 
     options = ['--built_packages_root_directory', plugin_package_directory]
+
+    # TODO(#296): configure TLS here if --use-tls was specified
 
     rc = test_utils.run_plugin_tests(containers,
                                      args.plugin_name,
