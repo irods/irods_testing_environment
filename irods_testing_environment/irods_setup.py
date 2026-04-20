@@ -493,7 +493,6 @@ class setup_input_builder(object):
                 "negotiation_key": self.negotiation_key,
                 "plugin_configuration": {
                     "authentication": {},
-                    # TODO(irods/irods#8670): Is it okay to include an empty "database" stanza?
                     "network": {},
                     "resource": {},
                     "rule_engines": [
