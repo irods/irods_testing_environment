@@ -1,11 +1,11 @@
-# grown-up modules
 import concurrent.futures
+import itertools
 import json
 import logging
 import os
+import pathlib
 
-# local modules
-from . import context, database_setup, execute, irods_config, odbc_setup
+from . import archive, context, database_setup, execute, irods_config, odbc_setup
 
 
 class zone_info(object):
@@ -242,6 +242,14 @@ class setup_input_builder(object):
 
         self.do_unattended_install = kwargs.get('do_unattended_install', False)
 
+        self.use_tls = kwargs.get('use_tls', False)
+        self.certificate_chain_file = str(pathlib.Path(context.irods_config()) / "chain.pem")
+        self.certificate_key_file = str(pathlib.Path(context.irods_config()) / "server.key")
+        self.dh_params_file = str(pathlib.Path(context.irods_config()) / "dhparams.pem")
+        self.ca_certificate_file = str(pathlib.Path(context.irods_config()) / "server.crt")
+        self.ca_certificate_path = ""  # This is optional but should be defined.
+        self.verify_server = "cert"
+
         return self
 
 
@@ -290,6 +298,22 @@ class setup_input_builder(object):
             input_args.insert(4, str(self.provides_local_storage))
             input_args.insert(5, str(self.resource_name))
             input_args.insert(6, str(self.vault_directory))
+
+            # Insert entries for TLS prompts (added in 5.1.0).
+            if self.irods_version >= (5, 0, 90):
+                insert_index = itertools.count(7)
+                if self.use_tls:
+                    # Prompt for generating self-signed certificate. Testing environment takes care of this, so decline.
+                    input_args.insert(next(insert_index), "no")
+                    # tls_server
+                    input_args.insert(next(insert_index), self.certificate_chain_file)
+                    input_args.insert(next(insert_index), self.certificate_key_file)
+                    input_args.insert(next(insert_index), self.dh_params_file)
+                    # tls_client
+                    input_args.insert(next(insert_index), self.ca_certificate_file)
+                    input_args.insert(next(insert_index), self.ca_certificate_path)
+                    input_args.insert(next(insert_index), str(2 if self.verify_server == "cert" else 1))
+                    input_args.insert(next(insert_index), "") # confirmation
         # Handle the difference between 4.2 servers and 4.3 servers.
         elif self.irods_version >= (4, 3, 0):
             input_args.insert(3, str(self.provides_local_storage))
@@ -364,6 +388,22 @@ class setup_input_builder(object):
             input_args.insert(12, str(self.provides_local_storage))
             input_args.insert(13, str(self.resource_name))
             input_args.insert(14, str(self.vault_directory))
+
+            # Insert entries for TLS prompts (added in 5.1.0).
+            if self.irods_version >= (5, 0, 90):
+                insert_index = itertools.count(15)
+                if self.use_tls:
+                    # Prompt for generating self-signed certificate. Testing environment takes care of this, so decline.
+                    input_args.insert(next(insert_index), "no")
+                    # tls_server
+                    input_args.insert(next(insert_index), self.certificate_chain_file)
+                    input_args.insert(next(insert_index), self.certificate_key_file)
+                    input_args.insert(next(insert_index), self.dh_params_file)
+                    # tls_client
+                    input_args.insert(next(insert_index), self.ca_certificate_file)
+                    input_args.insert(next(insert_index), self.ca_certificate_path)
+                    input_args.insert(next(insert_index), str(2 if self.verify_server == "cert" else 1))
+                    input_args.insert(next(insert_index), "") # confirmation
         # Handle the difference between 4.2 servers and 4.3 servers.
         elif self.irods_version >= (4, 3, 0):
             input_args.insert(11, str(self.provides_local_storage))
@@ -569,6 +609,29 @@ class setup_input_builder(object):
                 "server_control_plane_port": 1248,
                 "server_control_plane_timeout_milliseconds": 10000
             })
+
+        else:
+            if self.use_tls:
+                json_input["server_config"]["client_server_policy"] = "CS_NEG_REQUIRE"
+                json_input["server_config"]["tls_server"] = {
+                    "certificate_chain_file": self.certificate_chain_file,
+                    "certificate_key_file": self.certificate_key_file,
+                    "dh_params_file": self.dh_params_file,
+                }
+                json_input["server_config"]["tls_client"] = {"verify_server": self.verify_server}
+                if self.ca_certificate_file:
+                    json_input["server_config"]["tls_client"]["ca_certificate_file"] = self.ca_certificate_file
+                    json_input["service_account_environment"]["irods_ssl_ca_certificate_file"] = (
+                        self.ca_certificate_file
+                    )
+                if self.ca_certificate_path:
+                    json_input["server_config"]["tls_client"]["ca_certificate_path"] = self.ca_certificate_path
+                    json_input["service_account_environment"]["irods_ssl_ca_certificate_path"] = (
+                        self.ca_certificate_path
+                    )
+
+                json_input["service_account_environment"]["irods_client_server_policy"] = "CS_NEG_REQUIRE"
+                json_input["service_account_environment"]["irods_ssl_verify_server"] = self.verify_server
 
         return json.dumps(json_input, sort_keys=True, indent=4)
 
@@ -788,6 +851,28 @@ class setup_input_builder(object):
                 "server_control_plane_timeout_milliseconds": 10000
             })
 
+        else:
+            if self.use_tls:
+                json_input["server_config"]["client_server_policy"] = "CS_NEG_REQUIRE"
+                json_input["server_config"]["tls_server"] = {
+                    "certificate_chain_file": self.certificate_chain_file,
+                    "certificate_key_file": self.certificate_key_file,
+                    "dh_params_file": self.dh_params_file,
+                }
+                json_input["server_config"]["tls_client"] = {"verify_server": self.verify_server}
+                if self.ca_certificate_file:
+                    json_input["server_config"]["tls_client"]["ca_certificate_file"] = self.ca_certificate_file
+                    json_input["service_account_environment"]["irods_ssl_ca_certificate_file"] = (
+                        self.ca_certificate_file
+                    )
+                if self.ca_certificate_path:
+                    json_input["server_config"]["tls_client"]["ca_certificate_path"] = self.ca_certificate_path
+                    json_input["service_account_environment"]["irods_ssl_ca_certificate_path"] = (
+                        self.ca_certificate_path
+                    )
+                json_input["service_account_environment"]["irods_client_server_policy"] = "CS_NEG_REQUIRE"
+                json_input["service_account_environment"]["irods_ssl_verify_server"] = self.verify_server
+
         return json.dumps(json_input, sort_keys=True, indent=4)
 
     def build(self):
@@ -911,6 +996,24 @@ def setup_irods_server(container, setup_input, **kwargs):
     from . import container_info
     from . import irods_config
 
+    if kwargs.get("use_tls", False):
+        config_path = pathlib.Path(context.irods_config())
+        key_file = config_path / 'server.key'
+        dhparams_file = config_path / 'dhparams.pem'
+        chain_file = config_path / 'chain.pem'
+        cert_file = config_path / 'server.crt'
+
+        # Chain file and cert file use the same source for self-signed certs.
+        archive.copy_files_in_container(
+            container,
+            [
+                (kwargs.get("path_to_key_file_on_host"), key_file),
+                (kwargs.get("path_to_cert_file_on_host"), chain_file),
+                (kwargs.get("path_to_cert_file_on_host"), cert_file),
+                (kwargs.get("path_to_dhparams_file_on_host"), dhparams_file),
+            ],
+        )
+
     try:
         if stop_irods(container) != 0:
             logging.debug(f'[{container.name}] failed to stop iRODS server before setup')
@@ -939,8 +1042,12 @@ def setup_irods_server(container, setup_input, **kwargs):
         run_setup_script = 'bash -c \'{} {} --json_configuration_file /input\''.format(
             container_info.python(container), path_to_setup_script)
     else:
-        run_setup_script = 'bash -c \'{} {} < /input\''.format(
-            container_info.python(container), path_to_setup_script)
+        args = []
+        if irods_config.get_irods_version(container) >= (5, 0, 90):
+            if kwargs.get("use_tls", False):
+                args.append("--tls")
+        args = " ".join(args)
+        run_setup_script = f'bash -c \'{container_info.python(container)} {path_to_setup_script} {args} < /input\''
     ec = execute.execute_command(container, run_setup_script)
     if ec != 0:
         raise RuntimeError('failed to set up iRODS server [{}]'.format(container.name))
@@ -1003,9 +1110,7 @@ def setup_irods_catalog_provider(ctx,
 
     logging.warning('setting up iRODS catalog provider [{}]'.format(csp_container.name))
 
-    setup_irods_server(csp_container,
-                       setup_input,
-                       do_unattended_install=kwargs.get('do_unattended_install', False))
+    setup_irods_server(csp_container, setup_input, **kwargs)
 
 
 def setup_irods_catalog_consumer(ctx,
@@ -1052,9 +1157,7 @@ def setup_irods_catalog_consumer(ctx,
 
     logging.warning('setting up iRODS catalog consumer [{}]'.format(csc_container.name))
 
-    setup_irods_server(csc_container,
-                       setup_input,
-                       do_unattended_install=kwargs.get('do_unattended_install', False))
+    setup_irods_server(csc_container, setup_input, **kwargs)
 
 
 def setup_irods_catalog_consumers(ctx,
@@ -1072,8 +1175,6 @@ def setup_irods_catalog_consumers(ctx,
                                   consumer service name in the Compose project will be
                                   targeted. If an empty list is provided, nothing happens.
     """
-    import concurrent.futures
-
     catalog_consumer_containers = ctx.compose_project.containers(
         service_names=[context.irods_catalog_consumer_service()])
 
@@ -1170,8 +1271,6 @@ def setup_irods_zones(ctx,
                       zone_info_list,
                       odbc_driver=None,
                       **kwargs):
-    import concurrent.futures
-
     rc = 0
 
     with concurrent.futures.ThreadPoolExecutor() as executor:

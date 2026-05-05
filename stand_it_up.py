@@ -1,13 +1,10 @@
-# grown-up modules
-import compose.cli.command
-import docker
 import logging
 import os
 
-# local modules
-from irods_testing_environment import context
-from irods_testing_environment import services
-from irods_testing_environment import tls_setup
+import docker
+
+import compose.cli.command
+from irods_testing_environment import context, irods_config, services, tls_setup
 
 if __name__ == "__main__":
     import argparse
@@ -63,14 +60,24 @@ if __name__ == "__main__":
 
     # Bring up the services
     logging.debug('bringing up project [{}]'.format(ctx.compose_project.name))
-    services.create_topology(ctx,
-                             externals_directory=args.irods_externals_package_directory,
-                             package_directory=args.package_directory,
-                             package_version=args.package_version,
-                             odbc_driver=args.odbc_driver,
-                             consumer_count=args.consumer_count,
-                             install_packages=args.install_packages,
-                             do_unattended_install=args.do_unattended_install)
+    services.create_topology(
+        ctx,
+        externals_directory=args.irods_externals_package_directory,
+        package_directory=args.package_directory,
+        package_version=args.package_version,
+        odbc_driver=args.odbc_driver,
+        consumer_count=args.consumer_count,
+        install_packages=args.install_packages,
+        do_unattended_install=args.do_unattended_install,
+        use_tls=args.use_tls,
+    )
 
-    if args.use_tls:
+    containers = [
+        ctx.docker_client.containers.get(
+            context.container_name(ctx.compose_project.name, context.irods_catalog_provider_service())
+        )
+    ]
+
+    # TLS configuration happens in setup as of 5.1.0, so only do this for prior versions when requested.
+    if args.use_tls and irods_config.get_irods_version(containers[0]) < (5, 0, 90):
         tls_setup.configure_tls_in_zone(ctx.docker_client, ctx.compose_project)

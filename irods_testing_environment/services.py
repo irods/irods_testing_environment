@@ -1,11 +1,12 @@
-# grown-up modules
+"""Utility functions for managing Docker Compose services and setting up iRODS topologies."""
+
 import logging
 import os
+import pathlib
 
-# local modules
-from . import context
-from . import irods_setup
+from . import context, irods_setup, tls_setup
 from .install import install
+
 
 def create_topologies(ctx,
                       zone_count,
@@ -51,7 +52,24 @@ def create_topologies(ctx,
     # This should generate a list of identical zone infos
     zone_info_list = irods_setup.get_info_for_zones(ctx, zone_names, consumer_count)
 
-    irods_setup.setup_irods_zones(ctx, zone_info_list, odbc_driver=odbc_driver, **kwargs)
+    if kwargs.get("use_tls", False):
+        # The testing environment is using a self-signed certificate, so the certificate, key, and dhparams should be
+        # generated ONCE and copied to each server.
+        key, key_file = tls_setup.generate_tls_certificate_key()
+        cert_file = tls_setup.generate_tls_self_signed_certificate(key)
+        dhparams_file = tls_setup.generate_tls_dh_params()
+        kwargs["path_to_key_file_on_host"] = key_file
+        kwargs["path_to_cert_file_on_host"] = cert_file
+        kwargs["path_to_dhparams_file_on_host"] = dhparams_file
+
+    try:
+        irods_setup.setup_irods_zones(ctx, zone_info_list, odbc_driver=odbc_driver, **kwargs)
+
+    finally:
+        if kwargs.get("use_tls", False):
+            pathlib.Path(key_file).unlink()
+            pathlib.Path(cert_file).unlink()
+            pathlib.Path(dhparams_file).unlink()
 
 
 def create_topology(ctx,
