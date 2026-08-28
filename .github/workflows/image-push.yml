@@ -1,0 +1,62 @@
+name: Build and publish the docker image
+
+# manual trigger event
+on: workflow_dispatch
+
+# working parameters that are specific to this script
+env:
+  REGISTRY: containers.renci.org/irods/
+
+# job definition
+jobs:
+  # create a job
+  Build-and-publish-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    # create an array of operating systems to build. this is a list of the directories that have a dockerfile
+    strategy:
+      matrix:
+        os_name:
+          - almalinux-8
+          - centos-7
+          - debian-11
+          - rockylinux-8
+          - ubuntu-20.04
+# the following os versions do not have a release.Dockerfile that builds properly:
+#          - debian-12
+#          - rockylinux-9
+#          - ubuntu-22.04
+
+    # job steps
+    steps:
+      # connect to the renci image registry
+      - name: Login to containers.renci.org
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ secrets.CR_HOST }}
+          username: ${{ secrets.USER }}
+          password: ${{ secrets.PW }}
+
+      # checkout the codebase
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      # build and push the development image.
+      - name: Build/Push the development image to the registry
+        uses: docker/build-push-action@v3
+        with:
+          context: ./projects/${{ matrix.os_name }}
+          file: ./projects/${{ matrix.os_name }}/Dockerfile
+          push: true
+          tags: ${{ secrets.CR_HOST }}${{ secrets.CR }}${{ matrix.os_name }}:latest
+
+      # build and push the release image.
+      - name: Build/Push the release image to the registry
+        uses: docker/build-push-action@v3
+        with:
+          context: ./projects/${{ matrix.os_name }}
+          file: ./projects/${{ matrix.os_name }}/release.Dockerfile
+          push: true
+          tags: ${{ secrets.CR_HOST }}${{ secrets.CR }}${{ matrix.os_name }}.release:latest
