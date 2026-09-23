@@ -1,6 +1,6 @@
 services:
     catalog:
-        image: mysql:8.4
+        image: mysql:9.7
         environment:
             - MYSQL_ROOT_PASSWORD=testpassword
             - MYSQL_USER=irods
