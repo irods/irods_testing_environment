@@ -1052,6 +1052,16 @@ def setup_irods_server(container, setup_input, **kwargs):
     if ec != 0:
         raise RuntimeError('failed to set up iRODS server [{}]'.format(container.name))
 
+    # Issue irods/irods#4206 requires a file that the service account can rename. It must
+    # exist on all servers in a zone.
+    test_filename = '/tmp/irods_issue_4206.txt'
+    ec = execute.execute_command(container, f"bash -c 'echo issue 4206 > {test_filename}'")
+    if ec != 0:
+        raise RuntimeError(f'[{container.name}] failed to create {test_filename}')
+    ec = execute.execute_command(container, f'chown irods:irods {test_filename}')
+    if ec != 0:
+        raise RuntimeError(f'[{container.name}] failed to grant ownership of {test_filename} to iRODS service account')
+
     configure_rsyslog(container)
 
     if restart_irods(container) != 0:
