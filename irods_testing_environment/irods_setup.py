@@ -1064,11 +1064,9 @@ def setup_irods_server(container, setup_input, **kwargs):
 
     configure_rsyslog(container)
 
-    if restart_irods(container) != 0:
-        raise RuntimeError(f'[{container.name}] failed to start iRODS server after setup')
-
 
 def setup_irods_catalog_provider(ctx,
+                                 db_strat,
                                  database_service_instance=1,
                                  provider_service_instance=1,
                                  odbc_driver=None,
@@ -1076,6 +1074,7 @@ def setup_irods_catalog_provider(ctx,
     """Set up iRODS catalog service provider in a docker-compose project.
 
     Arguments:
+    db_strat -- interface to catalog database
     database_service_instance -- the service instance number of the container running the
                                  database server
     provider_service_instance -- the service instance number of the container being targeted
@@ -1121,6 +1120,13 @@ def setup_irods_catalog_provider(ctx,
     logging.warning('setting up iRODS catalog provider [{}]'.format(csp_container.name))
 
     setup_irods_server(csp_container, setup_input, **kwargs)
+
+    if kwargs.get('increase_objectid_sequence', True) and db_strat._did_create_db:
+        if db_strat.set_sequence_value('ICAT', 'R_ObjectId', '6442451241') != 0:
+            raise RuntimeError(f'[{csp_container.name}] Could not increase R_ObjectId.')
+
+    if restart_irods(csp_container) != 0:
+        raise RuntimeError(f'[{csp_container.name}] failed to start iRODS server after setup')
 
 
 def setup_irods_catalog_consumer(ctx,
@@ -1168,6 +1174,9 @@ def setup_irods_catalog_consumer(ctx,
     logging.warning('setting up iRODS catalog consumer [{}]'.format(csc_container.name))
 
     setup_irods_server(csc_container, setup_input, **kwargs)
+
+    if restart_irods(csc_container) != 0:
+        raise RuntimeError(f'[{csc_container.name}] failed to start iRODS server after setup')
 
 
 def setup_irods_catalog_consumers(ctx,
@@ -1258,13 +1267,14 @@ def setup_irods_zone(ctx,
         ctx, database_service_instance=database_service_instance)
 
     logging.info('setting up catalog database [{}]'.format(database_service_instance))
-    database_setup.setup_catalog(ctx,
-                                 force_recreate=force_recreate,
-                                 service_instance=database_service_instance)
+    db_strat = database_setup.setup_catalog(ctx,
+                                            force_recreate=force_recreate,
+                                            service_instance=database_service_instance)
 
     logging.info('setting up catalog provider [{}] [{}]'.format(provider_service_instance,
                                                                 database_service_instance))
     setup_irods_catalog_provider(ctx,
+                                 db_strat,
                                  database_service_instance=database_service_instance,
                                  provider_service_instance=provider_service_instance,
                                  odbc_driver=odbc_driver,

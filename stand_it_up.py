@@ -32,6 +32,11 @@ if __name__ == "__main__":
                             If indicated, the iRODS servers will be set up using \
                             unattended installation.''')
 
+    parser.add_argument('--increase-objectid-sequence',
+                        action='store_true', dest='increase_objectid_sequence',
+                        help='''\
+                            If indicated, R_ObjectId will be increaseed after provider setup.''')
+
     args = parser.parse_args()
 
     if not args.package_version and not args.install_packages:
@@ -70,6 +75,7 @@ if __name__ == "__main__":
         install_packages=args.install_packages,
         do_unattended_install=args.do_unattended_install,
         use_tls=args.use_tls,
+        increase_objectid_sequence=args.increase_objectid_sequence
     )
 
     containers = [
