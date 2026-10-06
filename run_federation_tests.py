@@ -30,6 +30,14 @@ if __name__ == "__main__":
     cli.add_irods_setup_args(parser)
     cli.add_irods_test_args(parser)
 
+    parser.add_argument(
+        '--skip-objectid-sequence-bump',
+        dest='increase_objectid_sequence',
+        action='store_false',
+        help=textwrap.dedent('''\
+                            Avoid increasing the objectid sequence number when setting up the database.'''),
+    )
+
     args = parser.parse_args()
 
     if not args.package_version and not args.install_packages:
@@ -98,7 +106,8 @@ if __name__ == "__main__":
                                              zone_name=z.zone_name,
                                              zone_key=z.zone_key,
                                              negotiation_key=z.negotiation_key,
-                                             do_unattended_install=args.do_unattended_install)
+                                             do_unattended_install=args.do_unattended_install,
+                                             increase_objectid_sequence=args.increase_objectid_sequence)
 
             federate.form_federation_clique(ctx, zone_info_list)
 
