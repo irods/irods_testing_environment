@@ -36,6 +36,14 @@ if __name__ == "__main__":
                             Indicates whether to run tests from provider or from consumer.\
                             '''))
 
+    parser.add_argument(
+        '--skip-objectid-sequence-bump',
+        dest='increase_objectid_sequence',
+        action='store_false',
+        help=textwrap.dedent('''\
+                            Avoid increasing the objectid sequence number when setting up the database.'''),
+    )
+
     args = parser.parse_args()
 
     if not args.package_version and not args.install_packages:
@@ -89,7 +97,8 @@ if __name__ == "__main__":
                                        odbc_driver=args.odbc_driver,
                                        consumer_count=consumer_count,
                                        install_packages=args.install_packages,
-                                       do_unattended_install=args.do_unattended_install)
+                                       do_unattended_install=args.do_unattended_install,
+                                       increase_objectid_sequence=args.increase_objectid_sequence)
 
             # Configure the containers for running iRODS automated tests
             logging.info('configuring iRODS containers for testing')
